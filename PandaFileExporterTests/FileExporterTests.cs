@@ -139,6 +139,18 @@ namespace PandaFileExporterTests
         }
 
         [Fact]
+        public void ToExcelArray_List()
+        {
+            InitializeDb();
+
+            var list = new List<Model>();
+
+            var response = FileExporter.ToExcelArray(list);
+
+            Assert.NotNull(response);
+        }
+
+        [Fact]
         public void ToPdfArray()
         {
             InitializeDb();

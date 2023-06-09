@@ -280,6 +280,34 @@ public static class FileExporter
             throw new Exception("Export failed!");
         }
     }
+
+    public static byte[] ToExcelArray<T>(List<T> source) where T : class
+    {
+        try
+        {
+            // Convert source into data table
+            var table = source.ToDataTable(typeof(T).GetDisplayName());
+
+            // Create a new workbook
+            using var workbook = new XLWorkbook();
+            // Create new worksheet and align
+            workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+
+            // Convert the workbook to a memory stream
+            using var memoryStream = new MemoryStream();
+            // Save workbook into memory stream
+            workbook.SaveAs(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // Return the byte array from the API endpoint
+            return memoryStream.ToArray();
+        }
+        catch (Exception)
+        {
+            throw new Exception("Export failed!");
+        }
+    }
+
     public static byte[] ToPdfArray<T>(IQueryable<T> source) where T : class
     {
         try
