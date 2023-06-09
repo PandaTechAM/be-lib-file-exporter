@@ -3,6 +3,8 @@ using ExcelExporter;
 using Gehtsoft.PDFFlow.Builder;
 using System.Net;
 using Gehtsoft.PDFFlow.Models.Enumerations;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Collections;
 
 public static class FileExporter
 {
@@ -301,6 +303,35 @@ public static class FileExporter
 
             // Return the byte array from the API endpoint
             return memoryStream.ToArray();
+        }
+        catch (Exception)
+        {
+            throw new Exception("Export failed!");
+        }
+    }
+
+    public static string ToExcelString<T>(IQueryable<T> source) where T : class
+    {
+        try
+        {
+            // Convert source into data table
+            var table = source.ToDataTable(typeof(T).GetDisplayName());
+
+            // Create a new workbook
+            using var workbook = new XLWorkbook();
+            
+            // Create new worksheet and align
+            var worksheet = workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+            
+            // Convert the workbook to a memory stream
+            using var memoryStream = new MemoryStream();
+            
+            // Save workbook into memory stream
+            workbook.SaveAs(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // Return the byte array from the API endpoint
+            return System.Text.Encoding.Default.GetString(memoryStream.ToArray());
         }
         catch (Exception)
         {
