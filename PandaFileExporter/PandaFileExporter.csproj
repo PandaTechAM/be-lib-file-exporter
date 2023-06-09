@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>PandaTech.FileExporter</PackageId>
+		<Title>Export table data into xls, xlsx, pdf formats</Title>
+		<Version>0.0.1</Version>
+		<Authors>PandaTech</Authors>
+		<Description>Export table data into xls, xlsx, pdf formats</Description>
+		<PackageIcon>Logo.jpg</PackageIcon>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="mime_types.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="mime_types.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Logo.jpg">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.101.0" />
+		<PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
+		<PackageReference Include="itext7" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="..\.gitignore">
+			<Link>.gitignore</Link>
+		</Content>
+		<Content Include="..\README.md">
+			<Link>README.md</Link>
+		</Content>
+	</ItemGroup>
+
+</Project>
