@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Reflection;
 
 namespace ExcelExporter
@@ -74,6 +75,11 @@ namespace ExcelExporter
             if (atts.Length == 0)
                 return model.GetType().Name;
             return (atts[2] as DisplayNameAttribute)!.DisplayName;
+        }
+
+        public static string GetString(this byte[] data)
+        {
+            return System.Text.Encoding.Default.GetString(data);
         }
     }
 }
