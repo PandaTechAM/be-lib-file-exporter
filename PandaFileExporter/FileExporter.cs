@@ -5,6 +5,8 @@ using System.Net;
 using Gehtsoft.PDFFlow.Models.Enumerations;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections;
+using System.Text;
+using Microsoft.Extensions.Primitives;
 
 public static class FileExporter
 {
@@ -310,28 +312,33 @@ public static class FileExporter
         }
     }
 
-    public static string ToExcelString<T>(IQueryable<T> source) where T : class
+    public static string ToExcelString<T>(List<T> source)
     {
         try
         {
-            // Convert source into data table
-            var table = source.ToDataTable(typeof(T).GetDisplayName());
+            // Setup new StringBuilder for csv generation
+            var stringBuiklder = new StringBuilder();
 
-            // Create a new workbook
-            using var workbook = new XLWorkbook();
-            
-            // Create new worksheet and align
-            var worksheet = workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
-            
-            // Convert the workbook to a memory stream
-            using var memoryStream = new MemoryStream();
-            
-            // Save workbook into memory stream
-            workbook.SaveAs(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
+            // Get headers
+            var firstItem = source.FirstOrDefault();
+            stringBuiklder.AppendLine();
+            foreach (var item in firstItem.GetType().GetProperties())
+            {
+                stringBuiklder.Append($"{item.GetDisplayName()};");
+            }
 
-            // Return the byte array from the API endpoint
-            return System.Text.Encoding.Default.GetString(memoryStream.ToArray());
+            // Add data rows
+            for (int i = 0; i < source.Count(); i++)
+            {
+                stringBuiklder.AppendLine();
+
+                foreach (var item in source[i].GetType().GetProperties())
+                {
+                    stringBuiklder.Append($"{item.GetDisplayName()};");
+                }
+            }
+
+            return stringBuiklder.ToString();
         }
         catch (Exception)
         {
