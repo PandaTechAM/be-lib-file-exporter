@@ -59,7 +59,7 @@ namespace ExcelExporter
             return (atts[0] as DisplayNameAttribute)!.DisplayName;
         }
 
-        public static string GetDisplayName<T>(this T model)
+        public static string GetDisplayName<T>(this T model) where T : class
         {
             //var test = model.GetType().GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
 
