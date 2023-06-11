@@ -7,6 +7,9 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections;
 using System.Text;
 using Microsoft.Extensions.Primitives;
+using System.Formats.Asn1;
+using System.IO;
+using CsvHelper;
 
 public static class FileExporter
 {
@@ -312,7 +315,7 @@ public static class FileExporter
         }
     }
 
-    public static string ToExcelString<T>(List<T> source)
+    public static byte[] ToCsvArray<T>(List<T> source)
     {
         try
         {
@@ -334,11 +337,11 @@ public static class FileExporter
 
                 foreach (var item in source[i].GetType().GetProperties())
                 {
-                    stringBuiklder.Append($"{item.GetDisplayName()};");
+                    stringBuiklder.Append($"{item.GetDisplayName()},");
                 }
             }
 
-            return stringBuiklder.ToString();
+            return Encoding.UTF8.GetBytes(stringBuiklder.ToString());
         }
         catch (Exception)
         {
