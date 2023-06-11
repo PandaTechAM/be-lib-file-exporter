@@ -323,9 +323,6 @@ public static class FileExporter
             var stringBuiklder = new StringBuilder();
 
             // Get headers
-            //var firstItem = source.FirstOrDefault();
-            stringBuiklder.AppendLine();
-            //foreach (var item in firstItem.GetType().GetProperties())
             foreach (var item in typeof(T).GetProperties())
             {
                 stringBuiklder.Append($"{item.GetDisplayName()};");
@@ -360,7 +357,7 @@ public static class FileExporter
             // Create Memory Stream
             using var memoryStream = new MemoryStream();
 
-            // Source: https://csharpforums.net/threads/the-easiest-way-to-create-pdf-documents-in-c.7246/
+            // Build document
             DocumentBuilder builder = DocumentBuilder.New();
             var section = builder.AddSection();
 
@@ -374,7 +371,6 @@ public static class FileExporter
 
             // Table Headers
             var firstItem = source.FirstOrDefault();
-            //for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
             for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
             {
                 table.AddColumnToTable();
@@ -382,7 +378,6 @@ public static class FileExporter
 
             // Add header row with names
             var headerRow = table.AddRow();
-            //foreach (var item in firstItem.GetType().GetProperties())
             foreach (var item in typeof(T).GetProperties())
             {
                 //headerRow.AddCell(item.Name);
@@ -438,7 +433,7 @@ public static class FileExporter
             // Create Memory Stream
             using var memoryStream = new MemoryStream();
 
-            // Source: https://csharpforums.net/threads/the-easiest-way-to-create-pdf-documents-in-c.7246/
+            // Build document
             DocumentBuilder builder = DocumentBuilder.New();
             var section = builder.AddSection();
 
@@ -452,7 +447,6 @@ public static class FileExporter
 
             // Table Headers
             var firstItem = source.FirstOrDefault();
-            //for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
             for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
             {
                 table.AddColumnToTable();
@@ -460,7 +454,6 @@ public static class FileExporter
 
             // Add header row with names
             var headerRow = table.AddRow();
-            //foreach (var item in firstItem.GetType().GetProperties())
             foreach (var item in typeof(T).GetProperties())
             {
                 //headerRow.AddCell(item.Name);
