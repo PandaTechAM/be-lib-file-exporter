@@ -325,7 +325,7 @@ public static class FileExporter
             // Get headers
             foreach (var item in typeof(T).GetProperties())
             {
-                stringBuiklder.Append($"{item.GetDisplayName()};");
+                stringBuiklder.Append($"{item.GetDisplayName()},");
             }
 
             // Add data rows
