@@ -411,4 +411,68 @@ public static class FileExporter
             throw new Exception("Export failed!");
         }
     }
+
+    public static byte[] ToPdfArray<T>(List<T> source) where T : class
+    {
+        try
+        {
+            // Create Memory Stream
+            using var memoryStream = new MemoryStream();
+
+            // Source: https://csharpforums.net/threads/the-easiest-way-to-create-pdf-documents-in-c.7246/
+            DocumentBuilder builder = DocumentBuilder.New();
+            var section = builder.AddSection();
+
+            // Setup PDF
+            section
+                .SetSize(PaperSize.A4)
+                .SetOrientation(PageOrientation.Landscape);
+
+            // Create table
+            var table = section.AddTable();
+
+            // Table Headers
+            var firstItem = source.FirstOrDefault();
+            for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
+            {
+                table.AddColumnToTable();
+            }
+
+            // Add header row with names
+            var headerRow = table.AddRow();
+            foreach (var item in firstItem.GetType().GetProperties())
+            {
+                //headerRow.AddCell(item.Name);
+                headerRow.AddCell(item.GetDisplayName());
+            }
+            headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
+
+            // Add data rows with values
+            var list = source.ToList();
+            for (int i = 0; i < source.Count(); i++)
+            {
+                var data = list[i];
+                var dataRow = table.AddRow();
+                foreach (var item in data.GetType().GetProperties())
+                {
+                    dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                }
+                dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
+            }
+
+            // Generate Document
+            section.ToDocument();
+
+            // Build document
+            builder.Build(memoryStream);
+
+            return memoryStream.ToArray();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Export failed!");
+        }
+    }
+
 }
