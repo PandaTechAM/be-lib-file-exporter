@@ -323,21 +323,25 @@ public static class FileExporter
             var stringBuiklder = new StringBuilder();
 
             // Get headers
-            var firstItem = source.FirstOrDefault();
+            //var firstItem = source.FirstOrDefault();
             stringBuiklder.AppendLine();
-            foreach (var item in firstItem.GetType().GetProperties())
+            //foreach (var item in firstItem.GetType().GetProperties())
+            foreach (var item in typeof(T).GetProperties())
             {
                 stringBuiklder.Append($"{item.GetDisplayName()};");
             }
 
             // Add data rows
-            for (int i = 0; i < source.Count(); i++)
+            if (source.Count > 0)
             {
-                stringBuiklder.AppendLine();
-
-                foreach (var item in source[i].GetType().GetProperties())
+                for (int i = 0; i < source.Count(); i++)
                 {
-                    stringBuiklder.Append($"{item.GetDisplayName()},");
+                    stringBuiklder.AppendLine();
+
+                    foreach (var item in source[i].GetType().GetProperties())
+                    {
+                        stringBuiklder.Append($"{item.GetDisplayName()},");
+                    }
                 }
             }
 
@@ -370,32 +374,47 @@ public static class FileExporter
 
             // Table Headers
             var firstItem = source.FirstOrDefault();
-            for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
+            //for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
+            for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
             {
                 table.AddColumnToTable();
             }
 
             // Add header row with names
             var headerRow = table.AddRow();
-            foreach (var item in firstItem.GetType().GetProperties())
+            //foreach (var item in firstItem.GetType().GetProperties())
+            foreach (var item in typeof(T).GetProperties())
             {
                 //headerRow.AddCell(item.Name);
                 headerRow.AddCell(item.GetDisplayName());
             }
             headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
 
-            // Add data rows with values
-            var list = source.ToList();
-            for (int i = 0; i < source.Count(); i++)
+            if (source.Count() > 0)
             {
-                var data = list[i];
-                var dataRow = table.AddRow();
-                foreach (var item in data.GetType().GetProperties())
+                // Add data rows with values
+                var list = source.ToList();
+                for (int i = 0; i < source.Count(); i++)
                 {
-                    dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                    var data = list[i];
+                    var dataRow = table.AddRow();
+                    foreach (var item in data.GetType().GetProperties())
+                    {
+                        dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                    }
+                    dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
                 }
-                dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
             }
+            else
+            {
+                // Add empty row
+                var dataRow = table.AddRow();
+                foreach (var item in typeof(T).GetProperties())
+                {
+                    dataRow.AddCellToRow(string.Empty);
+                }
+            }
+
 
             // Generate Document
             section.ToDocument();
@@ -433,32 +452,47 @@ public static class FileExporter
 
             // Table Headers
             var firstItem = source.FirstOrDefault();
-            for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
+            //for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
+            for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
             {
                 table.AddColumnToTable();
             }
 
             // Add header row with names
             var headerRow = table.AddRow();
-            foreach (var item in firstItem.GetType().GetProperties())
+            //foreach (var item in firstItem.GetType().GetProperties())
+            foreach (var item in typeof(T).GetProperties())
             {
                 //headerRow.AddCell(item.Name);
                 headerRow.AddCell(item.GetDisplayName());
             }
             headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
 
-            // Add data rows with values
-            var list = source.ToList();
-            for (int i = 0; i < source.Count(); i++)
+            if (source.Count > 0)
             {
-                var data = list[i];
-                var dataRow = table.AddRow();
-                foreach (var item in data.GetType().GetProperties())
+                // Add data rows with values
+                var list = source.ToList();
+                for (int i = 0; i < source.Count(); i++)
                 {
-                    dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                    var data = list[i];
+                    var dataRow = table.AddRow();
+                    foreach (var item in data.GetType().GetProperties())
+                    {
+                        dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                    }
+                    dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
                 }
-                dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
             }
+            else
+            {
+                // Add empty row
+                var dataRow = table.AddRow();
+                foreach (var item in typeof(T).GetProperties())
+                {
+                    dataRow.AddCellToRow(string.Empty);
+                }
+            }
+
 
             // Generate Document
             section.ToDocument();
