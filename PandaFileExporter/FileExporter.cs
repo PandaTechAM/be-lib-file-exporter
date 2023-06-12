@@ -3,13 +3,7 @@ using ExcelExporter;
 using Gehtsoft.PDFFlow.Builder;
 using System.Net;
 using Gehtsoft.PDFFlow.Models.Enumerations;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System.Collections;
 using System.Text;
-using Microsoft.Extensions.Primitives;
-using System.Formats.Asn1;
-using System.IO;
-using CsvHelper;
 
 public static class FileExporter
 {
@@ -208,9 +202,10 @@ public static class FileExporter
             // Return the byte array from the API endpoint
             return memoryStream.ToArray();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            throw new Exception("Export failed!");
+            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            throw;
         }
     }
 
@@ -235,9 +230,10 @@ public static class FileExporter
             // Return the byte array from the API endpoint
             return memoryStream.ToArray();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            throw new Exception("Export failed!");
+            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            throw;
         }
     }
 
@@ -270,9 +266,10 @@ public static class FileExporter
 
             return Encoding.UTF8.GetBytes(stringBuiklder.ToString());
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            throw new Exception("Export failed!");
+            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            throw;
         }
     }
 
@@ -346,9 +343,10 @@ public static class FileExporter
             return memoryStream.ToArray();
 
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            throw new Exception("Export failed!");
+            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            throw;
         }
     }
 
@@ -422,9 +420,10 @@ public static class FileExporter
             return memoryStream.ToArray();
 
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            throw new Exception("Export failed!");
+            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            throw;
         }
     }
 
