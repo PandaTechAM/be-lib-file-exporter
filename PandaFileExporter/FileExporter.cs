@@ -85,22 +85,35 @@ public static class FileExporter
     {
         try
         {
-            var table = source.ToDataTable(nameof(T));
+            // Setup new StringBuilder for csv generation
+            var stringBuiklder = new StringBuilder();
 
-            // Create a new workbook from the byte array
-            using var workbook = new XLWorkbook();
-            // Access the worksheet or perform any required operations
-            workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+            // Get headers
+            foreach (var item in typeof(T).GetProperties())
+            {
+                stringBuiklder.Append($"{item.GetDisplayName()},");
+            }
 
-            // Convert the workbook to a memory stream
-            using var memoryStream = new MemoryStream();
-            // Save workbook into memory stream
-            workbook.SaveAs(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
+            // Add data rows
+            if (source.Count() > 0)
+            {
+                var data = source.ToList();
+
+                for (int i = 0; i < source.Count(); i++)
+                {
+                    stringBuiklder.AppendLine();
+
+                    foreach (var item in data[i].GetType().GetProperties())
+                    {
+                        stringBuiklder.Append($"{item.GetValue(data[i])},");
+                    }
+                }
+            }
 
             // Create a response message with the file content
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(memoryStream);
+            //response.Content = new StreamContent(memoryStream);
+            response.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(stringBuiklder.ToString()));
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
             response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "export.csv";
@@ -113,93 +126,6 @@ public static class FileExporter
             throw new Exception("Excel file export failed!");
         }
     }
-
-    //public static HttpResponseMessage ExportToPdf<T>(IList<T> source) where T : class
-    //{
-    //    try
-    //    {
-    //        var response = new HttpResponseMessage(HttpStatusCode.OK);
-
-    //        // Set PDF documnet
-    //        MemoryStream memoryStream = new MemoryStream();
-    //        WriterProperties props = new WriterProperties()
-    //            .SetStandardEncryption(Encoding.ASCII.GetBytes("reader_password"), Encoding.ASCII.GetBytes("permission_password"), EncryptionConstants.ALLOW_PRINTING,
-    //                EncryptionConstants.ENCRYPTION_AES_128 | EncryptionConstants.DO_NOT_ENCRYPT_METADATA);
-    //        PdfWriter writer = new PdfWriter(memoryStream, props);
-    //        writer.SetCloseStream(false);
-    //        PdfDocument pdf = new PdfDocument(writer.SetSmartMode(true));
-    //        Document document = new Document(pdf, PageSize.A4);
-
-    //        // Header
-    //        Paragraph header = new Paragraph(typeof(T).ToString())
-    //           .SetTextAlignment(TextAlignment.CENTER)
-    //           .SetFontSize(20);
-
-    //        // New line
-    //        Paragraph newline = new Paragraph(new Text("\n"));
-
-    //        document.Add(newline);
-    //        document.Add(header);
-
-    //        // Line separator
-    //        LineSeparator ls = new LineSeparator(new SolidLine());
-    //        document.Add(ls);
-
-    //        // Table
-    //        Table table = new Table(2, false);
-
-    //        // Table Headers
-    //        var firstItem = source.FirstOrDefault();
-    //        foreach (var item in firstItem.GetType().GetProperties())
-    //        {
-    //            var cell = new Cell(1, 1)
-    //               .SetTextAlignment(TextAlignment.CENTER)
-    //               .Add(new Paragraph(nameof(item)));
-    //            table.AddCell(cell);
-    //        }
-
-    //        // Table rows
-    //        for (int i = 0; i < source.Count(); i++)
-    //        {
-    //            var data = source[i];
-    //            foreach (var item in data.GetType().GetProperties())
-    //            {
-    //                var cell = new Cell(1, 1)
-    //                   .SetTextAlignment(TextAlignment.CENTER)
-    //                   .Add(new Paragraph(item.GetValue(item).ToString()));
-    //                table.AddCell(cell);
-    //            }
-    //        }
-
-    //        document.Add(newline);
-    //        document.Add(table);
-
-    //        // Page numbers
-    //        int n = source.Count();
-    //        for (int i = 1; i <= n; i++)
-    //        {
-    //            //document.ShowTextAligned(new Paragraph(String
-    //            //   .Format("page" + i + " of " + n)),
-    //            //   559, 806, i, TextAlignment.RIGHT,
-    //            //   VerticalAlignment.TOP, 0);
-    //        }
-
-    //        // Close document
-    //        document.Close();
-
-    //        response.Content = new StreamContent(memoryStream);
-    //        response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-    //        response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-    //        response.Content.Headers.ContentDisposition.FileName = "export.pdf";
-
-    //        return response;
-
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        throw new Exception("PDF file export failed!");
-    //    }
-    //}
 
     public static HttpResponseMessage ExportToPdf<T>(IQueryable<T> source) where T : class
     {
@@ -337,7 +263,7 @@ public static class FileExporter
 
                     foreach (var item in source[i].GetType().GetProperties())
                     {
-                        stringBuiklder.Append($"{item.GetDisplayName()},");
+                        stringBuiklder.Append($"{item.GetValue(source[i])},");
                     }
                 }
             }
