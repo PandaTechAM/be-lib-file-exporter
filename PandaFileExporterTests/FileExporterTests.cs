@@ -143,9 +143,31 @@ namespace PandaFileExporterTests
         {
             InitializeDb();
 
-            var list = new List<Model>();
+            var request = new GetDataRequest
+            {
+                Filters = new(),
+                Aggregates = new(),
+                Order = new()
+            };
 
-            var response = FileExporter.ToExcelArray(list);
+            var response = FileExporter.ToExcelArray(_context.Models.ApplyFilters(request.Filters).ToList());
+
+            Assert.NotNull(response);
+        }
+
+        [Fact]
+        public void ToCsvArray_List()
+        {
+            InitializeDb();
+
+            var request = new GetDataRequest
+            {
+                Filters = new(),
+                Aggregates = new(),
+                Order = new()
+            };
+
+            var response = FileExporter.ToCsvArray(_context.Models.ApplyFilters(request.Filters).ToList());
 
             Assert.NotNull(response);
         }
@@ -163,6 +185,23 @@ namespace PandaFileExporterTests
             };
 
             var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters(request.Filters));
+
+            Assert.NotNull(response);
+        }
+
+        [Fact]
+        public void ToPdfArray_List()
+        {
+            InitializeDb();
+
+            var request = new GetDataRequest
+            {
+                Filters = new(),
+                Aggregates = new(),
+                Order = new()
+            };
+            var data = _context.Models.ApplyFilters(request.Filters).ToList();
+            var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters(request.Filters).ToList());
 
             Assert.NotNull(response);
         }

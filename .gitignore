@@ -396,3 +396,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/PandaFileExporter/MimeTypesFull.cs
+/MimeTypesFull.cs
