@@ -35,7 +35,7 @@ namespace ExcelExporter
             var properties = typeof(T).GetProperties();
             foreach (var property in properties)
             {
-                table.Columns.Add(property.GetDisplayName(), Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType);
+                table.Columns.Add(property.GetDisplayName(), typeof(string));
             }
 
             foreach (T item in data)
@@ -43,7 +43,7 @@ namespace ExcelExporter
                 DataRow row = table.NewRow();
 
                 foreach (var prop in properties)
-                    row[prop.GetDisplayName()] = prop.GetValue(item) ?? DBNull.Value;
+                    row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
 
                 table.Rows.Add(row);
             }
