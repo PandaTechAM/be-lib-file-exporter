@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, pdf formats</Title>
-		<Version>0.0.15</Version>
+		<Version>0.0.17</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
@@ -29,10 +29,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.101.0" />
-		<PackageReference Include="CsvHelper" Version="30.0.1" />
-		<PackageReference Include="CsvTools" Version="1.0.12" />
 		<PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
-		<PackageReference Include="itext7" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
 	</ItemGroup>
 
@@ -43,6 +40,12 @@
 		<Content Include="..\README.md">
 			<Link>README.md</Link>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Fonts\*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>
