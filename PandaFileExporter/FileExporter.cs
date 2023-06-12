@@ -205,6 +205,7 @@ public static class FileExporter
         catch (Exception e)
         {
             Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
     }
@@ -233,6 +234,7 @@ public static class FileExporter
         catch (Exception e)
         {
             Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
     }
@@ -269,6 +271,7 @@ public static class FileExporter
         catch (Exception e)
         {
             Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
     }
@@ -346,6 +349,7 @@ public static class FileExporter
         catch (Exception e)
         {
             Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
     }
@@ -423,6 +427,7 @@ public static class FileExporter
         catch (Exception e)
         {
             Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
     }
