@@ -244,12 +244,12 @@ public static class FileExporter
         try
         {
             // Setup new StringBuilder for csv generation
-            var stringBuiklder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             // Get headers
             foreach (var item in typeof(T).GetProperties())
             {
-                stringBuiklder.Append($"{item.GetDisplayName()},");
+                stringBuilder.Append($"{item.GetDisplayName()},");
             }
 
             // Add data rows
@@ -257,16 +257,19 @@ public static class FileExporter
             {
                 for (int i = 0; i < source.Count(); i++)
                 {
-                    stringBuiklder.AppendLine();
+                    stringBuilder.AppendLine();
 
                     foreach (var item in source[i].GetType().GetProperties())
                     {
-                        stringBuiklder.Append($"{item.GetValue(source[i])},");
+                        stringBuilder.Append($"{item.GetValue(source[i])},");
                     }
                 }
             }
 
-            return Encoding.UTF8.GetBytes(stringBuiklder.ToString());
+            var data = Encoding.UTF8.GetBytes(stringBuilder.ToString());
+            var result = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
+
+            return result;
         }
         catch (Exception e)
         {
