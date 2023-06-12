@@ -399,7 +399,8 @@ public static class FileExporter
                     var dataRow = table.AddRow();
                     foreach (var item in data.GetType().GetProperties())
                     {
-                        dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                        var row = dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                        row.SetFont(GetArialUtf8Font(12));
                     }
                     dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
                 }
@@ -430,6 +431,14 @@ public static class FileExporter
             Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
+    }
+
+
+    private static FontBuilder GetArialUtf8Font(int fontSize = 9, bool bold = false)
+    {
+        var fontLoader = FontBuilder.New().FromFile("Fonts/ARIAL.TTF", fontSize).SetBold(bold);
+
+        return fontLoader;
     }
 
 }
