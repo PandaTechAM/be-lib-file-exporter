@@ -1,16 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 namespace PandaFileExporterTests
 {
-    public class Model
+    [DisplayName("DB Model")]
+    public class DbModel
     {
+        [DisplayName("Model Id")]
         public int Id { get; set; }
+        [DisplayName("Model Name")]
         public string Name { get; set; }
     }
 
     public class AppDbContext : DbContext
     {
-        public DbSet<Model> Models { get; set; }
+        public DbSet<DbModel> Models { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
