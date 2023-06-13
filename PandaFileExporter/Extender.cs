@@ -61,20 +61,24 @@ namespace ExcelExporter
 
         public static string GetDisplayName<T>(this T model) where T : class
         {
-            //var test = model.GetType().GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+            if (model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true).Any())
+            {
+                var attr = TypeDescriptor.GetAttributes(model.GetType())[2] as DisplayNameAttribute;
+                return attr!.DisplayName;
+            }
 
-            var atts = model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true);
-            if (atts.Length == 0)
-                return model.GetType().Name;
-            return (atts[2] as DisplayNameAttribute)!.DisplayName;
+            return model.GetType().Name;
         }
 
         public static string GetDisplayName<T>(this DbSet<T> model) where T : class
         {
-            var atts = model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true);
-            if (atts.Length == 0)
-                return model.GetType().Name;
-            return (atts[2] as DisplayNameAttribute)!.DisplayName;
+            if (model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true).Any())
+            {
+                var attr = TypeDescriptor.GetAttributes(model.GetType())[2] as DisplayNameAttribute;
+                return attr!.DisplayName;
+            }
+
+            return model.GetType().Name;
         }
 
         public static string GetString(this byte[] data)

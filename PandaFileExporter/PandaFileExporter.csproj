@@ -6,10 +6,12 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, pdf formats</Title>
-		<Version>0.0.19</Version>
+		<Version>0.0.20</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageOutputPath></PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

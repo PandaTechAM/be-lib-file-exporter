@@ -1,3 +1,5 @@
+using DocumentFormat.OpenXml.Office2013.Excel;
+using ExcelExporter;
 using Microsoft.EntityFrameworkCore;
 using PandaFileExporter;
 using PandaTech.IEnumerableFilters;
@@ -21,7 +23,7 @@ namespace PandaFileExporterTests
 
         private void InitializeDb()
         {
-            _context.Models.Add(new Model
+            _context.Models.Add(new DbModel
             {
                 Id = 1,
                 Name = "Foo",
@@ -206,21 +208,25 @@ namespace PandaFileExporterTests
             Assert.NotNull(response);
         }
 
+        [Fact]
+        public void Property_DisplayName_Attribute()
+        {
+            var model = new DbModel();
+
+            foreach (var item in model.GetType().GetProperties())
+            {
+                Assert.Equal($"Model {item.Name}", item.GetDisplayName());
+            }
+        }
 
         [Fact]
-        public void test()
+        public void Class_DisplayName_Attribute()
         {
-            var now = DateTime.UtcNow;
+            var model = new DbModel();
 
-            var id = "1_25_1324567891234";
+            var name = model.GetDisplayName();
 
-            // Convert to int
-            string ticks = now.Ticks.ToString(); // Get
-
-            // Convert to datetime
-            DateTime dateTime = new DateTime(Convert.ToInt64(ticks)); // Set
-            
-            Assert.True(now == dateTime);
+            Assert.Equal("DB Model", name);
         }
     }
 }
