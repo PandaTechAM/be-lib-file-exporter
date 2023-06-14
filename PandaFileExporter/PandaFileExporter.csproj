@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, pdf formats</Title>
-		<Version>0.0.20</Version>
+		<Version>0.0.21</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
@@ -41,18 +41,6 @@
 		</Content>
 		<Content Include="..\README.md">
 			<Link>README.md</Link>
-		</Content>
-	</ItemGroup>
-
-	<!--<ItemGroup>
-		<None Update="Fonts\*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>-->
-
-	<ItemGroup>
-		<Content Include="Fonts\*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 

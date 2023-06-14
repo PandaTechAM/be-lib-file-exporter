@@ -4,6 +4,8 @@ using Gehtsoft.PDFFlow.Builder;
 using System.Net;
 using Gehtsoft.PDFFlow.Models.Enumerations;
 using System.Text;
+using ClosedXML.Graphics;
+using System.Reflection;
 
 public static class FileExporter
 {
@@ -188,10 +190,13 @@ public static class FileExporter
             // Convert source into data table
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
-            // Create a new workbook
-            using var workbook = new XLWorkbook();
+            // Create a new workbook and setup ARIAL.TTF font to be used in workbook
+            var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
+            using var workbook = new XLWorkbook(loadOptions);
+            //using var workbook = new XLWorkbook();
             // Create new worksheet and align
             workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+            //workbook.Style.Font.SetFontName("ARIAL.TTF");
 
             // Convert the workbook to a memory stream
             using var memoryStream = new MemoryStream();
@@ -217,10 +222,13 @@ public static class FileExporter
             // Convert source into data table
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
-            // Create a new workbook
-            using var workbook = new XLWorkbook();
+            // Create a new workbook and setup ARIAL.TTF font to be used in workbook
+            var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
+            using var workbook = new XLWorkbook(loadOptions);
+            //using var workbook = new XLWorkbook();
             // Create new worksheet and align
             workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+            //workbook.Style.Font.SetFontName("ARIAL.TTF");
 
             // Convert the workbook to a memory stream
             using var memoryStream = new MemoryStream();
