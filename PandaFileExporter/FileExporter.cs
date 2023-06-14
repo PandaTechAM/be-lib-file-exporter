@@ -28,10 +28,13 @@ public static class FileExporter
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             // Create a response message with the file content
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new StreamContent(memoryStream);
-            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.Content.Headers.ContentDisposition =
+                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "export.xlsx";
 
             // Return the response message from the API endpoint
@@ -47,25 +50,13 @@ public static class FileExporter
     {
         try
         {
-            // Convert source into data table
-            var table = source.ToDataTable(nameof(T));
-
-            // Create a new workbook
-            using var workbook = new XLWorkbook();
-            // Create new worksheet and align
-            workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
-
-            // Convert the workbook to a memory stream
-            using var memoryStream = new MemoryStream();
-            // Save workbook into memory stream
-            workbook.SaveAs(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            // Create a response message with the file content
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(memoryStream);
-            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StreamContent(new MemoryStream(ToExcelArray(source)));
+            response.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.Content.Headers.ContentDisposition =
+                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "export.xls";
 
             // Return the response message from the API endpoint
@@ -81,37 +72,13 @@ public static class FileExporter
     {
         try
         {
-            // Setup new StringBuilder for csv generation
-            var stringBuiklder = new StringBuilder();
-
-            // Get headers
-            foreach (var item in typeof(T).GetProperties())
-            {
-                stringBuiklder.Append($"{item.GetDisplayName()},");
-            }
-
-            // Add data rows
-            if (source.Count() > 0)
-            {
-                var data = source.ToList();
-
-                for (int i = 0; i < source.Count(); i++)
-                {
-                    stringBuiklder.AppendLine();
-
-                    foreach (var item in data[i].GetType().GetProperties())
-                    {
-                        stringBuiklder.Append($"{item.GetValue(data[i])},");
-                    }
-                }
-            }
-
-            // Create a response message with the file content
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
             //response.Content = new StreamContent(memoryStream);
-            response.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(stringBuiklder.ToString()));
+            response.Content =
+                new ByteArrayContent(ToCsvArray(source.ToList())); // TODO: add ToCsvArray() method from IQueryable
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentDisposition =
+                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "export.csv";
 
             // Return the response message from the API endpoint
@@ -128,59 +95,19 @@ public static class FileExporter
         try
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK);
-
-            using var memoryStream = new MemoryStream();
-
-            // Source: https://csharpforums.net/threads/the-easiest-way-to-create-pdf-documents-in-c.7246/
-            DocumentBuilder builder = DocumentBuilder.New();
-            var section = builder.AddSection();
-
-            var table = section.AddTable();
-
-            // Table Headers
-            var firstItem = source.FirstOrDefault();
-            for (int i = 0; i < firstItem.GetType().GetProperties().Count(); i++)
-            {
-                table.AddColumnToTable();
-            }
-
-            // Add header row with names
-            var headerRow = table.AddRow();
-            foreach (var item in firstItem.GetType().GetProperties())
-            {
-                headerRow.AddCell(item.Name);
-            }
-            headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
-
-            // Add data rows with values
-            for (int i = 0; i < source.Count(); i++)
-            {
-                var dataRow = table.AddRow();
-                foreach (var item in firstItem.GetType().GetProperties())
-                {
-                    dataRow.AddCellToRow(item.GetValue(firstItem).ToString());
-                }
-                dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
-            }
-
-            section.ToDocument();
-
-            builder.Build(memoryStream);
-
-            response.Content = new StreamContent(memoryStream);
+            response.Content = new StreamContent(new MemoryStream(ToPdfArray(source)));
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
-            response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
+            response.Content.Headers.ContentDisposition =
+                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "downloaded.pdf";
 
             return response;
-
         }
         catch (Exception ex)
         {
             throw new Exception("PDF file export failed!");
         }
     }
-
 
 
     public static byte[] ToExcelArray<T>(IQueryable<T> source) where T : class
@@ -191,13 +118,16 @@ public static class FileExporter
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
-            DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
-            var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
+            LoadOptions.DefaultGraphicEngine =
+                DefaultGraphicEngine.CreateWithFontsAndSystemFonts(
+                    new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
+            //DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
+            var loadOptions = new LoadOptions();
+            //{ GraphicEngine = new DefaultGraphicEngine("Fonts/ARIAL.TTF") };
             using var workbook = new XLWorkbook(loadOptions);
-            //using var workbook = new XLWorkbook();
+
             // Create new worksheet and align
             workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
-            //workbook.Style.Font.SetFontName("ARIAL.TTF");
 
             // Convert the workbook to a memory stream
             using var memoryStream = new MemoryStream();
@@ -216,37 +146,9 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToExcelArray<T>(List<T> source) where T : class
+    public static byte[] ToExcelArray<T>(IEnumerable<T> source) where T : class
     {
-        try
-        {
-            // Convert source into data table
-            var table = source.ToDataTable(typeof(T).GetDisplayName());
-
-            // Create a new workbook and setup ARIAL.TTF font to be used in workbook
-            DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
-            var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
-            using var workbook = new XLWorkbook(loadOptions);
-            //using var workbook = new XLWorkbook();
-            // Create new worksheet and align
-            workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
-            //workbook.Style.Font.SetFontName("ARIAL.TTF");
-
-            // Convert the workbook to a memory stream
-            using var memoryStream = new MemoryStream();
-            // Save workbook into memory stream
-            workbook.SaveAs(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            // Return the byte array from the API endpoint
-            return memoryStream.ToArray();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
-            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
-            throw;
-        }
+        return ToExcelArray(source.AsQueryable());
     }
 
     public static byte[] ToCsvArray<T>(List<T> source)
@@ -265,13 +167,13 @@ public static class FileExporter
             // Add data rows
             if (source.Count > 0)
             {
-                for (int i = 0; i < source.Count(); i++)
+                foreach (var t in source)
                 {
                     stringBuilder.AppendLine();
 
-                    foreach (var item in source[i].GetType().GetProperties())
+                    foreach (var item in t.GetType().GetProperties())
                     {
-                        stringBuilder.Append($"{item.GetValue(source[i])},");
+                        stringBuilder.Append($"{item.GetValue(t)},");
                     }
                 }
             }
@@ -297,7 +199,7 @@ public static class FileExporter
             using var memoryStream = new MemoryStream();
 
             // Build document
-            DocumentBuilder builder = DocumentBuilder.New();
+            var builder = DocumentBuilder.New();
             var section = builder.AddSection();
 
             // Setup PDF
@@ -310,7 +212,7 @@ public static class FileExporter
 
             // Table Headers
             var firstItem = source.FirstOrDefault();
-            for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
+            for (var i = 0; i < typeof(T).GetProperties().Length; i++)
             {
                 table.AddColumnToTable();
             }
@@ -322,20 +224,23 @@ public static class FileExporter
                 //headerRow.AddCell(item.Name);
                 headerRow.AddCell(item.GetDisplayName());
             }
+
             headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
 
-            if (source.Count() > 0)
+            if (source.Any())
             {
                 // Add data rows with values
                 var list = source.ToList();
-                for (int i = 0; i < source.Count(); i++)
+                for (var i = 0; i < source.Count(); i++)
                 {
                     var data = list[i];
                     var dataRow = table.AddRow();
                     foreach (var item in data.GetType().GetProperties())
                     {
-                        dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                        var row = dataRow.AddCellToRow(item.GetValue(data)?.ToString());
+                        row.SetFont(GetArialUtf8Font(12));
                     }
+
                     dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
                 }
             }
@@ -357,7 +262,6 @@ public static class FileExporter
             builder.Build(memoryStream);
 
             return memoryStream.ToArray();
-
         }
         catch (Exception e)
         {
@@ -367,83 +271,9 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToPdfArray<T>(List<T> source) where T : class
+    public static byte[] ToPdfArray<T>(IEnumerable<T> source) where T : class
     {
-        try
-        {
-            // Create Memory Stream
-            using var memoryStream = new MemoryStream();
-
-            // Build document
-            DocumentBuilder builder = DocumentBuilder.New();
-            var section = builder.AddSection();
-
-            // Setup PDF
-            section
-                .SetSize(PaperSize.A4)
-                .SetOrientation(PageOrientation.Landscape);
-
-            // Create table
-            var table = section.AddTable();
-
-            // Table Headers
-            var firstItem = source.FirstOrDefault();
-            for (int i = 0; i < typeof(T).GetProperties().Count(); i++)
-            {
-                table.AddColumnToTable();
-            }
-
-            // Add header row with names
-            var headerRow = table.AddRow();
-            foreach (var item in typeof(T).GetProperties())
-            {
-                //headerRow.AddCell(item.Name);
-                headerRow.AddCell(item.GetDisplayName());
-            }
-            headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
-
-            if (source.Count > 0)
-            {
-                // Add data rows with values
-                var list = source.ToList();
-                for (int i = 0; i < source.Count(); i++)
-                {
-                    var data = list[i];
-                    var dataRow = table.AddRow();
-                    foreach (var item in data.GetType().GetProperties())
-                    {
-                        var row = dataRow.AddCellToRow(item.GetValue(data)?.ToString());
-                        row.SetFont(GetArialUtf8Font(12));
-                    }
-                    dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
-                }
-            }
-            else
-            {
-                // Add empty row
-                var dataRow = table.AddRow();
-                foreach (var item in typeof(T).GetProperties())
-                {
-                    dataRow.AddCellToRow(string.Empty);
-                }
-            }
-
-
-            // Generate Document
-            section.ToDocument();
-
-            // Build document
-            builder.Build(memoryStream);
-
-            return memoryStream.ToArray();
-
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(new Exception($"Export failed with message: {e.Message}"));
-            Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
-            throw;
-        }
+        return ToPdfArray(source.AsQueryable());
     }
 
 
@@ -453,5 +283,4 @@ public static class FileExporter
 
         return fontLoader;
     }
-
 }

@@ -10,8 +10,8 @@ namespace ExcelExporter
     {
         public static byte[] ToByteArray(this string text)
         {
-            using MemoryStream ms = new MemoryStream();
-            using StreamWriter sw = new StreamWriter(ms);
+            using var ms = new MemoryStream();
+            using var sw = new StreamWriter(ms);
             sw.Write(text);
 
             return ms.GetBuffer();
@@ -19,8 +19,8 @@ namespace ExcelExporter
 
         public static byte[] ToByteArray<T>(this IQueryable<T> array) where T : class
         {
-            using MemoryStream ms = new MemoryStream();
-            using StreamWriter sw = new StreamWriter(ms);
+            using var ms = new MemoryStream();
+            using var sw = new StreamWriter(ms);
             foreach (object obj in array)
             {
                 sw.Write(obj);
@@ -38,9 +38,9 @@ namespace ExcelExporter
                 table.Columns.Add(property.GetDisplayName(), typeof(string));
             }
 
-            foreach (T item in data)
+            foreach (var item in data)
             {
-                DataRow row = table.NewRow();
+                var row = table.NewRow();
 
                 foreach (var prop in properties)
                     row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
@@ -54,9 +54,7 @@ namespace ExcelExporter
         public static string GetDisplayName(this PropertyInfo propertyInfo)
         {
             var atts = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true);
-            if (atts.Length == 0)
-                return propertyInfo.Name;
-            return (atts[0] as DisplayNameAttribute)!.DisplayName;
+            return atts.Length == 0 ? propertyInfo.Name : (atts[0] as DisplayNameAttribute)!.DisplayName;
         }
 
         public static string GetDisplayName<T>(this T model) where T : class

@@ -43,7 +43,7 @@ namespace PandaFileExporterAPI.Controllers
         public IActionResult ExportXlsx()
         {
             //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
-            var exportData = FileExporter.ToExcelArray(_context.Dummies);
+            var exportData = FileExporter.ToExcelArray(_context.Dummies.ToList());
             
             return File(exportData, MimeTypes.XLSX, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
         }
