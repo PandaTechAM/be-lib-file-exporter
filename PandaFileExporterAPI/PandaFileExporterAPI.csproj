@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Fonts\*">
+    <None Include="Fonts\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </None>
   </ItemGroup>
 
 </Project>
