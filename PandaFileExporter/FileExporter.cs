@@ -191,6 +191,7 @@ public static class FileExporter
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
+            DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
             var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
             using var workbook = new XLWorkbook(loadOptions);
             //using var workbook = new XLWorkbook();
@@ -223,6 +224,7 @@ public static class FileExporter
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
+            DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
             var loadOptions = new LoadOptions { GraphicEngine = new DefaultGraphicEngine("ARIAL.TTF") };
             using var workbook = new XLWorkbook(loadOptions);
             //using var workbook = new XLWorkbook();
