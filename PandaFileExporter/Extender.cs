@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Data;
-using System.IO;
 using System.Reflection;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace ExcelExporter
 {
@@ -25,6 +25,7 @@ namespace ExcelExporter
             {
                 sw.Write(obj);
             }
+
             return ms.GetBuffer();
         }
 
@@ -44,8 +45,20 @@ namespace ExcelExporter
 
                 foreach (var prop in properties)
                 {
-                    if (item is List<T> listItem)
-                        row[prop.GetDisplayName()] = string.Join(';', listItem.Select(i => i?.ToString() ?? ""));
+                    if (prop.PropertyType.Name == "List`1")
+                    {
+                        var listItem = prop.GetValue(item);
+                        var method =
+                            typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
+                                prop.PropertyType.GetGenericArguments()[0]);
+
+                        row[prop.GetDisplayName()] = method.Invoke(null, new[]
+                        {
+                            listItem!,
+                            ";"
+                        }) as string ?? "";
+                    }
+
                     else
                         row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                 }
@@ -84,10 +97,16 @@ namespace ExcelExporter
             return model.GetType().Name;
         }
 
+        public static string ListAsString<T>(this List<T> list, string separator = "; ")
+        {
+            var stringList = list.Select(item => item?.ToString() ?? "").ToList();
+
+            return string.Join(separator, stringList);
+        }
+
         public static string GetString(this byte[] data)
         {
-            return System.Text.Encoding.Default.GetString(data);
+            return Encoding.Default.GetString(data);
         }
     }
 }
-

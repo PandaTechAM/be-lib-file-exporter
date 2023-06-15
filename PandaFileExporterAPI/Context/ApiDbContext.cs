@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PandaFileExporterAPI.Context
 {
@@ -18,6 +19,13 @@ namespace PandaFileExporterAPI.Context
         public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddDays(10);
         public string? Comment { get; set; }
         public DateTime Version { get; set; } = DateTime.UtcNow;
+        [NotMapped]
+        public List<DateTime> Dates { get; set; } = new()
+        {
+            DateTime.Now,
+            DateTime.Today,
+            DateTime.UtcNow
+        };
     }
 
     public class ApiDbContext : DbContext
