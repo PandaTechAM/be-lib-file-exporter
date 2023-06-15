@@ -5,10 +5,10 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
-		<Title>Export table data into xls, xlsx, pdf formats</Title>
-		<Version>0.0.24</Version>
+		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
+		<Version>0.0.25</Version>
 		<Authors>PandaTech</Authors>
-		<Description>Export table data into xls, xlsx, pdf formats</Description>
+		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageOutputPath></PackageOutputPath>
