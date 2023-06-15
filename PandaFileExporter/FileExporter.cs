@@ -167,13 +167,27 @@ public static class FileExporter
             // Add data rows
             if (source.Count > 0)
             {
-                foreach (var t in source)
+                foreach (var item in source)
                 {
                     stringBuilder.AppendLine();
 
-                    foreach (var item in t.GetType().GetProperties())
+                    foreach (var prop in item.GetType().GetProperties())
                     {
-                        stringBuilder.Append($"{item.GetValue(t)},");
+                        if (prop.PropertyType.Name == "List`1")
+                        {
+                            var listItem = prop.GetValue(item);
+                            var method =
+                                typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
+                                    prop.PropertyType.GetGenericArguments()[0]);
+
+                            stringBuilder.Append(method.Invoke(null, new[]
+                            {
+                                listItem!,
+                                ";"
+                            }) as string ?? "");
+                        }
+                        else
+                            stringBuilder.Append($"{prop.GetValue(item)},");
                     }
                 }
             }

@@ -39,6 +39,15 @@ namespace PandaFileExporterAPI.Controllers
             return Ok();
         }
 
+        [HttpGet("export-csv")]
+        public IActionResult ExportCsv()
+        {
+            //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
+            var exportData = FileExporter.ToCsvArray(_context.Dummies.ToList());
+
+            return File(exportData, MimeTypes.CSV, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
+        }
+
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
         {
@@ -56,15 +65,6 @@ namespace PandaFileExporterAPI.Controllers
 
             return File(exportData, MimeTypes.XLS, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xls");
         }
-
-        //[HttpGet("export-csv")]
-        //public IActionResult ExportCsv()
-        //{
-        //    //var test = _context.Dummies.ToDataTable("Dummies");
-        //    var exportData = FileExporter.ToExcelArray(_context.Dummies);
-
-        //    return File(exportData, MimeTypes.CSV, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
-        //}
 
         [HttpGet("export-pdf")]
         public IActionResult ExportPdf()
