@@ -43,7 +43,12 @@ namespace ExcelExporter
                 var row = table.NewRow();
 
                 foreach (var prop in properties)
-                    row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
+                {
+                    if (item is List<T> listItem)
+                        row[prop.GetDisplayName()] = string.Join(';', listItem.Select(i => i?.ToString() ?? ""));
+                    else
+                        row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
+                }
 
                 table.Rows.Add(row);
             }
