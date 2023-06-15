@@ -55,10 +55,9 @@ namespace ExcelExporter
                         row[prop.GetDisplayName()] = method.Invoke(null, new[]
                         {
                             listItem!,
-                            ";"
+                            "; "
                         }) as string ?? "";
                     }
-
                     else
                         row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                 }
@@ -77,10 +76,17 @@ namespace ExcelExporter
 
         public static string GetDisplayName<T>(this T model) where T : class
         {
-            if (model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true).Any())
+            //if (model.GetType().GetCustomAttributes(typeof(DisplayNameAttribute), true).Any())
+            //{
+            //    var attr = TypeDescriptor.GetAttributes(model.GetType())[2] as DisplayNameAttribute;
+            //    return attr!.DisplayName;
+            //}
+
+            var attrs = model.GetType().GetCustomAttributes(typeof(CustomDisplayName), true);
+
+            if (attrs.Any())
             {
-                var attr = TypeDescriptor.GetAttributes(model.GetType())[2] as DisplayNameAttribute;
-                return attr!.DisplayName;
+                return ((CustomDisplayName)attrs.First()).DisplayName;
             }
 
             return model.GetType().Name;
@@ -107,6 +113,44 @@ namespace ExcelExporter
         public static string GetString(this byte[] data)
         {
             return Encoding.Default.GetString(data);
+        }
+
+
+
+        public static TValue? GetAttributeValue<TAttribute, TValue>(
+            this Type type,
+            Func<TAttribute, TValue> valueSelector)
+            where TAttribute : Attribute
+        {
+            var att = type.GetCustomAttributes(
+                typeof(TAttribute), true
+            ).FirstOrDefault() as TAttribute;
+            if (att != null)
+            {
+                return valueSelector(att);
+            }
+            return default(TValue);
+        }
+    }
+
+    public class CustomDisplayName : Attribute
+    {
+        // Private fields.
+        private string displayName;
+
+        // This constructor defines two required parameters: name and level.
+
+        public CustomDisplayName(string displayName)
+        {
+            this.displayName = displayName;
+        }
+
+        // Define Name property.
+        // This is a read-only attribute.
+
+        public virtual string DisplayName
+        {
+            get { return displayName; }
         }
     }
 }

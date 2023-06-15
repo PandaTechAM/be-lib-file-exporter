@@ -180,11 +180,11 @@ public static class FileExporter
                                 typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
                                     prop.PropertyType.GetGenericArguments()[0]);
 
-                            stringBuilder.Append(method.Invoke(null, new[]
+                            stringBuilder.Append($"{method.Invoke(null, new[]
                             {
                                 listItem!,
-                                ";"
-                            }) as string ?? "");
+                                "; "
+                            }) as string ?? ""},");
                         }
                         else
                             stringBuilder.Append($"{prop.GetValue(item)},");
