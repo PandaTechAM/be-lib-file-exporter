@@ -42,12 +42,8 @@ jobs:
         run: |
           dotnet build --no-restore --verbosity normal --configuration Release
 
-      - name: Publish
-        run: |
-          dotnet publish --no-build --verbosity normal --configuration Release --output ./dist
-
       - name: Pack NuGet package
-        run: dotnet pack --no-build --configuration Release --output ./dist
+        run: dotnet pack ./PandaFileExporter/PandaFileExporter.csproj --no-build --configuration Release  -o ./dist
 
       - name: Push NuGet package to Nexus
         run: |
