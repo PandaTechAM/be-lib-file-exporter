@@ -2,7 +2,7 @@
 
 namespace PandaFileExporter
 {
-    [JsonConv rter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ExportType
     {
         CSV,
