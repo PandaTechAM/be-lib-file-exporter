@@ -103,14 +103,14 @@ public static class FileExporter
 
             return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw new Exception("PDF file export failed!");
         }
     }
 
 
-    public static byte[] ToExcelArray<T>(IQueryable<T> source) where T : class
+    public static byte[] ToExcelArray<T>(IQueryable<T>? source) where T : class
     {
         try
         {
@@ -146,12 +146,12 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToExcelArray<T>(IEnumerable<T> source) where T : class
+    public static byte[] ToExcelArray<T>(IEnumerable<T>? source) where T : class
     {
-        return ToExcelArray(source.AsQueryable());
+        return ToExcelArray(source?.AsQueryable());
     }
 
-    public static byte[] ToCsvArray<T>(List<T> source)
+    public static byte[] ToCsvArray<T>(List<T>? source)
     {
         try
         {
@@ -165,13 +165,13 @@ public static class FileExporter
             }
 
             // Add data rows
-            if (source.Count > 0)
+            if (source is not null && source.Any())
             {
                 foreach (var item in source)
                 {
                     stringBuilder.AppendLine();
 
-                    foreach (var prop in item.GetType().GetProperties())
+                    foreach (var prop in item!.GetType().GetProperties())
                     {
                         if (prop.PropertyType.Name == "List`1")
                         {
@@ -205,7 +205,7 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToPdfArray<T>(IQueryable<T> source) where T : class
+    public static byte[] ToPdfArray<T>(IQueryable<T>? source) where T : class
     {
         try
         {
@@ -225,7 +225,6 @@ public static class FileExporter
             var table = section.AddTable();
 
             // Table Headers
-            var firstItem = source.FirstOrDefault();
             for (var i = 0; i < typeof(T).GetProperties().Length; i++)
             {
                 table.AddColumnToTable();
@@ -241,7 +240,7 @@ public static class FileExporter
 
             headerRow.SetHorizontalAlignment(HorizontalAlignment.Center).SetBold().ToTable();
 
-            if (source.Any())
+            if (source is not null && source.Any())
             {
                 // Add data rows with values
                 var list = source.ToList();
@@ -285,9 +284,9 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToPdfArray<T>(IEnumerable<T> source) where T : class
+    public static byte[] ToPdfArray<T>(IEnumerable<T>? source) where T : class
     {
-        return ToPdfArray(source.AsQueryable());
+        return ToPdfArray(source?.AsQueryable());
     }
 
 
