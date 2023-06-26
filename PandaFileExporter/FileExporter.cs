@@ -5,11 +5,11 @@ using System.Net;
 using Gehtsoft.PDFFlow.Models.Enumerations;
 using System.Text;
 using ClosedXML.Graphics;
-using System.Reflection;
+using PandaFileExporter;
 
 public static class FileExporter
 {
-    public static HttpResponseMessage ExportToXlsx<T>(IQueryable<T> source) where T : class
+    public static HttpResponseMessage ExportToXlsx<T>(IQueryable<T>? source) where T : class
     {
         try
         {
@@ -46,7 +46,7 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToXls<T>(IQueryable<T> source) where T : class
+    public static HttpResponseMessage ExportToXls<T>(IQueryable<T>? source) where T : class
     {
         try
         {
@@ -68,15 +68,15 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToCsv<T>(IQueryable<T> source) where T : class
+    public static HttpResponseMessage ExportToCsv<T>(IQueryable<T>? source) where T : class
     {
         try
         {
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             //response.Content = new StreamContent(memoryStream);
             response.Content =
-                new ByteArrayContent(ToCsvArray(source.ToList())); // TODO: add ToCsvArray() method from IQueryable
-            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+                new ByteArrayContent(ToCsvArray(source?.ToList())); // TODO: add ToCsvArray() method from IQueryable
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(MimeTypes.CSV); // "text/csv"
             response.Content.Headers.ContentDisposition =
                 new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
             response.Content.Headers.ContentDisposition.FileName = "export.csv";
@@ -90,7 +90,7 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToPdf<T>(IQueryable<T> source) where T : class
+    public static HttpResponseMessage ExportToPdf<T>(IQueryable<T>? source) where T : class
     {
         try
         {
