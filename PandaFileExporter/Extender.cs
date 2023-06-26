@@ -17,19 +17,22 @@ namespace ExcelExporter
             return ms.GetBuffer();
         }
 
-        public static byte[] ToByteArray<T>(this IQueryable<T> array) where T : class
+        public static byte[] ToByteArray<T>(this IQueryable<T>? array) where T : class
         {
             using var ms = new MemoryStream();
             using var sw = new StreamWriter(ms);
-            foreach (object obj in array)
+            if (array != null)
             {
-                sw.Write(obj);
+                foreach (object obj in array)
+                {
+                    sw.Write(obj);
+                }
             }
 
             return ms.GetBuffer();
         }
 
-        public static DataTable ToDataTable<T>(this IEnumerable<T> data, string name)
+        public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
         {
             DataTable table = new(name);
 
@@ -39,30 +42,33 @@ namespace ExcelExporter
                 table.Columns.Add(property.GetDisplayName(), typeof(string));
             }
 
-            foreach (var item in data)
+            if (data != null)
             {
-                var row = table.NewRow();
-
-                foreach (var prop in properties)
+                foreach (var item in data)
                 {
-                    if (prop.PropertyType.Name == "List`1")
-                    {
-                        var listItem = prop.GetValue(item);
-                        var method =
-                            typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
-                                prop.PropertyType.GetGenericArguments()[0]);
+                    var row = table.NewRow();
 
-                        row[prop.GetDisplayName()] = method.Invoke(null, new[]
+                    foreach (var prop in properties)
+                    {
+                        if (prop.PropertyType.Name == "List`1")
                         {
+                            var listItem = prop.GetValue(item);
+                            var method =
+                                typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
+                                    prop.PropertyType.GetGenericArguments()[0]);
+
+                            row[prop.GetDisplayName()] = method.Invoke(null, new[]
+                            {
                             listItem!,
                             "; "
                         }) as string ?? "";
+                        }
+                        else
+                            row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                     }
-                    else
-                        row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
-                }
 
-                table.Rows.Add(row);
+                    table.Rows.Add(row);
+                }
             }
 
             return table;
