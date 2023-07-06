@@ -46,28 +46,6 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToXls<T>(IQueryable<T>? source) where T : class
-    {
-        try
-        {
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StreamContent(new MemoryStream(ToExcelArray(source)));
-            response.Content.Headers.ContentType =
-                new System.Net.Http.Headers.MediaTypeHeaderValue(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.Content.Headers.ContentDisposition =
-                new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
-            response.Content.Headers.ContentDisposition.FileName = "export.xls";
-
-            // Return the response message from the API endpoint
-            return response;
-        }
-        catch (Exception)
-        {
-            throw new Exception("Excel file export failed!");
-        }
-    }
-
     public static HttpResponseMessage ExportToCsv<T>(IQueryable<T>? source) where T : class
     {
         try
