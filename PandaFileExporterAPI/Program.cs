@@ -28,10 +28,10 @@ app.MapControllers();
 
 using var scope = app.Services.CreateScope();
 var context = scope.ServiceProvider.GetService<ApiDbContext>();
-context.Database.EnsureDeleted();
-context.Database.EnsureCreated();
+context?.Database.EnsureDeleted();
+context?.Database.EnsureCreated();
 
-context.Dummies.AddRange(new List<DummyTable>
+context?.Dummies.AddRange(new List<DummyTable>
 {
     new DummyTable { Id = 1, Name = "Բարեւ բոլորին 1 " },
     new DummyTable { Id = 2, Name = "Բարեւ բոլորին 2" },
@@ -43,6 +43,6 @@ context.Dummies.AddRange(new List<DummyTable>
     new DummyTable { Id = 8, Name = "Բարեւ բոլորին 8" },
     new DummyTable { Id = 9, Name = "Բարեւ բոլորին 9" },
 });
-context.SaveChanges();
+context?.SaveChanges();
 
 app.Run();

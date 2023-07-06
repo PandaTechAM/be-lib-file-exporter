@@ -57,15 +57,6 @@ namespace PandaFileExporterAPI.Controllers
             return File(exportData, MimeTypes.XLSX, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
         }
 
-        [HttpGet("export-xls")]
-        public IActionResult ExportXls()
-        {
-            //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
-            var exportData = FileExporter.ToExcelArray(_context.Dummies);
-
-            return File(exportData, MimeTypes.XLS, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xls");
-        }
-
         [HttpGet("export-pdf")]
         public IActionResult ExportPdf()
         {

@@ -57,30 +57,6 @@ namespace PandaFileExporterTests
         }
 
         [Fact]
-        public void Export_Xls()
-        {
-            InitializeDb();
-
-            var request = new GetDataRequest
-            {
-                Filters = new()
-                {
-                    new FilterDto(){ PropertyName = "Name", Values = new List<object>(){ (object)"Foo" }, ComparisonType = ComparisonType.Equal },
-                },
-                Aggregates = new(),
-            };
-
-            // todo: check why the List<object> doesn't convert to json.string via filters
-            var test = request.ToString();
-            var test2 = GetDataRequest.FromString(test);
-
-            var response = FileExporter.ExportToXls(_context.Models.ApplyFilters(test2.Filters));
-
-            Assert.NotNull(response.Content);
-            Assert.NotEmpty(response.Content.Headers);
-        }
-
-        [Fact]
         public void Export_Csv()
         {
             InitializeDb();
