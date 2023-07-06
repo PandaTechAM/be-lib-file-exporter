@@ -220,13 +220,54 @@ namespace PandaFileExporterTests
         }
 
         [Fact]
+        public void Property_Custom_DisplayName_Attribute()
+        {
+            var model = new DtoModel()
+            {
+                Id = 1,
+                DbModels = new List<DbModel>
+                {
+                    new DbModel{Id = 1, Name = "Name 1"},
+                    new DbModel{Id = 2, Name = "Name 2"},
+                    new DbModel{Id = 3, Name = "Name 3"},
+                }
+            };
+
+            foreach (var item in model.GetType().GetProperties())
+            {
+                Assert.Equal($"DTO {item.Name}", item.GetDisplayName());
+            }
+        }
+
+        [Fact]
         public void Class_DisplayName_Attribute()
         {
             var model = new DbModel();
 
             var name = model.GetDisplayName();
 
-            Assert.Equal("DB Model", name);
+            //Assert.Equal("DB Model", name);
+            Assert.Equal("Model Custom Name", name);
+        }
+
+        [Fact]
+        public void testtsts()
+        {
+            
+            var ticks = "638224542870360200";
+            long.TryParse(ticks, out long result3);
+            //var newDate = new DateTime(result3, DateTimeKind.Utc);
+            var newDate = new DateTime(result3);
+
+            //var existingDate = new DateTime(date, DateTimeKind.Utc);
+
+            var date = "2023-06-15 19:31:27.03602+00";
+            DateTime.TryParse(date, out DateTime existingDate);
+            //existingDate = DateTime.SpecifyKind(existingDate, DateTimeKind.Local).ToUniversalTime();
+            existingDate = existingDate.ToUniversalTime();
+
+            Assert.Equal(existingDate, newDate);
+            Assert.Equal(existingDate.Ticks, newDate.Ticks);
         }
     }
 }
