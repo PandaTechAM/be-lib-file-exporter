@@ -7,7 +7,6 @@ namespace PandaFileExporter
     {
         CSV,
         PDF,
-        XLS,
         XLSX
     }
 }
