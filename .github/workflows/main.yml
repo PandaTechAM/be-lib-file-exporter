@@ -26,7 +26,7 @@ jobs:
 
       - name: Add NuGet source
         run: |
-          dotnet nuget add source https://hubrepopanda.easypay.am/repository/nuget-hosted/index.json -n pandatech --username ${{ secrets.nexus_username }} --password ${{ secrets.nexus_password }} --store-password-in-clear-text
+          dotnet nuget add source https://hubrepopanda.pandatech.it/repository/nuget-hosted/index.json -n pandatech --username ${{ secrets.nexus_username }} --password ${{ secrets.nexus_password }} --store-password-in-clear-text
         continue-on-error: true
 
      # - name: Add nuget source
@@ -50,7 +50,7 @@ jobs:
           ls ./dist
           PACKAGE_FILE=$(ls ./dist/*.nupkg | head -n 1)
           echo "Pushing NuGet package: $PACKAGE_FILE"
-          dotnet nuget push "$PACKAGE_FILE" -s https://hubrepopanda.easypay.am/repository/nuget-hosted/index.json --skip-duplicate
+          dotnet nuget push "$PACKAGE_FILE" -s https://hubrepopanda.pandatech.it/repository/nuget-hosted/index.json --skip-duplicate
 
       - name: Cleanup build folder
         run: |
