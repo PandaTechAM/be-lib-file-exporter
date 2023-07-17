@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using PandaFileExporter;
 using PandaFileExporterAPI.Context;
+using System.IO.Compression;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace PandaFileExporterAPI.Controllers
 {
@@ -45,6 +48,13 @@ namespace PandaFileExporterAPI.Controllers
             //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToCsvArray(_context.Dummies.ToList());
 
+            if (exportData.Length > (10 * 1024 * 1024))
+            {
+                exportData = FileExporter.ToZipArray(_context.Dummies);
+                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+
+            }
+
             return File(exportData, MimeTypes.CSV, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
         }
 
@@ -53,7 +63,14 @@ namespace PandaFileExporterAPI.Controllers
         {
             //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToExcelArray(_context.Dummies.ToList());
-            
+
+            if (exportData.Length > (10 * 1024 * 1024))
+            {
+                exportData = FileExporter.ToZipArray(_context.Dummies);
+                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+
+            }
+
             return File(exportData, MimeTypes.XLSX, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
         }
 
@@ -62,7 +79,14 @@ namespace PandaFileExporterAPI.Controllers
         {
             //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToPdfArray(_context.Dummies);
-            
+
+            if (exportData.Length > (10 * 1024 * 1024))
+            {
+                exportData = FileExporter.ToZipArray(_context.Dummies);
+                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+
+            }
+
             return File(exportData, MimeTypes.PDF, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
         }
     }
