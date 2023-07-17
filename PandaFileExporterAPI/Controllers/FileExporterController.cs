@@ -51,7 +51,7 @@ namespace PandaFileExporterAPI.Controllers
             if (exportData.Length > (10 * 1024 * 1024))
             {
                 exportData = FileExporter.ToZipArray(_context.Dummies);
-                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }
 
@@ -67,7 +67,7 @@ namespace PandaFileExporterAPI.Controllers
             if (exportData.Length > (10 * 1024 * 1024))
             {
                 exportData = FileExporter.ToZipArray(_context.Dummies);
-                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }
 
@@ -83,7 +83,7 @@ namespace PandaFileExporterAPI.Controllers
             if (exportData.Length > (10 * 1024 * 1024))
             {
                 exportData = FileExporter.ToZipArray(_context.Dummies);
-                return File(exportData, MimeTypesFull.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }
 
