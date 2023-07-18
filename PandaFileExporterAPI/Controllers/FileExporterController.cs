@@ -50,12 +50,12 @@ namespace PandaFileExporterAPI.Controllers
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(_context.Dummies);
+                exportData = FileExporter.ToZipArray(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }
 
-            return File(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
+            return File(exportData,MimeTypes.CSV, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
         }
 
         [HttpGet("export-xlsx")]
@@ -66,12 +66,12 @@ namespace PandaFileExporterAPI.Controllers
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(_context.Dummies);
+                exportData = FileExporter.ToZipArray(exportData , $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }
 
-            return File(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
+            return File(exportData,MimeTypes.XLSX, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
         }
 
         [HttpGet("export-pdf")]
@@ -82,7 +82,7 @@ namespace PandaFileExporterAPI.Controllers
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(_context.Dummies);
+                exportData = FileExporter.ToZipArray(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
 
             }

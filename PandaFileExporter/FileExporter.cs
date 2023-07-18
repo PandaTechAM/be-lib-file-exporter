@@ -270,18 +270,19 @@ public static class FileExporter
         return ToPdfArray(source?.AsQueryable());
     }
 
-    public static byte[] ToZipArray<T>(IEnumerable<T> source) where T : class
+    public static byte[] ToZipArray(byte[] source, string filename)
     {
         try
         {
-            var jsonData = JsonSerializer.Serialize(source);
-
             using var memoryStream = new MemoryStream();
-            using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-            var entry = archive.CreateEntry("data.json", CompressionLevel.Optimal);
-            using var entryStream = entry.Open();
-            using var writer = new StreamWriter(entryStream);
-            writer.Write(jsonData);
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                var entry = archive.CreateEntry(filename, CompressionLevel.Optimal);
+
+                using var entryStream = entry.Open();
+                entryStream.Write(source, 0, source.Length);
+                entryStream.Close();
+            }
 
             return memoryStream.ToArray();
         }
