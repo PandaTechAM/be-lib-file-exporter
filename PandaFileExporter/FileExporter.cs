@@ -6,6 +6,9 @@ using Gehtsoft.PDFFlow.Models.Enumerations;
 using System.Text;
 using ClosedXML.Graphics;
 using PandaFileExporter;
+using System.IO.Compression;
+using System.Text.Json;
+using DocumentFormat.OpenXml.Vml.Office;
 
 public static class FileExporter
 {
@@ -267,6 +270,29 @@ public static class FileExporter
         return ToPdfArray(source?.AsQueryable());
     }
 
+    public static byte[] ToZipArray(byte[] source, string filename)
+    {
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                var entry = archive.CreateEntry(filename, CompressionLevel.Optimal);
+
+                using var entryStream = entry.Open();
+                entryStream.Write(source, 0, source.Length);
+                entryStream.Close();
+            }
+
+            return memoryStream.ToArray();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(new Exception($"Zip failed with message: {e.Message}"));
+            Console.WriteLine(new Exception($"Zip failed with inner message: {e.InnerException?.Message}"));
+            throw;
+        }
+    }
 
     private static FontBuilder GetArialUtf8Font(int fontSize = 9, bool bold = false)
     {
