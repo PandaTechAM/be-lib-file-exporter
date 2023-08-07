@@ -12,7 +12,7 @@ namespace PandaFileExporterAPI.Context
         public string Status { get; set; } = "Created";
         public int Price { get; set; } = 50000;
         public int Count { get; set; } = 100;
-        public string Description { get; set; } = "Test";
+        public string Description { get; set; } = "Test, test";
         [DisplayName("Creation Date")]
         public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         [DisplayName("Expiration Date")]

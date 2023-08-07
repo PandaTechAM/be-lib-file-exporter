@@ -168,7 +168,27 @@ public static class FileExporter
                             }) as string ?? ""},");
                         }
                         else
-                            stringBuilder.Append($"{prop.GetValue(item)},");
+                        {
+                            var value = prop.GetValue(item)?.ToString();
+                            if (value != null)
+                            {
+                                // Check if the value contains commas or double quotes
+                                if (value.Contains(',') || value.Contains('"'))
+                                {
+                                    // Escape double quotes by doubling them
+                                    value = value.Replace("\"", "\"\"");
+
+                                    // Enclose the value in double quotes
+                                    value = $"\"{value}\"";
+                                }
+                                stringBuilder.Append($"{value},");
+                            }
+                            else
+                            {
+                                // Append the value to the CSV
+                                stringBuilder.Append($"{prop.GetValue(item)},");
+                            }
+                        }
                     }
                 }
             }
