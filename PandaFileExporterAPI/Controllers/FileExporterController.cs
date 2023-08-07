@@ -1,10 +1,6 @@
-﻿using ExcelExporter;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PandaFileExporter;
 using PandaFileExporterAPI.Context;
-using System.IO.Compression;
-using System.Runtime.InteropServices;
-using System.Text.Json;
 
 namespace PandaFileExporterAPI.Controllers
 {
@@ -27,15 +23,15 @@ namespace PandaFileExporterAPI.Controllers
 
             _context.Dummies.AddRange(new List<DummyTable>
                 {
-                    new DummyTable { Id = 1, Name = "Test 1" },
-                    new DummyTable { Id = 2, Name = "Test 2" },
-                    new DummyTable { Id = 3, Name = "Test 3" },
-                    new DummyTable { Id = 4, Name = "Test 4" },
-                    new DummyTable { Id = 5, Name = "Test 5" },
-                    new DummyTable { Id = 6, Name = "Test 6" },
-                    new DummyTable { Id = 7, Name = "Test 7" },
-                    new DummyTable { Id = 8, Name = "Test 8" },
-                    new DummyTable { Id = 9, Name = "Test 9" },
+                    new DummyTable { Id = 1, Name = "Test 1", Description = "Test, new string 1" },
+                    new DummyTable { Id = 2, Name = "Test 2", Description = "Test, new string 2" },
+                    new DummyTable { Id = 3, Name = "Test 3", Description = "Test, new string 3" },
+                    new DummyTable { Id = 4, Name = "Test 4", Description = "Test, new string 4" },
+                    new DummyTable { Id = 5, Name = "Test 5", Description = "Test, new string 5" },
+                    new DummyTable { Id = 6, Name = "Test 6", Description = "Test, new string 6" },
+                    new DummyTable { Id = 7, Name = "Test 7", Description = "Test, new string 7" },
+                    new DummyTable { Id = 8, Name = "Test 8", Description = "Test, new string 8" },
+                    new DummyTable { Id = 9, Name = "Test 9", Description = "Test, new string 9" },
                 });
             _context.SaveChanges();
 
@@ -45,7 +41,6 @@ namespace PandaFileExporterAPI.Controllers
         [HttpGet("export-csv")]
         public IActionResult ExportCsv()
         {
-            //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToCsvArray(_context.Dummies.ToList());
 
             if (exportData.Length > (10 * 1024 * 1024))
@@ -60,7 +55,6 @@ namespace PandaFileExporterAPI.Controllers
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
         {
-            //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToExcelArray(_context.Dummies.ToList());
 
             if (exportData.Length > (10 * 1024 * 1024))
@@ -75,7 +69,6 @@ namespace PandaFileExporterAPI.Controllers
         [HttpGet("export-pdf")]
         public IActionResult ExportPdf()
         {
-            //var exportData = FileExporter.ExportToXlsx(_context.Dummies);
             var exportData = FileExporter.ToPdfArray(_context.Dummies);
 
             if (exportData.Length > (10 * 1024 * 1024))
