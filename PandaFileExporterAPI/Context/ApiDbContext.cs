@@ -26,6 +26,8 @@ namespace PandaFileExporterAPI.Context
             DateTime.Today,
             DateTime.UtcNow
         };
+        [NotMapped]
+        public List<string>? NullableList { get; set; } = null;
     }
 
     public class ApiDbContext : DbContext

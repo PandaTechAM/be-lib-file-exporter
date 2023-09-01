@@ -167,6 +167,10 @@ public static class FileExporter
                                 "; "
                             }) as string ?? ""},");
                         }
+                        else if (prop.PropertyType.IsClass && prop.PropertyType.Name != "String")
+                        {
+                            prop.ToString();
+                        }
                         else
                         {
                             var value = prop.GetValue(item)?.ToString();

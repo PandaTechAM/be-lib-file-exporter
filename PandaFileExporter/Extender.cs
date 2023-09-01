@@ -109,9 +109,9 @@ namespace ExcelExporter
             return model.GetType().Name;
         }
 
-        public static string ListAsString<T>(this List<T> list, string separator = "; ")
+        public static string ListAsString<T>(this List<T>? list, string separator = "; ")
         {
-            var stringList = list.Select(item => item?.ToString() ?? "").ToList();
+            var stringList = list?.Select(item => item?.ToString() ?? "").ToList() ?? new List<string>(); 
 
             return string.Join(separator, stringList);
         }
