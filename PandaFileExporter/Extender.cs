@@ -59,10 +59,14 @@ namespace ExcelExporter
 
                             row[prop.GetDisplayName()] = method.Invoke(null, new[]
                             {
-                            listItem!,
-                            "; "
-                        }) as string ?? "";
+                                listItem!,
+                                "; "
+                            }) as string ?? "";
                         }
+                        //else if(prop.PropertyType.IsClass && prop.PropertyType.Name != "String")
+                        //{
+                        //    row[prop.GetDisplayName()] = prop.ToString();
+                        //}
                         else
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                     }

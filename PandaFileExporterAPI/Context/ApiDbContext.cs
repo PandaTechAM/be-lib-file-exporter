@@ -28,6 +28,16 @@ namespace PandaFileExporterAPI.Context
         };
         [NotMapped]
         public List<string>? NullableList { get; set; } = null;
+        [NotMapped]
+        public DTO DTO { get; set; } = new DTO { Name = "Name" };
+    }
+
+    public class DTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+
+        public override string ToString() => Name;
     }
 
     public class ApiDbContext : DbContext
