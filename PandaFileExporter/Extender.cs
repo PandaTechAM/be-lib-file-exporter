@@ -63,10 +63,19 @@ namespace ExcelExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        //else if(prop.PropertyType.IsClass && prop.PropertyType.Name != "String")
-                        //{
-                        //    row[prop.GetDisplayName()] = prop.ToString();
-                        //}
+                        else if (prop.PropertyType.IsArray && prop.PropertyType.Name != "String")
+                        {
+                            var listItem = prop.GetValue(item);
+                            var method =
+                                typeof(Extender).GetMethod("EnumAsString")!.MakeGenericMethod(
+                                    listItem!.GetType().GetElementType()!);
+
+                            row[prop.GetDisplayName()] = method.Invoke(null, new[]
+                            {
+                                listItem!,
+                                "; "
+                            }) as string ?? "";
+                        }
                         else
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                     }
@@ -116,6 +125,13 @@ namespace ExcelExporter
         public static string ListAsString<T>(this List<T>? list, string separator = "; ")
         {
             var stringList = list?.Select(item => item?.ToString() ?? "").ToList() ?? new List<string>(); 
+
+            return string.Join(separator, stringList);
+        }
+
+        public static string EnumAsString<T>(this T[]? list, string separator = "; ")
+        {
+            var stringList = list?.Select(item => item?.ToString() ?? "").ToList() ?? new List<string>();
 
             return string.Join(separator, stringList);
         }

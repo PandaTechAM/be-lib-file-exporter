@@ -30,6 +30,8 @@ namespace PandaFileExporterAPI.Context
         public List<string>? NullableList { get; set; } = null;
         [NotMapped]
         public DTO DTO { get; set; } = new DTO { Name = "Name" };
+        [NotMapped]
+        public MyEnum[] EnumArray { get; set; } = new MyEnum[4] { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
     }
 
     public class DTO
@@ -38,6 +40,11 @@ namespace PandaFileExporterAPI.Context
         public string Name { get; set; } = null!;
 
         public override string ToString() => Name;
+    }
+
+    public enum MyEnum
+    {
+        A, B, C, D
     }
 
     public class ApiDbContext : DbContext

@@ -167,10 +167,20 @@ public static class FileExporter
                                 "; "
                             }) as string ?? ""},");
                         }
-                        //else if (prop.PropertyType.IsClass && prop.PropertyType.Name != "String")
-                        //{
-                        //    stringBuilder.Append(prop.ToString());
-                        //}
+                        else if (prop.PropertyType.IsArray && prop.PropertyType.Name != "String")
+                        {
+                            var listItem = prop.GetValue(item);
+
+                            var method =
+                                typeof(Extender).GetMethod("EnumAsString")!.MakeGenericMethod(
+                                    listItem!.GetType().GetElementType()!);
+
+                            stringBuilder.Append($"{method.Invoke(null, new[]
+                            {
+                                listItem!,
+                                "; "
+                            }) as string ?? ""},");
+                        }
                         else
                         {
                             var value = prop.GetValue(item)?.ToString();
@@ -253,10 +263,41 @@ public static class FileExporter
                 {
                     var data = list[i];
                     var dataRow = table.AddRow();
-                    foreach (var item in data.GetType().GetProperties())
+                    foreach (var prop in data.GetType().GetProperties())
                     {
-                        var row = dataRow.AddCellToRow(item.GetValue(data)?.ToString());
-                        row.SetFont(GetArialUtf8Font(12));
+                        if (prop.PropertyType.Name == "List`1")
+                        {
+                            var listItem = prop.GetValue(data);
+                            var method =
+                                typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
+                                    prop.PropertyType.GetGenericArguments()[0]);
+
+                            var row = dataRow.AddCellToRow(method.Invoke(null, new[]
+                            {
+                                listItem!,
+                                "; "
+                            }) as string ?? "");
+                            row.SetFont(GetArialUtf8Font(12));
+                        }
+                        else if (prop.PropertyType.IsArray && prop.PropertyType.Name != "String")
+                        {
+                            var listItem = prop.GetValue(data);
+                            var method =
+                                typeof(Extender).GetMethod("EnumAsString")!.MakeGenericMethod(
+                                    listItem!.GetType().GetElementType()!);
+
+                            var row = dataRow.AddCellToRow(method.Invoke(null, new[]
+                                        {
+                                listItem!,
+                                "; "
+                            }) as string ?? "");
+                            row.SetFont(GetArialUtf8Font(12));
+                        }
+                        else
+                        {
+                            var row = dataRow.AddCellToRow(prop.GetValue(data)?.ToString());
+                            row.SetFont(GetArialUtf8Font(12));
+                        }
                     }
 
                     dataRow.SetHorizontalAlignment(HorizontalAlignment.Center).ToTable();
