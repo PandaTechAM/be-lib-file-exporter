@@ -108,7 +108,12 @@ public static class FileExporter
             using var workbook = new XLWorkbook(loadOptions);
 
             // Create new worksheet and align
-            workbook.Worksheets.Add(table).ColumnsUsed().AdjustToContents();
+            var wb = workbook.Worksheets.Add(table);
+
+            if (source != null && source.Any())
+            {
+                wb.ColumnsUsed().AdjustToContents();
+            }
 
             // Convert the workbook to a memory stream
             using var memoryStream = new MemoryStream();
