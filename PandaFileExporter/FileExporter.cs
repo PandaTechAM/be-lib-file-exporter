@@ -108,11 +108,11 @@ public static class FileExporter
             using var workbook = new XLWorkbook(loadOptions);
 
             // Create new worksheet and align
-            var wb = workbook.Worksheets.Add(table);
+            var worksheet = workbook.Worksheets.Add(table);
 
             if (source != null && source.Any())
             {
-                wb.ColumnsUsed().AdjustToContents();
+                worksheet.ColumnsUsed().AdjustToContents();
             }
 
             // Convert the workbook to a memory stream
@@ -137,7 +137,7 @@ public static class FileExporter
         return ToExcelArray(source?.AsQueryable());
     }
 
-    public static byte[] ToCsvArray<T>(List<T>? source)
+    public static byte[] ToCsvArray<T>(IQueryable<T>? source)
     {
         try
         {
@@ -223,6 +223,11 @@ public static class FileExporter
             Console.WriteLine(new Exception($"Export failed with inner message: {e.InnerException?.Message}"));
             throw;
         }
+    }
+    
+    public static byte[] ToCsvArray<T>(List<T>? source)
+    {
+        return ToCsvArray(source?.AsQueryable());
     }
 
     public static byte[] ToPdfArray<T>(IQueryable<T>? source) where T : class
