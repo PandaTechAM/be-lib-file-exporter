@@ -1,7 +1,5 @@
-using DocumentFormat.OpenXml.Office2013.Excel;
 using ExcelExporter;
 using Microsoft.EntityFrameworkCore;
-using PandaFileExporter;
 using PandaTech.IEnumerableFilters;
 using PandaTech.IEnumerableFilters.Dto;
 
@@ -13,7 +11,7 @@ namespace PandaFileExporterTests
         public FileExporterTests()
         {
             var builder = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase(databaseName: "testDB")
+                .UseInMemoryDatabase(databaseName: "testDB1")
                 .Options;
             _context = new AppDbContext(builder);
 

@@ -12,7 +12,7 @@ using DocumentFormat.OpenXml.Vml.Office;
 
 public static class FileExporter
 {
-    public static HttpResponseMessage ExportToXlsx<T>(IQueryable<T>? source) where T : class
+    public static HttpResponseMessage ExportToXlsx<T>(IQueryable<T>? source)
     {
         try
         {
@@ -49,7 +49,7 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToCsv<T>(IQueryable<T>? source) where T : class
+    public static HttpResponseMessage ExportToCsv<T>(IQueryable<T>? source)
     {
         try
         {
@@ -71,7 +71,7 @@ public static class FileExporter
         }
     }
 
-    public static HttpResponseMessage ExportToPdf<T>(IQueryable<T>? source) where T : class
+    public static HttpResponseMessage ExportToPdf<T>(IQueryable<T>? source)
     {
         try
         {
@@ -91,7 +91,7 @@ public static class FileExporter
     }
 
 
-    public static byte[] ToExcelArray<T>(IQueryable<T>? source) where T : class
+    public static byte[] ToExcelArray<T>(IQueryable<T>? source)
     {
         try
         {
@@ -132,7 +132,12 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToExcelArray<T>(IEnumerable<T>? source) where T : class
+    public static byte[] ToExcelArray<T>(IEnumerable<T>? source)
+    {
+        return ToExcelArray(source?.AsQueryable());
+    }
+    
+    public static byte[] ToExcelArray<T>(List<T>? source)
     {
         return ToExcelArray(source?.AsQueryable());
     }
@@ -225,12 +230,17 @@ public static class FileExporter
         }
     }
     
+    public static byte[] ToCsvArray<T>(IEnumerable<T>? source)
+    {
+        return ToCsvArray(source?.AsQueryable());
+    }
+    
     public static byte[] ToCsvArray<T>(List<T>? source)
     {
         return ToCsvArray(source?.AsQueryable());
     }
 
-    public static byte[] ToPdfArray<T>(IQueryable<T>? source) where T : class
+    public static byte[] ToPdfArray<T>(IQueryable<T>? source)
     {
         try
         {
@@ -340,7 +350,12 @@ public static class FileExporter
         }
     }
 
-    public static byte[] ToPdfArray<T>(IEnumerable<T>? source) where T : class
+    public static byte[] ToPdfArray<T>(IEnumerable<T>? source)
+    {
+        return ToPdfArray(source?.AsQueryable());
+    }
+    
+    public static byte[] ToPdfArray<T>(List<T>? source)
     {
         return ToPdfArray(source?.AsQueryable());
     }
