@@ -2,6 +2,7 @@
 using System.Data;
 using System.Reflection;
 using System.Text;
+using BaseConverter;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExcelExporter
@@ -76,6 +77,10 @@ namespace ExcelExporter
                                 "; "
                             }) as string ?? "";
                         }
+                        else if (prop.PropertyType.Name == "Int64")
+                        {
+                            row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
+                        }
                         else
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString() ?? "";
                     }
@@ -124,7 +129,7 @@ namespace ExcelExporter
 
         public static string ListAsString<T>(this List<T>? list, string separator = "; ")
         {
-            var stringList = list?.Select(item => item?.ToString() ?? "").ToList() ?? new List<string>(); 
+            var stringList = list?.Select(item => item?.ToString() ?? "").ToList() ?? new List<string>();
 
             return string.Join(separator, stringList);
         }
@@ -136,11 +141,19 @@ namespace ExcelExporter
             return string.Join(separator, stringList);
         }
 
+        public static string Base36String(this object? value)
+        {
+            if (value is null) return "";
+            
+            _ = long.TryParse((string)value, out long convertedValue);
+            
+            return PandaBaseConverter.Base10ToBase36(convertedValue) ?? "";
+        }
+
         public static string GetString(this byte[] data)
         {
             return Encoding.Default.GetString(data);
         }
-
 
 
         public static TValue? GetAttributeValue<TAttribute, TValue>(
@@ -155,6 +168,7 @@ namespace ExcelExporter
             {
                 return valueSelector(att);
             }
+
             return default(TValue);
         }
     }

@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
-		<Version>0.0.42</Version>
+		<Version>0.0.43</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
@@ -32,7 +32,9 @@
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.101.0" />
 		<PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
+		<PackageReference Include="PandaTech.BaseConverter" Version="1.0.16" />
 	</ItemGroup>
 
 	<ItemGroup>

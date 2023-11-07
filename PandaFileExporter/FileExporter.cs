@@ -8,10 +8,15 @@ using ClosedXML.Graphics;
 using PandaFileExporter;
 using System.IO.Compression;
 using System.Text.Json;
+using BaseConverter;
 using DocumentFormat.OpenXml.Vml.Office;
+using Microsoft.AspNetCore.Mvc;
 
 public static class FileExporter
 {
+    private static readonly int ExportSizeLimit =
+        Convert.ToInt32(Environment.GetEnvironmentVariable("EXPORT_SIZE_LIMIT") ?? "10");
+    
     public static HttpResponseMessage ExportToXlsx<T>(IQueryable<T>? source)
     {
         try
@@ -112,7 +117,7 @@ public static class FileExporter
 
             if (source != null && source.Any())
             {
-                worksheet.ColumnsUsed().AdjustToContents();
+                worksheet.ColumnsUsed(); //.AdjustToContents();
             }
 
             // Convert the workbook to a memory stream
@@ -190,6 +195,10 @@ public static class FileExporter
                                 listItem!,
                                 "; "
                             }) as string ?? ""},");
+                        }
+                        else if (prop.PropertyType.Name == "Int64")
+                        {
+                            stringBuilder.Append($"{prop.GetValue(item)?.ToString().Base36String()},");
                         }
                         else
                         {
@@ -313,6 +322,11 @@ public static class FileExporter
                             }) as string ?? "");
                             row.SetFont(GetArialUtf8Font(12));
                         }
+                        else if (prop.PropertyType.Name == "Int64")
+                        {
+                            var row = dataRow.AddCellToRow(prop.GetValue(data)?.ToString().Base36String());
+                            row.SetFont(GetArialUtf8Font(12));
+                        }
                         else
                         {
                             var row = dataRow.AddCellToRow(prop.GetValue(data)?.ToString());
@@ -389,5 +403,42 @@ public static class FileExporter
         var fontLoader = FontBuilder.New().FromFile("Fonts/ARIAL.TTF", fontSize).SetBold(bold);
 
         return fontLoader;
+    }
+    
+    private static Task<ExportFileData> GetFileData<T>(IQueryable<T> source, ExportType exportType)
+    {
+        var data = exportType switch
+        {
+            ExportType.XLSX => new ExportFileData
+            {
+                Data = ToExcelArray(source),
+                Type = MimeTypes.XLSX,
+            },
+            ExportType.CSV => new ExportFileData
+            {
+                Data = ToCsvArray(source),
+                Type = MimeTypes.CSV,
+            },
+            ExportType.PDF => new ExportFileData
+            {
+                Data = ToPdfArray(source),
+                Type = MimeTypes.PDF,
+            },
+            _ => throw new ArgumentException("Unsupported data file type")
+        };
+
+        data.Name = $"{typeof(T).Name/*.ToSnakeCase()*/}.{exportType.ToString().ToLower()}";
+        
+        if (data.Data.Length > ExportSizeLimit * 1024 * 1024)
+        {
+            data = new ExportFileData
+            {
+                Data = ToZipArray(data.Data, $"{typeof(T).Name/*.ToSnakeCase()*/}.{exportType.ToString().ToLower()}"),
+                Type = MimeTypes.ZIP,
+                Name = $"{typeof(T).Name/*.ToSnakeCase()*/}.zip"
+            };
+        }
+
+        return Task.FromResult(data);
     }
 }

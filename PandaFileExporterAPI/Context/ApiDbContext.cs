@@ -7,18 +7,20 @@ namespace PandaFileExporterAPI.Context
     [DisplayName("Dummy Table")]
     public class DummyTable
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; } = null!;
         public string Status { get; set; } = "Created";
         public int Price { get; set; } = 50000;
         public int Count { get; set; } = 100;
+        public long Average { get; set; } = 500;
         public string Description { get; set; } = "Test, test";
-        [DisplayName("Creation Date")]
+        [DisplayName("Creation Date")] 
         public DateTime CreationDate { get; set; } = DateTime.UtcNow;
-        [DisplayName("Expiration Date")]
+        [DisplayName("Expiration Date")] 
         public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddDays(10);
         public string? Comment { get; set; }
         public DateTime Version { get; set; } = DateTime.UtcNow;
+
         [NotMapped]
         public List<DateTime> Dates { get; set; } = new()
         {
@@ -26,12 +28,16 @@ namespace PandaFileExporterAPI.Context
             DateTime.Today,
             DateTime.UtcNow
         };
-        [NotMapped]
+
+        [NotMapped] 
         public List<string>? NullableList { get; set; } = null;
-        [NotMapped]
-        public DTO DTO { get; set; } = new DTO { Name = "Name" };
-        [NotMapped]
-        public MyEnum[] EnumArray { get; set; } = new MyEnum[4] { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
+        [NotMapped] 
+        public DTO DTO { get; set; } = new() { Name = "Name" };
+
+        [NotMapped] 
+        public MyEnum Enum { get; set; } = MyEnum.A;
+        [NotMapped] 
+        public MyEnum[] EnumArray { get; set; } = { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
     }
 
     public class DTO
@@ -44,14 +50,19 @@ namespace PandaFileExporterAPI.Context
 
     public enum MyEnum
     {
-        A, B, C, D
+        A,
+        B,
+        C,
+        D
     }
 
     public class ApiDbContext : DbContext
     {
         public DbSet<DummyTable> Dummies { get; set; }
 
-        public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) { }
+        public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options)
+        {
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

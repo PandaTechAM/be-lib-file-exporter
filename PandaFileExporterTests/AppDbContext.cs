@@ -21,6 +21,19 @@ namespace PandaFileExporterTests
         public int Id { get; set; }
         [CustomDisplayName("DTO DbModels")]
         public List<DbModel> DbModels { get; set; } = null!;
+        [DisplayName("DTO Not Nullable List")]
+        public List<string> ListNotNullable { get; set; } = null!;
+        [DisplayName("DTO Nullable List")]
+        public List<string>? ListNullable { get; set; }
+        [DisplayName("DTO Enum")]
+        public MyEnum Enum { get; set; }
+        [DisplayName("DTO Enum List")]
+        public MyEnum[] EnumArray { get; set; } = new MyEnum[4] { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
+    }
+
+    public enum MyEnum
+    {
+        A, B, C, D
     }
 
     public class AppDbContext : DbContext
