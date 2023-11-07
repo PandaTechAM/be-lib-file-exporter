@@ -77,7 +77,7 @@ namespace ExcelExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        else if (prop.PropertyType.Name == "Int64")
+                        else if (prop.Name.Contains("Id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
                         {
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
                         }

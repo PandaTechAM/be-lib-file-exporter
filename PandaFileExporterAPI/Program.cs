@@ -43,6 +43,16 @@ context?.Dummies.AddRange(new List<DummyTable>
     new DummyTable { Id = 7, Name = "Բարեւ բոլորին 7", Description = "Test this out, it's OK" },
     new DummyTable { Id = 8, Name = "Բարեւ բոլորին 8", Description = "Test this out, it's OK" },
     new DummyTable { Id = 9, Name = "Բարեւ բոլորին 9", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 10, Name = "Բարեւ բոլորին 10", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 11, Name = "Բարեւ բոլորին 11", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 12, Name = "Բարեւ բոլորին 12", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 13, Name = "Բարեւ բոլորին 13", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 14, Name = "Բարեւ բոլորին 14", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 15, Name = "Բարեւ բոլորին 15", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 16, Name = "Բարեւ բոլորին 16", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 17, Name = "Բարեւ բոլորին 17", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 18, Name = "Բարեւ բոլորին 18", Description = "Test this out, it's OK" },
+    new DummyTable { Id = 19, Name = "Բարեւ բոլորին 19", Description = "Test this out, it's OK" },
 });
 context?.SaveChanges();
 

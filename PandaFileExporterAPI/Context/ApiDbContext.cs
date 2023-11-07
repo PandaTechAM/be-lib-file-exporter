@@ -7,12 +7,15 @@ namespace PandaFileExporterAPI.Context
     [DisplayName("Dummy Table")]
     public class DummyTable
     {
+        [PandaPropertyBaseConverter]
         public long Id { get; set; }
         public string Name { get; set; } = null!;
         public string Status { get; set; } = "Created";
         public int Price { get; set; } = 50000;
         public int Count { get; set; } = 100;
-        public long Average { get; set; } = 500;
+        public int? Min { get; set; } = 0;
+        public long? Average { get; set; } = 500;
+        public int? Max { get; set; } = 0;
         public string Description { get; set; } = "Test, test";
         [DisplayName("Creation Date")] 
         public DateTime CreationDate { get; set; } = DateTime.UtcNow;
@@ -42,7 +45,8 @@ namespace PandaFileExporterAPI.Context
 
     public class DTO
     {
-        public int Id { get; set; }
+        [PandaPropertyBaseConverter]
+        public long Id { get; set; }
         public string Name { get; set; } = null!;
 
         public override string ToString() => Name;

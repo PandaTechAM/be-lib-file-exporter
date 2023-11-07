@@ -196,7 +196,7 @@ public static class FileExporter
                                 "; "
                             }) as string ?? ""},");
                         }
-                        else if (prop.PropertyType.Name == "Int64")
+                        else if (prop.Name.Contains("Id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
                         {
                             stringBuilder.Append($"{prop.GetValue(item)?.ToString().Base36String()},");
                         }
@@ -322,7 +322,7 @@ public static class FileExporter
                             }) as string ?? "");
                             row.SetFont(GetArialUtf8Font(12));
                         }
-                        else if (prop.PropertyType.Name == "Int64")
+                        else if (prop.Name.Contains("Id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
                         {
                             var row = dataRow.AddCellToRow(prop.GetValue(data)?.ToString().Base36String());
                             row.SetFont(GetArialUtf8Font(12));
