@@ -77,7 +77,13 @@ namespace ExcelExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        else if (prop.Name.Contains("Id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
+                        else if (prop.Name.ToLower().Contains("id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
+                        {
+                            row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
+                        }
+                        else if (prop.Name.ToLower().Contains("id") &&
+                                 prop.PropertyType.UnderlyingSystemType.GenericTypeArguments.Any(x =>
+                                     x.AssemblyQualifiedName?.Contains("Int64") ?? false))
                         {
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
                         }
@@ -144,9 +150,9 @@ namespace ExcelExporter
         public static string Base36String(this object? value)
         {
             if (value is null) return "";
-            
+
             _ = long.TryParse((string)value, out long convertedValue);
-            
+
             return PandaBaseConverter.Base10ToBase36(convertedValue) ?? "";
         }
 

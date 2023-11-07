@@ -8,7 +8,11 @@ namespace PandaFileExporterAPI.Context
     public class DummyTable
     {
         [PandaPropertyBaseConverter]
+        [DisplayName("Dummy ID")]
         public long Id { get; set; }
+        [PandaPropertyBaseConverter]
+        [DisplayName("Related ID")]
+        public long? RelatedId { get; set; }
         public string Name { get; set; } = null!;
         public string Status { get; set; } = "Created";
         public int Price { get; set; } = 50000;
