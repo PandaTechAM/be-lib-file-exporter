@@ -36,6 +36,7 @@ namespace ExcelExporter
         public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
         {
             DataTable table = new(name);
+            table.TableName = data.FirstOrDefault().GetDisplayNameFromAttribute();
 
             var properties = typeof(T).GetProperties();
             foreach (var property in properties)
@@ -77,7 +78,8 @@ namespace ExcelExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        else if (prop.Name.ToLower().Contains("id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
+                        else if (prop.Name.ToLower().Contains("id") &&
+                                 prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
                         {
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
                         }
@@ -159,6 +161,12 @@ namespace ExcelExporter
         public static string GetString(this byte[] data)
         {
             return Encoding.Default.GetString(data);
+        }
+
+        public static string GetDisplayNameFromAttribute<T>(this T source)
+        {
+            return typeof(T).GetCustomAttributes<DisplayNameAttribute>()
+                .FirstOrDefault(_ => true)?.DisplayName ?? typeof(T).Name;
         }
 
 

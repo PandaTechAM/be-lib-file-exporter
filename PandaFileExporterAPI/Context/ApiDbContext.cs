@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PandaFileExporterAPI.Context
 {
-    [DisplayName("Dummy Table")]
+    //[DisplayName("Dummy Table")]
     public class DummyTable
     {
         [PandaPropertyBaseConverter]

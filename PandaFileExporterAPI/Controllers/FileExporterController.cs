@@ -23,15 +23,25 @@ namespace PandaFileExporterAPI.Controllers
 
             _context.Dummies.AddRange(new List<DummyTable>
                 {
-                    new DummyTable { Id = 1, Name = "Test 1", Description = "Test, new string 1" },
-                    new DummyTable { Id = 2, Name = "Test 2", Description = "Test, new string 2" },
-                    new DummyTable { Id = 3, Name = "Test 3", Description = "Test, new string 3" },
-                    new DummyTable { Id = 4, Name = "Test 4", Description = "Test, new string 4" },
-                    new DummyTable { Id = 5, Name = "Test 5", Description = "Test, new string 5" },
-                    new DummyTable { Id = 6, Name = "Test 6", Description = "Test, new string 6" },
-                    new DummyTable { Id = 7, Name = "Test 7", Description = "Test, new string 7" },
-                    new DummyTable { Id = 8, Name = "Test 8", Description = "Test, new string 8" },
-                    new DummyTable { Id = 9, Name = "Test 9", Description = "Test, new string 9" },
+                    new() { Id = 1, RelatedId = 18, Name = "Բարև բոլորին 1", Description = "Test this out, it's OK" },
+                    new() { Id = 2, RelatedId = 18, Name = "Բարև բոլորին 2", Description = "Test this out, it's OK" },
+                    new() { Id = 3, Name = "Բարև բոլորին 3", Description = "Test this out, it's OK" },
+                    new() { Id = 4, Name = "Բարև բոլորին 4", Description = "Test this out, it's OK" },
+                    new() { Id = 5, RelatedId = 18, Name = "Բարև բոլորին 5", Description = "Test this out, it's OK" },
+                    new() { Id = 6, Name = "Բարև բոլորին 6", Description = "Test this out, it's OK" },
+                    new() { Id = 7, Name = "Բարև բոլորին 7", Description = "Test this out, it's OK" },
+                    new() { Id = 8, Name = "Բարև բոլորին 8", Description = "Test this out, it's OK" },
+                    new() { Id = 9, Name = "Բարև բոլորին 9", Description = "Test this out, it's OK" },
+                    new() { Id = 10, RelatedId = 18, Name = "Բարև բոլորին 10", Description = "Test this out, it's OK" },
+                    new() { Id = 11, Name = "Բարև բոլորին 11", Description = "Test this out, it's OK" },
+                    new() { Id = 12, Name = "Բարև բոլորին 12", Description = "Test this out, it's OK" },
+                    new() { Id = 13, Name = "Բարև բոլորին 13", Description = "Test this out, it's OK" },
+                    new() { Id = 14, RelatedId = 18, Name = "Բարև բոլորին 14", Description = "Test this out, it's OK" },
+                    new() { Id = 15, Name = "Բարև բոլորին 15", Description = "Test this out, it's OK" },
+                    new() { Id = 16, Name = "Բարև բոլորին 16", Description = "Test this out, it's OK" },
+                    new() { Id = 17, RelatedId = 18, Name = "Բարև բոլորին 17", Description = "Test this out, it's OK" },
+                    new() { Id = 18, Name = "Բարև բոլորին 18", Description = "Test this out, it's OK" },
+                    new() { Id = 19, Name = "Բարև բոլորին 19", Description = "Test this out, it's OK" },
                 });
             _context.SaveChanges();
 
