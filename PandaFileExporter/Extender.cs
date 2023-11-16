@@ -33,6 +33,24 @@ namespace ExcelExporter
             return ms.GetBuffer();
         }
 
+        /// <summary>
+        /// Validate sheet name as character count MUST be greater than or equal to 1 and less than or equal to 31
+        /// </summary>
+        /// <param name="sheetName">Sheet name to validate</param>
+        /// <returns></returns>
+        public static string ValidateName(this string sheetName)
+        {
+            if (sheetName.Length == 0)
+                return "Export";
+
+            if (sheetName.Length > 31)
+            {
+                return sheetName.Substring(0, 30);
+            }
+
+            return sheetName;
+        }
+        
         public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
         {
             DataTable table = new(name);

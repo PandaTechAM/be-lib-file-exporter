@@ -97,7 +97,7 @@ public static class FileExporter
         try
         {
             // Convert source into data table
-            var table = source.ToDataTable(typeof(T).GetDisplayName());
+            var table = source.ToDataTable(typeof(T).GetDisplayName().ValidateName());
 
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
             LoadOptions.DefaultGraphicEngine =
@@ -153,7 +153,7 @@ public static class FileExporter
             // Get headers
             foreach (var item in typeof(T).GetProperties())
             {
-                stringBuilder.Append($"{item.GetDisplayName()},");
+                stringBuilder.Append($"{item.GetDisplayName().ValidateName()},");
             }
 
             // Add data rows
