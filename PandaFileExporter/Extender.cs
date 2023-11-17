@@ -54,7 +54,7 @@ namespace ExcelExporter
         public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
         {
             DataTable table = new(name);
-            table.TableName = data.FirstOrDefault().GetDisplayNameFromAttribute();
+            table.TableName = data.FirstOrDefault().GetDisplayNameFromAttribute().ValidateName();
 
             var properties = typeof(T).GetProperties();
             foreach (var property in properties)

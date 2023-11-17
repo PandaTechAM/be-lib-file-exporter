@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PandaFileExporterAPI.Context
 {
-    //[DisplayName("Dummy Table")]
+    [DisplayName("Dummy Table - long name which must me 1-31")]
     public class DummyTable
     {
         [PandaPropertyBaseConverter]
@@ -13,6 +13,7 @@ namespace PandaFileExporterAPI.Context
         [PandaPropertyBaseConverter]
         [DisplayName("Related ID")]
         public long? RelatedId { get; set; }
+        [DisplayName("Name - long name which must me 1-31")]
         public string Name { get; set; } = null!;
         public string Status { get; set; } = "Created";
         public int Price { get; set; } = 50000;

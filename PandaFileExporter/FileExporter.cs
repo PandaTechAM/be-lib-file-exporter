@@ -97,7 +97,7 @@ public static class FileExporter
         try
         {
             // Convert source into data table
-            var table = source.ToDataTable(typeof(T).GetDisplayName().ValidateName());
+            var table = source.ToDataTable(typeof(T).GetDisplayName());
 
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
             LoadOptions.DefaultGraphicEngine =
