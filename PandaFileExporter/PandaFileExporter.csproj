@@ -6,16 +6,21 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
-		<Version>0.0.48</Version>
+		<Version>0.0.49</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<PackageOutputPath></PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
+		
+	</ItemGroup>
+	<ItemGroup>
 		<None Remove="mime_types.json" />
+		<None Include="Fonts\*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
