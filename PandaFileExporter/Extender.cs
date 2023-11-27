@@ -123,6 +123,12 @@ namespace ExcelExporter
             var atts = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true);
             return atts.Length == 0 ? propertyInfo.Name : (atts[0] as DisplayNameAttribute)!.DisplayName;
         }
+        
+        public static string GetCustomDisplayName(this PropertyInfo propertyInfo)
+        {
+            var atts = propertyInfo.GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
+            return atts.Length == 0 ? propertyInfo.Name : (atts[0] as CustomDisplayNameAttribute)!.DisplayName;
+        }
 
         public static string GetDisplayName<T>(this T model) where T : class
         {
@@ -132,11 +138,11 @@ namespace ExcelExporter
             //    return attr!.DisplayName;
             //}
 
-            var attrs = model.GetType().GetCustomAttributes(typeof(CustomDisplayName), true);
+            var attrs = model.GetType().GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
 
             if (attrs.Any())
             {
-                return ((CustomDisplayName)attrs.First()).DisplayName;
+                return ((CustomDisplayNameAttribute)attrs.First()).DisplayName;
             }
 
             return model.GetType().Name;
@@ -205,14 +211,14 @@ namespace ExcelExporter
         }
     }
 
-    public class CustomDisplayName : Attribute
+    public class CustomDisplayNameAttribute : Attribute
     {
         // Private fields.
         private string displayName;
 
         // This constructor defines two required parameters: name and level.
 
-        public CustomDisplayName(string displayName)
+        public CustomDisplayNameAttribute(string displayName)
         {
             this.displayName = displayName;
         }

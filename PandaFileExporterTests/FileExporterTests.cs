@@ -1,3 +1,4 @@
+using System.Reflection;
 using ExcelExporter;
 using Microsoft.EntityFrameworkCore;
 using PandaTech.IEnumerableFilters;
@@ -209,8 +210,12 @@ namespace PandaFileExporterTests
 
             foreach (var item in model.GetType().GetProperties())
             {
-                Assert.Equal($"DTO {item.Name}", item.GetDisplayName());
-            }
+                var atts = item.GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
+                var neededValue = atts.Length == 0 ? item.Name : (atts[0] as CustomDisplayNameAttribute)!.DisplayName;
+
+                var existingValue = item.GetCustomDisplayName();
+                
+                Assert.Equal(neededValue, existingValue); }
         }
 
         [Fact]

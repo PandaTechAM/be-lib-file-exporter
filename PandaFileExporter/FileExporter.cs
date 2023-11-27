@@ -102,10 +102,10 @@ public static class FileExporter
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
             LoadOptions.DefaultGraphicEngine =
                 DefaultGraphicEngine.CreateWithFontsAndSystemFonts(
-                    new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
-            //DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("Fonts/ARIAL.TTF")));
+                    new MemoryStream(File.ReadAllBytes("./Fonts/ARIAL.TTF")));
+            //DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("./Fonts/ARIAL.TTF")));
             var loadOptions = new LoadOptions();
-            //{ GraphicEngine = new DefaultGraphicEngine("Fonts/ARIAL.TTF") };
+            //{ GraphicEngine = new DefaultGraphicEngine("./Fonts/ARIAL.TTF") };
             using var workbook = new XLWorkbook(loadOptions);
 
             // Create new worksheet and align
@@ -409,7 +409,7 @@ public static class FileExporter
 
     private static FontBuilder GetArialUtf8Font(int fontSize = 9, bool bold = false)
     {
-        var fontLoader = FontBuilder.New().FromFile("Fonts/ARIAL.TTF", fontSize).SetBold(bold);
+        var fontLoader = FontBuilder.New().FromFile("./Fonts/ARIAL.TTF", fontSize).SetBold(bold);
 
         return fontLoader;
     }
