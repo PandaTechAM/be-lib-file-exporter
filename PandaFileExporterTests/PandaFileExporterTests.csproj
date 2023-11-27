@@ -40,11 +40,5 @@
 		<ProjectReference Include="..\PandaFileExporterAPI\PandaFileExporterAPI.csproj" />
 		<ProjectReference Include="..\PandaFileExporter\PandaFileExporter.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="Fonts\*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
+	
 </Project>

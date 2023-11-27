@@ -99,13 +99,15 @@ public static class FileExporter
             // Convert source into data table
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
+            var fontPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Fonts", "ARIAL.ttf");
+            
             // Create a new workbook and setup ARIAL.TTF font to be used in workbook
             LoadOptions.DefaultGraphicEngine =
                 DefaultGraphicEngine.CreateWithFontsAndSystemFonts(
-                    new MemoryStream(File.ReadAllBytes("./Fonts/ARIAL.TTF")));
-            //DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("./Fonts/ARIAL.TTF")));
+                    new MemoryStream(File.ReadAllBytes(fontPath))); //Fonts/ARIAL.TTF
+            //DefaultGraphicEngine.CreateOnlyWithFonts(new MemoryStream(File.ReadAllBytes("content/ARIAL.TTF")));
             var loadOptions = new LoadOptions();
-            //{ GraphicEngine = new DefaultGraphicEngine("./Fonts/ARIAL.TTF") };
+            //{ GraphicEngine = new DefaultGraphicEngine("content/ARIAL.TTF") };
             using var workbook = new XLWorkbook(loadOptions);
 
             // Create new worksheet and align
@@ -409,7 +411,9 @@ public static class FileExporter
 
     private static FontBuilder GetArialUtf8Font(int fontSize = 9, bool bold = false)
     {
-        var fontLoader = FontBuilder.New().FromFile("./Fonts/ARIAL.TTF", fontSize).SetBold(bold);
+        var fontPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Fonts", "ARIAL.ttf");
+        
+        var fontLoader = FontBuilder.New().FromFile(fontPath, fontSize).SetBold(bold); //Fonts/ARIAL.TTF
 
         return fontLoader;
     }
