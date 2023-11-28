@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
-		<Version>0.0.53</Version>
+		<Version>0.0.54</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
@@ -14,19 +14,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Content Include="Fonts\**" Pack="true" PackagePath="Fonts" />
+		<Content Include="Fonts\**" Pack="true" PackagePath="Fonts" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<None Update="Fonts\**\*">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<PackagePath>Fonts\</PackagePath>
-		</None>
-	</ItemGroup>
-	
-	<Target Name="CopyFonts">
-		<Copy SourceFiles="Fonts\*" DestinationFolder="Fonts" />
-	</Target>
+<!--	<ItemGroup>-->
+<!--		<None Update="Fonts\**\*">-->
+<!--			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
+<!--			<PackagePath>Fonts\</PackagePath>-->
+<!--		</None>-->
+<!--	</ItemGroup>-->
+<!--	-->
+<!--	<Target Name="CopyFonts">-->
+<!--		<Copy SourceFiles="Fonts\*" DestinationFolder="Fonts" />-->
+<!--	</Target>-->
 	
 	<ItemGroup>
 		<None Remove="mime_types.json" />
