@@ -1,32 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
 		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
-		<Version>0.0.54</Version>
+		<Version>0.0.55</Version>
 		<Authors>PandaTech</Authors>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<TargetFramework>net8.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Content Include="Fonts\**" Pack="true" PackagePath="Fonts" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
-
-<!--	<ItemGroup>-->
-<!--		<None Update="Fonts\**\*">-->
-<!--			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>-->
-<!--			<PackagePath>Fonts\</PackagePath>-->
-<!--		</None>-->
-<!--	</ItemGroup>-->
-<!--	-->
-<!--	<Target Name="CopyFonts">-->
-<!--		<Copy SourceFiles="Fonts\*" DestinationFolder="Fonts" />-->
-<!--	</Target>-->
 	
 	<ItemGroup>
 		<None Remove="mime_types.json" />
@@ -44,10 +32,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ClosedXML" Version="0.101.0" />
+		<PackageReference Include="ClosedXML" Version="0.102.1" />
 		<PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
-		<PackageReference Include="PandaTech.BaseConverter" Version="1.0.16" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="PandaTech.BaseConverter" Version="1.0.18" />
 	</ItemGroup>
 </Project>

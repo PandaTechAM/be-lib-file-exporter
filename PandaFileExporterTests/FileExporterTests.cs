@@ -1,6 +1,6 @@
 using System.Reflection;
-using ExcelExporter;
 using Microsoft.EntityFrameworkCore;
+using PandaFileExporter;
 using PandaTech.IEnumerableFilters;
 using PandaTech.IEnumerableFilters.Dto;
 
@@ -49,7 +49,7 @@ namespace PandaFileExporterTests
             var test = request.ToString();
             var test2 = GetDataRequest.FromString(test);
 
-            var response = FileExporter.ExportToXlsx(_context.Models.ApplyFilters(test2.Filters));
+            var response = FileExporter.ExportToXlsx(_context.Models.ApplyFilters<DbModel, DbModelFilter>(test2.Filters));
 
             Assert.NotNull(response.Content);
             Assert.NotEmpty(response.Content.Headers);
@@ -64,7 +64,7 @@ namespace PandaFileExporterTests
             {
                 Filters = new()
                 {
-                    new FilterDto(){ PropertyName = "Name", Values = new List<object>(){ (object)"Foo" }, ComparisonType = ComparisonType.Equal },
+                    new FilterDto { PropertyName = "Name", Values = new List<object> { (object)"Foo" }, ComparisonType = ComparisonType.Equal },
                 },
                 Aggregates = new(),
                 Order = new()
@@ -74,7 +74,7 @@ namespace PandaFileExporterTests
             var test = request.ToString();
             var test2 = GetDataRequest.FromString(test);
 
-            var response = FileExporter.ExportToCsv(_context.Models.ApplyFilters(test2.Filters));
+            var response = FileExporter.ExportToCsv(_context.Models.ApplyFilters<DbModel, DbModelFilter>(test2.Filters));
 
             Assert.NotNull(response.Content);
             Assert.NotEmpty(response.Content.Headers);
@@ -92,7 +92,7 @@ namespace PandaFileExporterTests
                 Order = new()
             };
 
-            var response = FileExporter.ExportToPdf(_context.Models.ApplyFilters(request.Filters));
+            var response = FileExporter.ExportToPdf(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters));
 
             Assert.NotNull(response.Content);
             Assert.NotEmpty(response.Content.Headers);
@@ -110,7 +110,7 @@ namespace PandaFileExporterTests
                 Order = new()
             };
 
-            var response = FileExporter.ToExcelArray(_context.Models.ApplyFilters(request.Filters));
+            var response = FileExporter.ToExcelArray(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters));
 
             Assert.NotNull(response);
         }
@@ -127,7 +127,7 @@ namespace PandaFileExporterTests
                 Order = new()
             };
 
-            var response = FileExporter.ToExcelArray(_context.Models.ApplyFilters(request.Filters).ToList());
+            var response = FileExporter.ToExcelArray(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters).ToList());
 
             Assert.NotNull(response);
         }
@@ -144,7 +144,7 @@ namespace PandaFileExporterTests
                 Order = new()
             };
 
-            var response = FileExporter.ToCsvArray(_context.Models.ApplyFilters(request.Filters).ToList());
+            var response = FileExporter.ToCsvArray(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters).ToList());
 
             Assert.NotNull(response);
         }
@@ -161,7 +161,7 @@ namespace PandaFileExporterTests
                 Order = new()
             };
 
-            var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters(request.Filters));
+            var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters));
 
             Assert.NotNull(response);
         }
@@ -177,8 +177,8 @@ namespace PandaFileExporterTests
                 Aggregates = new(),
                 Order = new()
             };
-            var data = _context.Models.ApplyFilters(request.Filters).ToList();
-            var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters(request.Filters).ToList());
+            var data = _context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters).ToList();
+            var response = FileExporter.ToPdfArray(_context.Models.ApplyFilters<DbModel, DbModelFilter>(request.Filters).ToList());
 
             Assert.NotNull(response);
         }

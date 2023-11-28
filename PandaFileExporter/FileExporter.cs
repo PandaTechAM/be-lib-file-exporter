@@ -1,12 +1,18 @@
-﻿using ClosedXML.Excel;
-using ExcelExporter;
-using Gehtsoft.PDFFlow.Builder;
-using System.Net;
-using Gehtsoft.PDFFlow.Models.Enumerations;
-using System.Text;
-using ClosedXML.Graphics;
-using PandaFileExporter;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using ClosedXML.Excel;
+using ClosedXML.Graphics;
+using Gehtsoft.PDFFlow.Builder;
+using Gehtsoft.PDFFlow.Models.Enumerations;
+
+namespace PandaFileExporter;
 
 public static class FileExporter
 {
@@ -320,7 +326,7 @@ public static class FileExporter
                                     listItem!.GetType().GetElementType()!);
 
                             var row = dataRow.AddCellToRow(method.Invoke(null, new[]
-                                        {
+                            {
                                 listItem!,
                                 "; "
                             }) as string ?? "");
