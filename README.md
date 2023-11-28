@@ -1,7 +1,7 @@
 ## File Exporter
 Exports given data into csv, xls, xlsx and pdf formats.
 
-### Structure
+### Structure 
 
 Package consists of static `FileExporter` class which contains all needed calls to export given data into supported types defined inside `ExportType` enum.
 
