@@ -74,6 +74,8 @@ namespace PandaFileExporter
 
                     foreach (var prop in properties)
                     {
+                        var hasConverter = prop.GetCustomAttributes(typeof(PandaPropertyBaseConverterAttribute)).Any();
+                        
                         if (prop.PropertyType.Name == "List`1")
                         {
                             var listItem = prop.GetValue(item);
@@ -87,6 +89,7 @@ namespace PandaFileExporter
                                 "; "
                             }) as string ?? "";
                         }
+                        //else if (prop.PropertyType.IsGenericType && prop.PropertyType == typeof(List<>))
                         else if (prop.PropertyType.IsArray && prop.PropertyType.Name != "String")
                         {
                             var listItem = prop.GetValue(item);
@@ -100,14 +103,8 @@ namespace PandaFileExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        else if (prop.Name.ToLower().Contains("id") &&
-                                 prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
-                        {
-                            row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
-                        }
-                        else if (prop.Name.ToLower().Contains("id") &&
-                                 prop.PropertyType.UnderlyingSystemType.GenericTypeArguments.Any(x =>
-                                     x.AssemblyQualifiedName?.Contains("Int64") ?? false))
+                        
+                        else if (NumericTypesWithNullables.Contains(prop.PropertyType) && hasConverter)
                         {
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
                         }
@@ -133,6 +130,16 @@ namespace PandaFileExporter
             var atts = propertyInfo.GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
             return atts.Length == 0 ? propertyInfo.Name : (atts[0] as CustomDisplayNameAttribute)!.DisplayName;
         }
+
+        private static readonly Type[] NumericTypesWithNullables = {
+            typeof(int), typeof(double), typeof(decimal), typeof(long),
+            typeof(short), typeof(sbyte), typeof(byte), typeof(ulong),
+            typeof(ushort), typeof(uint), typeof(float),
+            typeof(int?), typeof(double?), typeof(decimal?), typeof(long?),
+            typeof(short?), typeof(sbyte?), typeof(byte?), typeof(ulong?),
+            typeof(ushort?), typeof(uint?), typeof(float?)
+        };
+
 
         public static string GetDisplayName<T>(this T model) where T : class
         {
