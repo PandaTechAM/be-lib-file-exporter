@@ -60,10 +60,12 @@ public static class FileExporter
     {
         try
         {
+            DataTable table = DataTable.FromQueryable(source);
+            
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             //response.Content = new StreamContent(memoryStream);
             response.Content =
-                new ByteArrayContent(ToCsvArray(source?.ToList())); // TODO: add ToCsvArray() method from IQueryable
+                new ByteArrayContent(table.ToCsv()); 
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(MimeTypes.CSV); // "text/csv"
             response.Content.Headers.ContentDisposition =
                 new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment");
@@ -102,7 +104,10 @@ public static class FileExporter
     {
         try
         {
-            // Convert source into data table
+            var table = DataTable.FromQueryable(source);
+            return table.ToXlsx();
+            
+            /*// Convert source into data table
             var table = source.ToDataTable(typeof(T).GetDisplayName());
 
             var fontPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Fonts", "ARIAL.ttf");
@@ -131,7 +136,7 @@ public static class FileExporter
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             // Return the byte array from the API endpoint
-            return memoryStream.ToArray();
+            return memoryStream.ToArray();*/
         }
         catch (Exception e)
         {
@@ -155,91 +160,8 @@ public static class FileExporter
     {
         try
         {
-            // Setup new StringBuilder for csv generation
-            var stringBuilder = new StringBuilder();
-
-            // Get headers
-            foreach (var item in typeof(T).GetProperties())
-            {
-                stringBuilder.Append($"{item.GetDisplayName().ValidateName()},");
-            }
-
-            // Add data rows
-            if (source is not null && source.Any())
-            {
-                foreach (var item in source)
-                {
-                    stringBuilder.AppendLine();
-
-                    foreach (var prop in item!.GetType().GetProperties())
-                    {
-                        if (prop.PropertyType.Name == "List`1")
-                        {
-                            var listItem = prop.GetValue(item);
-                            var method =
-                                typeof(Extender).GetMethod("ListAsString")!.MakeGenericMethod(
-                                    prop.PropertyType.GetGenericArguments()[0]);
-
-                            stringBuilder.Append($"{method.Invoke(null, new[]
-                            {
-                                listItem!,
-                                "; "
-                            }) as string ?? ""},");
-                        }
-                        else if (prop.PropertyType.IsArray && prop.PropertyType.Name != "String")
-                        {
-                            var listItem = prop.GetValue(item);
-
-                            var method =
-                                typeof(Extender).GetMethod("EnumAsString")!.MakeGenericMethod(
-                                    listItem!.GetType().GetElementType()!);
-
-                            stringBuilder.Append($"{method.Invoke(null, new[]
-                            {
-                                listItem!,
-                                "; "
-                            }) as string ?? ""},");
-                        }
-                        else if (prop.Name.ToLower().Contains("id") && prop.PropertyType.UnderlyingSystemType.Name.Contains("Int64"))
-                        {
-                            stringBuilder.Append($"{prop.GetValue(item)?.ToString().Base36String()},");
-                        }
-                        else if (prop.Name.ToLower().Contains("id") &&
-                                 prop.PropertyType.UnderlyingSystemType.GenericTypeArguments.Any(x =>
-                                     x.AssemblyQualifiedName?.Contains("Int64") ?? false))
-                        {
-                            stringBuilder.Append($"{prop.GetValue(item)?.ToString().Base36String()},");
-                        }
-                        else
-                        {
-                            var value = prop.GetValue(item)?.ToString();
-                            if (value != null)
-                            {
-                                // Check if the value contains commas or double quotes
-                                if (value.Contains(',') || value.Contains('"'))
-                                {
-                                    // Escape double quotes by doubling them
-                                    value = value.Replace("\"", "\"\"");
-
-                                    // Enclose the value in double quotes
-                                    value = $"\"{value}\"";
-                                }
-                                stringBuilder.Append($"{value},");
-                            }
-                            else
-                            {
-                                // Append the value to the CSV
-                                stringBuilder.Append($"{prop.GetValue(item)},");
-                            }
-                        }
-                    }
-                }
-            }
-
-            var data = Encoding.UTF8.GetBytes(stringBuilder.ToString());
-            var result = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
-
-            return result;
+            DataTable table = DataTable.FromQueryable(source);
+            return table.ToCsv();
         }
         catch (Exception e)
         {
@@ -263,6 +185,11 @@ public static class FileExporter
     {
         try
         {
+            var table = DataTable.FromQueryable(source);
+            return table.ToPdf();
+            
+            
+            /*
             // Create Memory Stream
             using var memoryStream = new MemoryStream();
 
@@ -371,7 +298,7 @@ public static class FileExporter
             // Build document
             builder.Build(memoryStream);
 
-            return memoryStream.ToArray();
+            return memoryStream.ToArray();*/
         }
         catch (Exception e)
         {

@@ -34,8 +34,8 @@ context?.Database.EnsureCreated();
 // Remove this part if you want to work with real database from server
 context?.Dummies.AddRange(new List<DummyTable>
 {
-    new() { Id = 1, RelatedId = 18, Name = "Բարև բոլորին 1", Description = "Test this out, it's OK" },
-    new() { Id = 2, RelatedId = 18, Name = "Բարև բոլորին 2", Description = "Test this out, it's OK" },
+    new() { Id = 1, RelatedId = 18, Name = "Բարև բոլորին 1", Description = "Test this out, it's OK" , Max = 100, NullableList = new List<string> { "1", "2", "3" }},
+    new() { Id = 2, RelatedId = 18, Name = "Բարև բոլորին 2", Description = "Test this out, it's OK" , EnumArray = new [] { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D }},
     new() { Id = 3, Name = "Բարև բոլորին 3", Description = "Test this out, it's OK" },
     new() { Id = 4, Name = "Բարև բոլորին 4", Description = "Test this out, it's OK" },
     new() { Id = 5, RelatedId = 18, Name = "Բարև բոլորին 5", Description = "Test this out, it's OK" },

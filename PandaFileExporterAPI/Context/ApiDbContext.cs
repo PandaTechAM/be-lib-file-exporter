@@ -37,8 +37,7 @@ namespace PandaFileExporterAPI.Context
             DateTime.UtcNow
         };
 
-        [NotMapped] 
-        public List<string>? NullableList { get; set; } = null;
+        public List<string>? NullableList { get; set; }
         [NotMapped] 
         public DTO DTO { get; set; } = new() { Name = "Name" };
 

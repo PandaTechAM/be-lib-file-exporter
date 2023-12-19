@@ -54,10 +54,10 @@ namespace PandaFileExporter
 
             return sheetName;
         }
-        
-        public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
+
+        public static System.Data.DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
         {
-            DataTable table = new(name);
+            System.Data.DataTable table = new(name);
             table.TableName = data.FirstOrDefault().GetDisplayNameFromAttribute().ValidateName();
 
             var properties = typeof(T).GetProperties();
@@ -75,7 +75,7 @@ namespace PandaFileExporter
                     foreach (var prop in properties)
                     {
                         var hasConverter = prop.GetCustomAttributes(typeof(PandaPropertyBaseConverterAttribute)).Any();
-                        
+
                         if (prop.PropertyType.Name == "List`1")
                         {
                             var listItem = prop.GetValue(item);
@@ -103,7 +103,6 @@ namespace PandaFileExporter
                                 "; "
                             }) as string ?? "";
                         }
-                        
                         else if (NumericTypesWithNullables.Contains(prop.PropertyType) && hasConverter)
                         {
                             row[prop.GetDisplayName()] = prop.GetValue(item)?.ToString().Base36String() ?? "";
@@ -124,14 +123,15 @@ namespace PandaFileExporter
             var atts = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true);
             return atts.Length == 0 ? propertyInfo.Name : (atts[0] as DisplayNameAttribute)!.DisplayName;
         }
-        
+
         public static string GetCustomDisplayName(this PropertyInfo propertyInfo)
         {
             var atts = propertyInfo.GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
             return atts.Length == 0 ? propertyInfo.Name : (atts[0] as CustomDisplayNameAttribute)!.DisplayName;
         }
 
-        private static readonly Type[] NumericTypesWithNullables = {
+        private static readonly Type[] NumericTypesWithNullables =
+        {
             typeof(int), typeof(double), typeof(decimal), typeof(long),
             typeof(short), typeof(sbyte), typeof(byte), typeof(ulong),
             typeof(ushort), typeof(uint), typeof(float),
@@ -148,15 +148,21 @@ namespace PandaFileExporter
             //    var attr = TypeDescriptor.GetAttributes(model.GetType())[2] as DisplayNameAttribute;
             //    return attr!.DisplayName;
             //}
-
-            var attrs = model.GetType().GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
-
-            if (attrs.Any())
+            if (model is Enum)
             {
-                return ((CustomDisplayNameAttribute)attrs.First()).DisplayName;
+                return model.ToString() ?? "";
             }
 
-            return model.GetType().Name;
+            {
+                var attrs = model.GetType().GetCustomAttributes(typeof(CustomDisplayNameAttribute), true);
+
+                if (attrs.Any())
+                {
+                    return ((CustomDisplayNameAttribute)attrs.First()).DisplayName;
+                }
+
+                return model.GetType().Name;
+            }
         }
 
         public static string GetDisplayName<T>(this DbSet<T> model) where T : class
