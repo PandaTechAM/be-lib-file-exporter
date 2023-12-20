@@ -154,7 +154,8 @@ public class DataTable
     public byte[] ToXlsx()
     {
         var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add(Name[..30]);
+        var length = Math.Min(Name.Length, 30);
+        var worksheet = workbook.Worksheets.Add(Name[..length]);
         for (int i = 0; i < Headers.Count; i++)
         {
             worksheet.Cell(1, i + 1).Value = Headers[i];
