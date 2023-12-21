@@ -42,6 +42,9 @@ namespace PandaFileExporterAPI.Context
         public DTO DTO { get; set; } = new() { Name = "Name" };
 
         [NotMapped] 
+        public List<DTO>? Dtos { get; set; } = new List<DTO> { new DTO { Id = 1, Name = "1" } };
+
+        [NotMapped] 
         public MyEnum Enum { get; set; } = MyEnum.A;
         [NotMapped] 
         public MyEnum[] EnumArray { get; set; } = { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
