@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Text;
 using ClosedXML.Excel;
 using PdfSharpCore;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
 
 namespace PandaFileExporter;
 
@@ -126,6 +128,7 @@ public class DataTable
         typeof(short?), typeof(sbyte?), typeof(byte?), typeof(ulong?),
         typeof(ushort?), typeof(uint?), typeof(float?)
     };
+
     private string Encapsulate(string value)
     {
         if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
@@ -180,17 +183,21 @@ public class DataTable
         var columnWidths = new List<double>();
 
         var fontHeader =
-            new PdfSharpCore.Drawing.XFont("Arial", 10, PdfSharpCore.Drawing.XFontStyle.Bold); // Bold font for headers
-        var fontData = new PdfSharpCore.Drawing.XFont("Arial", 10); // Regular font for data
-        var document = new PdfSharpCore.Pdf.PdfDocument();
+            new XFont("Calibri", 10, XFontStyle.Bold,
+                new XPdfFontOptions(PdfFontEncoding.Unicode));
+
+        var fontData = new XFont("Calibri", 10, XFontStyle.Regular,
+            new XPdfFontOptions(PdfFontEncoding.Unicode)); 
+        
+        var document = new PdfDocument();
         var page = document.AddPage();
         page.Orientation = PageOrientation.Landscape;
-        var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(page);
+        var graphics = XGraphics.FromPdfPage(page);
 
         // Add header 
-        
-        graphics.DrawString(Name, fontHeader, PdfSharpCore.Drawing.XBrushes.Black, 20, 10);
-        
+
+        graphics.DrawString(Name, fontHeader, XBrushes.Black, 20, 10);
+
         foreach (var t in Headers)
         {
             columnWidths.Add(Math.Max(
@@ -203,7 +210,7 @@ public class DataTable
         var y = 50; // Starting Y position
 
 
-        var brush = PdfSharpCore.Drawing.XBrushes.Black;
+        var brush = XBrushes.Black;
 
         for (int i = 0; i < Headers.Count; i++)
         {
@@ -233,18 +240,18 @@ public class DataTable
         x = 20; // Reset X position for each row
         for (var i = 0; i < Headers.Count; i++)
         {
-            graphics.DrawLine(PdfSharpCore.Drawing.XPens.Black, x, 50, x, y);
+            graphics.DrawLine(XPens.Black, x, 50, x, y);
             x += (int)Math.Floor(columnWidths[i]); // Increment X position for the next data cell
         }
 
-        graphics.DrawLine(PdfSharpCore.Drawing.XPens.Black, x, 30, x, y);
+        graphics.DrawLine(XPens.Black, x, 50, x, y);
 
 
         // ADD LINES TO SEPARATE ROWS
         y = 50; // Reset Y position for each row
         for (var i = 0; i < Rows.Count + 2; i++)
         {
-            graphics.DrawLine(PdfSharpCore.Drawing.XPens.Black, 20, y, x, y);
+            graphics.DrawLine(XPens.Black, 20, y, x, y);
             y += 20; // Increment Y position for the next data cell
         }
 
