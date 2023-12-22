@@ -5,28 +5,49 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BaseConverter;
 using ClosedXML.Excel;
+using Microsoft.OpenApi.Extensions;
 using PdfSharpCore;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
+using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace PandaFileExporter;
 
 public class DataTable
 {
     public string Name { get; set; } = null!;
-    public List<string> Headers { get; set; } = new();
-    public List<Dictionary<string, string>> Rows { get; set; }
+    public List<string> Headers { get; set; } = [];
+    public List<Dictionary<string, string>> Rows { get; set; } = [];
 
     public static DataTable FromQueryable<T>(IQueryable<T>? data)
     {
         var table = new DataTable();
         if (data == null) return table;
 
-        table.Name = typeof(T).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? typeof(T).Name;
+        var displayName = typeof(T).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+        displayName ??= typeof(T).Name + " {DateTime}";
+        displayName = displayName.Replace("{DateTime}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
 
+        table.Name = displayName;
+
+        return Table(table, data);
+    }
+
+    public static DataTable FromQueryable<T>(IQueryable<T>? data, string name)
+    {
+        var table = new DataTable();
+        if (data == null) return table;
+
+        table.Name = name;
+
+        return Table(table, data);
+    }
+
+    private static DataTable Table<T>(DataTable table, IQueryable<T>? data)
+    {
         var properties = typeof(T).GetProperties()
-            // .Where(x => x.GetCustomAttributes<DisplayNameAttribute>().Any())
             .Select(x => new
             {
                 Property = x,
@@ -39,9 +60,7 @@ public class DataTable
             table.Headers.Add(property.Name);
         }
 
-        table.Rows = new List<Dictionary<string, string>>();
-
-        foreach (var dataRow in data)
+        foreach (var dataRow in data!)
         {
             var row = new Dictionary<string, string>();
 
@@ -57,16 +76,15 @@ public class DataTable
             table.Rows.Add(row);
         }
 
-
         return table;
     }
 
-    static bool IsCollectionType(Type type)
+    private static bool IsCollectionType(Type type)
     {
         return type.GetInterface(nameof(ICollection)) != null;
     }
 
-    static string ConvertDataToString(object? value, bool HasBaseConverter)
+    private static string ConvertDataToString(object? value, bool hasBaseConverter)
     {
         string stringValue;
         switch (value)
@@ -89,21 +107,21 @@ public class DataTable
             default:
             {
                 if (NumericTypesWithNullables.Contains(value.GetType())
-                    && HasBaseConverter)
+                    && hasBaseConverter)
                 {
                     stringValue = value.ToString().Base36String() ?? "";
                 }
                 else if (value.GetType().IsArray)
                 {
                     List<string> list = (from object? obj in (value as IEnumerable)!
-                        select ConvertDataToString(obj, HasBaseConverter)).ToList();
+                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
 
                     stringValue = string.Join(';', list);
                 }
                 else if (IsCollectionType(value.GetType()))
                 {
                     List<string> list = (from object? obj in (value as IEnumerable)!
-                        select ConvertDataToString(obj, HasBaseConverter)).ToList();
+                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
 
                     stringValue = string.Join(';', list);
                 }
@@ -129,7 +147,7 @@ public class DataTable
         typeof(ushort?), typeof(uint?), typeof(float?)
     };
 
-    private string Encapsulate(string value)
+    private static string Encapsulate(string value)
     {
         if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
         {
@@ -152,7 +170,6 @@ public class DataTable
         var data = Encoding.UTF8.GetBytes(csv.ToString());
         return Encoding.UTF8.GetPreamble().Concat(data).ToArray();
     }
-
 
     public byte[] ToXlsx()
     {
@@ -178,86 +195,238 @@ public class DataTable
         return stream.ToArray();
     }
 
-    public byte[] ToPdf()
+    public byte[] ToPdf(bool headerOnEachPage = false, PageSize pageSize = PageSize.A4,
+        PageOrientation pageOrientation = PageOrientation.Landscape)
     {
-        var columnWidths = new List<double>();
+        var pdfDrawer = new PdfDrawer(this,pageOrientation, pageSize);
 
-        var fontHeader =
-            new XFont("Calibri", 10, XFontStyle.Bold,
-                new XPdfFontOptions(PdfFontEncoding.Unicode));
+        pdfDrawer.AddSpacing(10);
+        pdfDrawer.AddDocumentHeader();
+        pdfDrawer.AddSpacing(10);
+        pdfDrawer.AddTableHeaders();
+        pdfDrawer.AddTableRows(headerOnEachPage);
 
-        var fontData = new XFont("Calibri", 10, XFontStyle.Regular,
-            new XPdfFontOptions(PdfFontEncoding.Unicode)); 
+        return pdfDrawer.GetBytes();
+    }
+
+
+    private class PdfDrawer
+    {
+        private const string FONT_NAME = "Calibri";
+        private const double FONT_SIZE = 10;
+        private const double DOCUMENT_PADDING = 15;
+        private const double CELL_PADDING = 5;
+        private readonly PageOrientation _pageOrientation;
+        private readonly PageSize _pageSize;
         
-        var document = new PdfDocument();
-        var page = document.AddPage();
-        page.Orientation = PageOrientation.Landscape;
-        var graphics = XGraphics.FromPdfPage(page);
 
-        // Add header 
+        private double _currentX;
+        private double _currentY;
+        private readonly PdfDocument _document;
+        private readonly double _pageWidth;
+        private readonly double _pageHeight;
+        private int pages = 1;
+        private double rowHeight = 0;
+        
 
-        graphics.DrawString(Name, fontHeader, XBrushes.Black, 20, 10);
+        private readonly List<XGraphics> _graphicsList = new();
+        private readonly List<double> _columnWidths;
+        private int _documentsInRow = 0;
 
-        foreach (var t in Headers)
+        private DataTable _table;
+
+        public PdfDrawer(DataTable table, PageOrientation pageOrientation, PageSize pageSize)
         {
-            columnWidths.Add(Math.Max(
-                Rows.Select(x => graphics.MeasureString(x[t], fontData).Width).Max(),
-                graphics.MeasureString(t, fontHeader).Width) + 5);
-        }
+            _table = table;
+            _pageOrientation = pageOrientation;
+            _pageSize = pageSize;
+            _currentX = 0;
+            _currentY = 0;
 
-
-        var x = 20; // Starting X position
-        var y = 50; // Starting Y position
-
-
-        var brush = XBrushes.Black;
-
-        for (int i = 0; i < Headers.Count; i++)
-        {
-            graphics.DrawString(Headers[i], fontHeader, brush, x + 2, y + 18);
-            x += (int)Math.Floor(columnWidths[i]); // Increment X position for the next data cell
-        }
-
-        y += 20; // Increase Y position for rows
-
-        foreach (var row in Rows)
-        {
-            x = 20; // Reset X position for each row
-            for (var index = 0; index < Headers.Count; index++)
+            _columnWidths = new List<double>();
+            
+            _document = new PdfDocument();
+            var page = _document.AddPage();
+            page.Size = _pageSize;
+            page.Orientation = _pageOrientation;
+            _pageWidth = page.Width;
+            _pageHeight = page.Height;
+            
+            var graphics = XGraphics.FromPdfPage(page);
+            foreach (var t in table.Headers)
             {
-                var t = Headers[index];
-                graphics.DrawString(row[t], fontData, brush, x + 2, y + 18);
-                x += (int)Math.Floor(columnWidths[index]); // Increment X position for the next data cell
+                _columnWidths.Add(Math.Max(
+                    table.Rows.Select(x => graphics.MeasureString(x[t], Font(FONT_SIZE)).Width).Max(),
+                    graphics.MeasureString(t, Font(FONT_SIZE, true)).Width) + 5);
+            }
+            
+            _documentsInRow = 1;
+            rowHeight = graphics.MeasureString("Test", Font(FONT_SIZE)).Height + 4;
+
+            _graphicsList.Add(graphics);
+            var currentGraphicsIndex = 0;
+            var x = DOCUMENT_PADDING;
+            foreach (var t in _columnWidths)
+            {
+                if ((currentGraphicsIndex + 1) * _pageWidth < x + t + DOCUMENT_PADDING + 2 * CELL_PADDING)
+                {
+                    currentGraphicsIndex++;
+                    var newPage = _document.AddPage();
+                    newPage.Size = _pageSize;
+                    newPage.Orientation = _pageOrientation;
+                    
+                    _graphicsList.Add(XGraphics.FromPdfPage(newPage));
+                    x = currentGraphicsIndex * _pageWidth + DOCUMENT_PADDING;
+                    _documentsInRow++;
+                }
+
+                x += t + CELL_PADDING * 2;
+            }
+        }
+
+        private XFont Font(double fontSize, bool bold = false)
+        {
+            return new XFont(FONT_NAME, fontSize, bold ? XFontStyle.Bold : XFontStyle.Regular,
+                new XPdfFontOptions(PdfFontEncoding.Unicode));
+        }
+
+        public void AddRow(IReadOnlyList<string> values, XFont font, bool gridUp, bool gridDown, bool gridLeft, bool gridRight)
+        {
+            _currentX = DOCUMENT_PADDING;
+            var graphics = _graphicsList.TakeLast(_documentsInRow).ToList();
+            var currentGraphicsIndex = 0;
+            var currentGraphics = graphics[currentGraphicsIndex];
+            var cellHeight = currentGraphics.MeasureString("Test", font).Height + 4;
+            
+            for (var index = 0; index < values.Count; index++)
+            {
+                var value = values[index];
+                if ((currentGraphicsIndex + 1) * _pageWidth < _currentX + _columnWidths[index] + DOCUMENT_PADDING + 2 * CELL_PADDING)
+                {
+                    currentGraphicsIndex++;
+                    currentGraphics = graphics[currentGraphicsIndex];
+                    _currentX = currentGraphicsIndex * _pageWidth + DOCUMENT_PADDING;
+                }
+
+                currentGraphics.DrawString(value, font, XBrushes.Black, NormalizeX(_currentX + CELL_PADDING),
+                    NormalizeY(_currentY + cellHeight - 2));
+                
+                if (gridUp)
+                    currentGraphics.DrawLine(
+                        XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY));
+                if (gridDown)
+                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY + cellHeight), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY + cellHeight));
+                if (gridLeft)
+                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY), NormalizeX(_currentX) , NormalizeY(_currentY + cellHeight));
+                if (gridRight)
+                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX) + _columnWidths[index] + 2 * CELL_PADDING, NormalizeY(_currentY), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY + cellHeight));
+                
+                _currentX += _columnWidths[index] + 2 * CELL_PADDING;
             }
 
-            y += 20; // Increase Y position for the next row
+            _currentY += cellHeight;
         }
 
-        // fit width to content
-        page.Width = columnWidths.Sum() + 40;
-
-        // ADD LINES TO SEPARATE COLUMNS
-        x = 20; // Reset X position for each row
-        for (var i = 0; i < Headers.Count; i++)
+        private double NormalizeX(double x)
         {
-            graphics.DrawLine(XPens.Black, x, 50, x, y);
-            x += (int)Math.Floor(columnWidths[i]); // Increment X position for the next data cell
+            return x % _pageWidth;
         }
-
-        graphics.DrawLine(XPens.Black, x, 50, x, y);
-
-
-        // ADD LINES TO SEPARATE ROWS
-        y = 50; // Reset Y position for each row
-        for (var i = 0; i < Rows.Count + 2; i++)
+        
+        private double NormalizeY(double y)
         {
-            graphics.DrawLine(XPens.Black, 20, y, x, y);
-            y += 20; // Increment Y position for the next data cell
+            return y % _pageHeight;
         }
 
-        var stream = new System.IO.MemoryStream();
 
-        document.Save(stream);
-        return stream.ToArray();
+        public void AddSpacing(double x)
+        {
+            _currentY += x;
+        }
+        
+        public void AddRow(string value, XFont font)
+        {
+            _currentX = DOCUMENT_PADDING;
+            var graphics = _graphicsList.TakeLast(_documentsInRow).First();
+            var cellHeight = (int)graphics.MeasureString("Test", font).Height + 4;
+
+            graphics.DrawString(value, font, XBrushes.Black, _currentX + 2, _currentY + cellHeight - 2);
+            _currentY += cellHeight;
+
+            // TODO: Add new page if needed
+            // TODO: Handle long values
+        }
+
+        public void AddDocumentHeader()
+        {
+            AddRow(_table.Name, Font(FONT_SIZE * 2, true));
+        }
+
+
+        public void AddTableHeaders()
+        {
+            AddRow(_table.Headers, Font(FONT_SIZE * 1, true), true, true, true, true);
+        }
+
+        public byte[] GetBytes()
+        {
+            var stream = new System.IO.MemoryStream();
+
+            _document.Options.FlateEncodeMode = PdfFlateEncodeMode.BestCompression;
+
+            _document.Save(stream);
+
+            return stream.ToArray();
+        }
+
+        public void AddTableRows(bool headerOnEachPage = false)
+        {
+            var neddUpperLine = false;
+            
+            foreach (var row in _table.Rows)
+            {
+                if (_currentY + 2 * DOCUMENT_PADDING + rowHeight > _pageHeight * pages )
+                {
+                    for (int x = 0; x < _documentsInRow; x++)
+                    {
+                        var page = _document.AddPage();
+                        page.Size = _pageSize;
+                        page.Orientation = _pageOrientation;
+                        _graphicsList.Add(XGraphics.FromPdfPage(page));
+                    }
+
+                    pages++;
+                    _currentY = DOCUMENT_PADDING + _pageHeight * (pages - 1);
+                    if (headerOnEachPage)
+                        AddTableHeaders();
+                    else
+                        neddUpperLine = true;
+                }
+                
+                AddRow(row.Values.ToList(), Font(FONT_SIZE), neddUpperLine, true, true, true);
+                neddUpperLine = false;
+            }
+        }
+    }
+}
+
+public static class DataTableExtender
+{
+    public static DataTable ToDataTable<T>(this IEnumerable<T>? data, string name)
+    {
+        return DataTable.FromQueryable(data?.AsQueryable(), name);
+    }
+
+    public static DataTable ToDataTable<T>(this IEnumerable<T>? data)
+    {
+        return DataTable.FromQueryable(data?.AsQueryable());
+    }
+
+    public static string Base36String(this object? value)
+    {
+        if (value is null) return "";
+
+        _ = long.TryParse((string)value, out var convertedValue);
+
+        return PandaBaseConverter.Base10ToBase36(convertedValue) ?? "";
     }
 }

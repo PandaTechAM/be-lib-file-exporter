@@ -1,11 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
-using PandaFileExporter;
 
 namespace PandaFileExporterTests
 {
     [DisplayName("DB Model")]
-    [CustomDisplayName("Model Custom Name")]
     public class DbModel
     {
         [DisplayName("Model Id")]
@@ -14,12 +12,12 @@ namespace PandaFileExporterTests
         public string Name { get; set; } = null!;
     }
 
-    [CustomDisplayName("DTO Custom Name")]
+    [DisplayName("DTO Custom Name")]
     public class DtoModel
     {
-        [CustomDisplayName("DTO Id")]
+        [DisplayName("DTO Id")]
         public int Id { get; set; }
-        [CustomDisplayName("DTO DbModels")]
+        [DisplayName("DTO DbModels")]
         public List<DbModel> DbModels { get; set; } = null!;
         [DisplayName("DTO Not Nullable List")]
         public List<string> ListNotNullable { get; set; } = null!;

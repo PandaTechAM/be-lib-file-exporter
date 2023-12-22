@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PandaFileExporter;
 using PandaFileExporterAPI.Context;
+using PdfSharpCore;
 
 namespace PandaFileExporterAPI.Controllers
 {
@@ -77,9 +78,9 @@ namespace PandaFileExporterAPI.Controllers
         }
 
         [HttpGet("export-pdf")]
-        public IActionResult ExportPdf()
+        public IActionResult ExportPdf(bool headersOnEachPage = false, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
-            var exportData = FileExporter.ToPdfArray(_context.Dummies);
+            var exportData = _context.Dummies.ToDataTable().ToPdf(headersOnEachPage, pageSize,  pageOrientation);
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
