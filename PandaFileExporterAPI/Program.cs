@@ -56,7 +56,7 @@ context?.Dummies.AddRange(new List<DummyTable>
 });
 
 for (int x = 20; x < 1000; x++)
-    context?.Dummies.Add(new() { Id = x, Name = "Բարև բոլորին 19", Description = "Test this out, it's OK" });
+    context?.Dummies.Add(new DummyTable { Id = x, Name = "Բարև բոլորին 19", Description = "Test this out, it's OK" });
 context?.SaveChanges();
 
 app.Run();

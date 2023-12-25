@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PandaFileExporterAPI.Context
 {
-    //[DisplayName("Dummy Table - long name which must me 1-31 {DateTime}")]
+    [DisplayName("Dummy Table - long name which must me 1-31 {DateTime}")]
     public class DummyTable
     {
         [PandaPropertyBaseConverter]

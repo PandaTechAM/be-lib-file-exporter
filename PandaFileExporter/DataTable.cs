@@ -167,24 +167,23 @@ public class DataTable
             csv.AppendLine(string.Join(",", row.Values.Select(Encapsulate)));
         }
 
-        var data = Encoding.UTF8.GetBytes(csv.ToString());
+        var data = Encoding.UTF8.GetBytes(csv.ToString().Trim());
         return Encoding.UTF8.GetPreamble().Concat(data).ToArray();
     }
 
     public byte[] ToXlsx()
     {
         var workbook = new XLWorkbook();
-        var length = Math.Min(Name.Length, 30);
-        var worksheet = workbook.Worksheets.Add(Name[..length]);
-        for (int i = 0; i < Headers.Count; i++)
+        var worksheet = workbook.Worksheets.Add(ValidName(Name));
+        for (var i = 0; i < Headers.Count; i++)
         {
             worksheet.Cell(1, i + 1).Value = Headers[i];
         }
 
-        for (int i = 0; i < Rows.Count; i++)
+        for (var i = 0; i < Rows.Count; i++)
         {
             var row = Rows[i];
-            for (int j = 0; j < Headers.Count; j++)
+            for (var j = 0; j < Headers.Count; j++)
             {
                 worksheet.Cell(i + 2, j + 1).Value = row[Headers[j]];
             }
@@ -195,10 +194,23 @@ public class DataTable
         return stream.ToArray();
     }
 
+    private static string ValidName(string name)
+    {
+        var invalidChars = "\0\u0003:\\/?*[]".ToCharArray();
+
+        var validName = name;
+        foreach (var invalidChar in invalidChars)
+        {
+            validName = validName.Replace(invalidChar, '_');
+        }
+
+        return validName[..Math.Min(validName.Length, 30)];
+    }
+
     public byte[] ToPdf(bool headerOnEachPage = false, PageSize pageSize = PageSize.A4,
         PageOrientation pageOrientation = PageOrientation.Landscape)
     {
-        var pdfDrawer = new PdfDrawer(this,pageOrientation, pageSize);
+        var pdfDrawer = new PdfDrawer(this, pageOrientation, pageSize);
 
         pdfDrawer.AddSpacing(10);
         pdfDrawer.AddDocumentHeader();
@@ -218,7 +230,7 @@ public class DataTable
         private const double CELL_PADDING = 5;
         private readonly PageOrientation _pageOrientation;
         private readonly PageSize _pageSize;
-        
+
 
         private double _currentX;
         private double _currentY;
@@ -227,7 +239,7 @@ public class DataTable
         private readonly double _pageHeight;
         private int pages = 1;
         private double rowHeight = 0;
-        
+
 
         private readonly List<XGraphics> _graphicsList = new();
         private readonly List<double> _columnWidths;
@@ -244,14 +256,14 @@ public class DataTable
             _currentY = 0;
 
             _columnWidths = new List<double>();
-            
+
             _document = new PdfDocument();
             var page = _document.AddPage();
             page.Size = _pageSize;
             page.Orientation = _pageOrientation;
             _pageWidth = page.Width;
             _pageHeight = page.Height;
-            
+
             var graphics = XGraphics.FromPdfPage(page);
             foreach (var t in table.Headers)
             {
@@ -259,7 +271,7 @@ public class DataTable
                     table.Rows.Select(x => graphics.MeasureString(x[t], Font(FONT_SIZE)).Width).Max(),
                     graphics.MeasureString(t, Font(FONT_SIZE, true)).Width) + 5);
             }
-            
+
             _documentsInRow = 1;
             rowHeight = graphics.MeasureString("Test", Font(FONT_SIZE)).Height + 4;
 
@@ -274,7 +286,7 @@ public class DataTable
                     var newPage = _document.AddPage();
                     newPage.Size = _pageSize;
                     newPage.Orientation = _pageOrientation;
-                    
+
                     _graphicsList.Add(XGraphics.FromPdfPage(newPage));
                     x = currentGraphicsIndex * _pageWidth + DOCUMENT_PADDING;
                     _documentsInRow++;
@@ -290,18 +302,20 @@ public class DataTable
                 new XPdfFontOptions(PdfFontEncoding.Unicode));
         }
 
-        public void AddRow(IReadOnlyList<string> values, XFont font, bool gridUp, bool gridDown, bool gridLeft, bool gridRight)
+        public void AddRow(IReadOnlyList<string> values, XFont font, bool gridUp, bool gridDown, bool gridLeft,
+            bool gridRight)
         {
             _currentX = DOCUMENT_PADDING;
             var graphics = _graphicsList.TakeLast(_documentsInRow).ToList();
             var currentGraphicsIndex = 0;
             var currentGraphics = graphics[currentGraphicsIndex];
             var cellHeight = currentGraphics.MeasureString("Test", font).Height + 4;
-            
+
             for (var index = 0; index < values.Count; index++)
             {
                 var value = values[index];
-                if ((currentGraphicsIndex + 1) * _pageWidth < _currentX + _columnWidths[index] + DOCUMENT_PADDING + 2 * CELL_PADDING)
+                if ((currentGraphicsIndex + 1) * _pageWidth <
+                    _currentX + _columnWidths[index] + DOCUMENT_PADDING + 2 * CELL_PADDING)
                 {
                     currentGraphicsIndex++;
                     currentGraphics = graphics[currentGraphicsIndex];
@@ -310,17 +324,24 @@ public class DataTable
 
                 currentGraphics.DrawString(value, font, XBrushes.Black, NormalizeX(_currentX + CELL_PADDING),
                     NormalizeY(_currentY + cellHeight - 2));
-                
+
                 if (gridUp)
                     currentGraphics.DrawLine(
-                        XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY));
+                        XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY),
+                        NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY));
                 if (gridDown)
-                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY + cellHeight), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY + cellHeight));
+                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY + cellHeight),
+                        NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING),
+                        NormalizeY(_currentY + cellHeight));
                 if (gridLeft)
-                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY), NormalizeX(_currentX) , NormalizeY(_currentY + cellHeight));
+                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY),
+                        NormalizeX(_currentX), NormalizeY(_currentY + cellHeight));
                 if (gridRight)
-                    currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX) + _columnWidths[index] + 2 * CELL_PADDING, NormalizeY(_currentY), NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY + cellHeight));
-                
+                    currentGraphics.DrawLine(XPens.Black,
+                        NormalizeX(_currentX) + _columnWidths[index] + 2 * CELL_PADDING, NormalizeY(_currentY),
+                        NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING),
+                        NormalizeY(_currentY + cellHeight));
+
                 _currentX += _columnWidths[index] + 2 * CELL_PADDING;
             }
 
@@ -331,7 +352,7 @@ public class DataTable
         {
             return x % _pageWidth;
         }
-        
+
         private double NormalizeY(double y)
         {
             return y % _pageHeight;
@@ -342,7 +363,7 @@ public class DataTable
         {
             _currentY += x;
         }
-        
+
         public void AddRow(string value, XFont font)
         {
             _currentX = DOCUMENT_PADDING;
@@ -381,12 +402,12 @@ public class DataTable
         public void AddTableRows(bool headerOnEachPage = false)
         {
             var neddUpperLine = false;
-            
+
             foreach (var row in _table.Rows)
             {
-                if (_currentY + 2 * DOCUMENT_PADDING + rowHeight > _pageHeight * pages )
+                if (_currentY + 2 * DOCUMENT_PADDING + rowHeight > _pageHeight * pages)
                 {
-                    for (int x = 0; x < _documentsInRow; x++)
+                    for (var x = 0; x < _documentsInRow; x++)
                     {
                         var page = _document.AddPage();
                         page.Size = _pageSize;
@@ -401,7 +422,7 @@ public class DataTable
                     else
                         neddUpperLine = true;
                 }
-                
+
                 AddRow(row.Values.ToList(), Font(FONT_SIZE), neddUpperLine, true, true, true);
                 neddUpperLine = false;
             }
