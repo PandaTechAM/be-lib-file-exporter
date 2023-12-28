@@ -1,15 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<PackageId>PandaTech.FileExporter</PackageId>
-		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
-		<Version>1.0.4</Version>
 		<Authors>PandaTech</Authors>
-		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
+		<Copyright>MIT</Copyright>
 		<PackageIcon>Logo.jpg</PackageIcon>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<TargetFramework>net8.0</TargetFramework>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<Version>1.0.4</Version>
+		<Company>PandaTech</Company>
+		<Title>Export table data into xls, xlsx, csv, pdf formats</Title>
+		<RepositoryType>lib</RepositoryType>
+		<PackageTags>Pandatech, lib, export</PackageTags>
+		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
+		<RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
+		<PackageReleaseNotes>Structure change</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -17,14 +23,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="mime_types.json" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="..\Logo.jpg">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
+		<None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
+		<None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 
 	<ItemGroup>
