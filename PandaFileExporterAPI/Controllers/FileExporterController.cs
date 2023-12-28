@@ -52,11 +52,11 @@ namespace PandaFileExporterAPI.Controllers
         [HttpGet("export-csv")]
         public IActionResult ExportCsv()
         {
-            var exportData = FileExporter.ToCsvArray(_context.Dummies.ToList());
+            var exportData = _context.Dummies.AsQueryable().ToDataTable().ToCsv();
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
+                exportData = exportData.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
             }
 
@@ -66,11 +66,11 @@ namespace PandaFileExporterAPI.Controllers
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
         {
-            var exportData = FileExporter.ToExcelArray(_context.Dummies.ToList());
+            var exportData = _context.Dummies.ToDataTable().ToXlsx();
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(exportData , $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
+                exportData = ZipExtensions.ToZip(exportData , $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
             }
 
@@ -84,7 +84,7 @@ namespace PandaFileExporterAPI.Controllers
 
             if (exportData.Length > (10 * 1024 * 1024))
             {
-                exportData = FileExporter.ToZipArray(exportData, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
+                exportData = exportData.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
                 return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
             }
 
