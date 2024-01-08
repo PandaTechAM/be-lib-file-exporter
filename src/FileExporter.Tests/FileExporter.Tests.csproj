@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Fonts\ARIAL.TTF" />
+		<None Remove="Fonts\arialbd.ttf" />
+		<None Remove="Fonts\arialbi.ttf" />
+		<None Remove="Fonts\ariali.ttf" />
+		<None Remove="Fonts\ARIALN.TTF" />
+		<None Remove="Fonts\ARIALNB.TTF" />
+		<None Remove="Fonts\ARIALNBI.TTF" />
+		<None Remove="Fonts\ARIALNI.TTF" />
+		<None Remove="Fonts\ariblk.ttf" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="PandaTech.IEnumerableFilters" Version="3.2.30" />
+		<PackageReference Include="xunit" Version="2.6.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.5.4">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="6.0.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FileExporter.Demo\FileExporter.Demo.csproj" />
+		<ProjectReference Include="..\FileExporter\FileExporter.csproj" />
+	</ItemGroup>
+	
+</Project>
