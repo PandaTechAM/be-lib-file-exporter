@@ -223,7 +223,7 @@ public class DataTable
 
     private class PdfDrawer
     {
-        private const string FONT_NAME = "Calibri";
+        private const string FONT_NAME = "Arial";
         private const double FONT_SIZE = 10;
         private const double DOCUMENT_PADDING = 15;
         private const double CELL_PADDING = 5;
