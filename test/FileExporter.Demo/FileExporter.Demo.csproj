@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileExporter\FileExporter.csproj" />
+    <ProjectReference Include="..\..\src\FileExporter\FileExporter.csproj" />
   </ItemGroup>
 
 </Project>

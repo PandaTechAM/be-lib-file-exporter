@@ -37,8 +37,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FileExporter.Demo\FileExporter.Demo.csproj" />
-		<ProjectReference Include="..\FileExporter\FileExporter.csproj" />
+		<ProjectReference Include="..\..\src\FileExporter.Demo\FileExporter.Demo.csproj" />
+		<ProjectReference Include="..\..\src\FileExporter\FileExporter.csproj" />
 	</ItemGroup>
 	
 </Project>
