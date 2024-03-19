@@ -1,65 +1,33 @@
-name: Build and Publish NuGet Package
+name: Deploy NuGet Package
+
+env:
+  PROJECT_PATH: './src/FileExporter/FileExporter.csproj'
+  OUTPUT_DIR: 'nupkgs'
+  NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
+  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
 on:
   push:
     branches:
-      - development
-
+      - main
 jobs:
-  build:
-    runs-on: self-hosted
-
-    env:
-      DOTNET_VERSION: 8.x.x
-      NUGET_SOURCE_PANDATECH: https://hubrepopanda.pandatech.it/repository/nuget-hosted/index.json
-      NUGET_SOURCE_ORG: https://api.nuget.org/v3/index.json
-      OUTPUT_DIR: ./dist
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-          include-prerelease: false
-      
-      - name: Remove old NuGet sources
-        run: |
-          dotnet nuget remove source pandatech
-        #  dotnet nuget remove source nuget.org
-        continue-on-error: true
-
-      - name: Add NuGet source
-        run: |
-          dotnet nuget add source https://hubrepopanda.pandatech.it/repository/nuget-hosted/index.json -n pandatech --username ${{ secrets.nexus_username }} --password ${{ secrets.nexus_password }} --store-password-in-clear-text
-        continue-on-error: true
-
-     # - name: Add nuget source
-     #   run: |
-     #     dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org 
-     #   continue-on-error: true
-        
-      - name: Restore
-        run: |
-          dotnet restore --verbosity normal --no-cache --force --disable-parallel
+          global-json-file: global.json
 
       - name: Build
-        run: |
-          dotnet build --no-restore --verbosity normal --configuration Release
+        run: dotnet build ${{ env.PROJECT_PATH }}
 
-      - name: Pack NuGet package
-        run: dotnet pack ./PandaFileExporter/PandaFileExporter.csproj --no-build --configuration Release  -o ./dist
+      - name: Pack
+        run: dotnet pack ${{ env.PROJECT_PATH }} --output ${{ env.OUTPUT_DIR }}
 
-      - name: Push NuGet package to Nexus
-        run: |
-          ls ./dist
-          PACKAGE_FILE=$(ls ./dist/*.nupkg | head -n 1)
-          echo "Pushing NuGet package: $PACKAGE_FILE"
-          dotnet nuget push "$PACKAGE_FILE" -s https://hubrepopanda.pandatech.it/repository/nuget-hosted/index.json --skip-duplicate
-
-      - name: Cleanup build folder
-        run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
+      - name: Publish
+        run: dotnet nuget push ${{ env.OUTPUT_DIR }}/*.nupkg -k ${{ env.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE }}
