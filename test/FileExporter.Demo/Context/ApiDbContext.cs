@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using BaseConverter.Attributes;
 
 namespace FileExporter.Demo.Context
 {

@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (!app.Environment.IsProduction())
+//if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
