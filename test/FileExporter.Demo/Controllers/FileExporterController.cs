@@ -52,43 +52,37 @@ namespace FileExporter.Demo.Controllers
         [HttpGet("export-csv")]
         public IActionResult ExportCsv()
         {
-            var exportData = _context.Dummies.AsQueryable().ToDataTable().ToCsv();
+            var exportData = _context.Dummies.ToCsv();
 
-            if (exportData.Length > (10 * 1024 * 1024))
-            {
-                exportData = exportData.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
-                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
-            }
+            //if (exportData.Data.Length > (10 * 1024 * 1024))
+            //{
+            //    exportData.Data = exportData.Data.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
+            //    return File(exportData.Data, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+            //}
 
-            return File(exportData,MimeTypes.CSV, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
+            return exportData.ToFile();
         }
 
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
         {
-            var exportData = _context.Dummies.ToDataTable().ToXlsx();
+            var exportData = _context.Dummies.ToXlsx();
 
-            if (exportData.Length > (10 * 1024 * 1024))
-            {
-                exportData = ZipExtensions.ToZip(exportData , $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
-                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
-            }
-
-            return File(exportData,MimeTypes.XLSX, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.xlsx");
+            return exportData.ToFile();
         }
 
         [HttpGet("export-pdf")]
         public IActionResult ExportPdf(bool headersOnEachPage = false, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
-            var exportData = _context.Dummies.ToDataTable().ToPdf(headersOnEachPage, pageSize,  pageOrientation);
+            var exportData = _context.Dummies.ToPdf(headersOnEachPage, pageSize, pageOrientation);
 
-            if (exportData.Length > (10 * 1024 * 1024))
+            if (exportData.Data.Length > (10 * 1024 * 1024))
             {
-                exportData = exportData.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
-                return File(exportData, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
+                exportData.Data = exportData.Data.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
+                return File(exportData.Data, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
             }
 
-            return File(exportData, MimeTypes.PDF, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
+            return File(exportData.Data, MimeTypes.PDF, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
         }
     }
 }
