@@ -1,39 +1,47 @@
-﻿# PandaFileExporter
+﻿# FileExporter
 
-The `PandaFileExporter` is a C# library that provides functionalities to export data into various file formats such as CSV, XLSX, and PDF. It is designed to work with data in the form of `IQueryable<T>`, `IEnumerable<T>`, or `List<T>`.
+FileExporter is a lightweight C# library designed to simplify file export operations in your .NET applications. With support for exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to quickly generate and download files.
 
-## Classes
+## Features
 
-### DataTable
+- **Easy Exporting**: Simply call `ToCsv()`, `ToXlsx()`, or `ToPdf()` on your data collection to export to the desired format.
+- **Automatic Splitting**: Handles large datasets gracefully by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
+- **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
+- **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
 
-The `DataTable` class represents a table of data with headers and rows. It provides functionalities to convert an `IQueryable<T>` or `IEnumerable<T>` to a `DataTable` and to export the `DataTable` to CSV, XLSX, or PDF format.
+## Installation
+
+You can install FileExporter via NuGet Package Manager:
+
+```bash
+Install-Package FileExporter
+```
 
 ## Usage
-
-To use the `PandaFileExporter` library, you can follow these steps:
-
-1. Convert your data to a `DataTable` using the `ToDataTable` method of the `DataTable` class or the `FromQueryable` method of the `DataTable` class.
+Here's a quick example of how to use FileExporter to export data to a CSV file:
 
 ```csharp
-    var data = new List<YourClass> { /* your data */ };
-    var dataTable = data.ToDataTable("YourDataName");
+using FileExporter;
+
+// Define your data
+var data = new List<MyDataClass>
+{
+    new MyDataClass { Name = "John Doe", Age = 30, Email = "john@example.com" },
+    new MyDataClass { Name = "Jane Smith", Age = 25, Email = "jane@example.com" }
+};
+
+// Export data to CSV
+var exportedFile = data.ToCsv().ToFile();
+
+// Return the exported file to the caller
+return exportedFile;
 ```
+You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
 
-```csharp
-    var data = new List<YourClass> { /* your data */ };
-    var dataTable = DataTable.FromQueryable(data.AsQueryable(), "YourDataName");
-```
+## Contributing
 
-2. Call the appropriate method of the `FileExporter` class to export the `DataTable` to the desired file format. The methods include `ToCsvArray`, `ToExcelArray`, and `ToPdfArray`.
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
-```csharp
-    var csvData = dataTable.ToCsv();
-    var xlsxData = dataTable.ToXlsx();
-    var pdfData = dataTable.ToPdf();
-```
+## License
 
-3. If the exported data is larger than a certain size, you can compress it into a ZIP file using the `ToZip` method of the `ZipExtensions` class.
-
-```csharp
-    var zipData = csvData.ToZip("YourDataName.csv");
-```
+This project is licensed under the MIT License.
