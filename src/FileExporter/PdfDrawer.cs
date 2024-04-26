@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using PdfSharpCore;
 using PdfSharpCore.Drawing;
+using PdfSharpCore.Fonts;
 using PdfSharpCore.Pdf;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
@@ -33,6 +34,10 @@ internal class PdfDrawer<T>
     private readonly string _name;
     private readonly IEnumerable<string> _headers;
 
+    static PdfDrawer()
+    {
+        GlobalFontSettings.FontResolver = new FontResolver();
+    }
     internal PdfDrawer(DataTable<T> dataTable, string fontName, int fontSize, PageOrientation pageOrientation, PageSize pageSize)
     {
         _name = dataTable.Name;
@@ -157,7 +162,6 @@ internal class PdfDrawer<T>
         _currentX = DOCUMENT_PADDING;
         var graphics = _graphicsList.TakeLast(_documentsInRow).First();
         var cellHeight = (int)graphics.MeasureString("Test", font).Height + 4;
-
         graphics.DrawString(value, font, XBrushes.Black, _currentX + 2, _currentY + cellHeight - 2);
         _currentY += cellHeight;
 
