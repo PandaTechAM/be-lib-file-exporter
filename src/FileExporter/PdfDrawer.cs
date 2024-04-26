@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using PdfSharpCore;
 using PdfSharpCore.Drawing;
@@ -8,10 +9,10 @@ using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace FileExporter;
 
-public class PdfDrawer<T>
+internal class PdfDrawer<T>
 {
-    private const string FONT_NAME = "Arial";
-    private const double FONT_SIZE = 10;
+    private readonly string _fontName;
+    private readonly double _fontSize;
     private const double DOCUMENT_PADDING = 15;
     private const double CELL_PADDING = 5;
     private readonly PageOrientation _pageOrientation;
@@ -29,17 +30,20 @@ public class PdfDrawer<T>
     private readonly List<double> _columnWidths;
     private readonly int _documentsInRow = 0;
 
-    private readonly DataTable<T> _table;
+    private readonly string _name;
+    private readonly IEnumerable<string> _headers;
 
-    public PdfDrawer(DataTable<T> table, PageOrientation pageOrientation, PageSize pageSize)
+    internal PdfDrawer(DataTable<T> dataTable, string fontName, int fontSize, PageOrientation pageOrientation, PageSize pageSize)
     {
-        _table = table;
+        _name = dataTable.Name;
+        _headers = dataTable.Headers;
         _pageOrientation = pageOrientation;
         _pageSize = pageSize;
         _currentX = 0;
         _currentY = 0;
-
-        _columnWidths = new List<double>();
+        _columnWidths = [];
+        _fontName = fontName;
+        _fontSize = fontSize;
 
         _document = new PdfDocument();
         var page = _document.AddPage();
@@ -49,19 +53,24 @@ public class PdfDrawer<T>
         _pageHeight = page.Height;
 
         var graphics = XGraphics.FromPdfPage(page);
-        foreach (var t in table.Headers)
+
+        foreach (var t in _headers)
         {
-            _columnWidths.Add(Math.Max(
-                table.GetRecordsForExport().Select(x => graphics.MeasureString(x[t], Font(FONT_SIZE)).Width).Max(),
-                graphics.MeasureString(t, Font(FONT_SIZE, true)).Width) + 5);
+            _columnWidths.Add(
+                              Math.Max(dataTable.GetRecordsForExport()
+                                                .Select(x => graphics.MeasureString(x[t], Font(_fontSize)).Width)
+                                                .Max(),
+                                       graphics.MeasureString(t, Font(_fontSize, true)).Width) + 5);
         }
 
         _documentsInRow = 1;
-        rowHeight = graphics.MeasureString("Test", Font(FONT_SIZE)).Height + 4;
+
+        rowHeight = graphics.MeasureString("Test", Font(_fontSize)).Height + 4;
 
         _graphicsList.Add(graphics);
         var currentGraphicsIndex = 0;
         var x = DOCUMENT_PADDING;
+
         foreach (var t in _columnWidths)
         {
             if ((currentGraphicsIndex + 1) * _pageWidth < x + t + DOCUMENT_PADDING + 2 * CELL_PADDING)
@@ -80,7 +89,7 @@ public class PdfDrawer<T>
         }
     }
 
-    public void AddRow(IReadOnlyList<string> values, XFont font, bool gridUp, bool gridDown, bool gridLeft,
+    internal void AddRow(IReadOnlyList<string> values, XFont font, bool gridUp, bool gridDown, bool gridLeft,
         bool gridRight)
     {
         _currentX = DOCUMENT_PADDING;
@@ -92,6 +101,7 @@ public class PdfDrawer<T>
         for (var index = 0; index < values.Count; index++)
         {
             var value = values[index];
+
             if ((currentGraphicsIndex + 1) * _pageWidth <
                 _currentX + _columnWidths[index] + DOCUMENT_PADDING + 2 * CELL_PADDING)
             {
@@ -104,21 +114,32 @@ public class PdfDrawer<T>
                 NormalizeY(_currentY + cellHeight - 2));
 
             if (gridUp)
+            {
                 currentGraphics.DrawLine(
                     XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY),
                     NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING), NormalizeY(_currentY));
+            }
+
             if (gridDown)
+            {
                 currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY + cellHeight),
                     NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING),
                     NormalizeY(_currentY + cellHeight));
+            }
+
             if (gridLeft)
+            {
                 currentGraphics.DrawLine(XPens.Black, NormalizeX(_currentX), NormalizeY(_currentY),
                     NormalizeX(_currentX), NormalizeY(_currentY + cellHeight));
+            }
+
             if (gridRight)
+            {
                 currentGraphics.DrawLine(XPens.Black,
                     NormalizeX(_currentX) + _columnWidths[index] + 2 * CELL_PADDING, NormalizeY(_currentY),
                     NormalizeX(_currentX + _columnWidths[index] + 2 * CELL_PADDING),
                     NormalizeY(_currentY + cellHeight));
+            }
 
             _currentX += _columnWidths[index] + 2 * CELL_PADDING;
         }
@@ -126,12 +147,12 @@ public class PdfDrawer<T>
         _currentY += cellHeight;
     }
 
-    public void AddSpacing(double x)
+    internal void AddSpacing(double x)
     {
         _currentY += x;
     }
 
-    public void AddRow(string value, XFont font)
+    internal void AddRow(string value, XFont font)
     {
         _currentX = DOCUMENT_PADDING;
         var graphics = _graphicsList.TakeLast(_documentsInRow).First();
@@ -144,17 +165,17 @@ public class PdfDrawer<T>
         // TODO: Handle long values
     }
 
-    public void AddDocumentHeader()
+    internal void AddDocumentHeader()
     {
-        AddRow(_table.Name, Font(FONT_SIZE * 2, true));
+        AddRow(_name, Font(_fontSize * 2, true));
     }
 
-    public void AddTableHeaders()
+    internal void AddTableHeaders()
     {
-        AddRow(_table.Headers, Font(FONT_SIZE * 1, true), true, true, true, true);
+        AddRow(_headers.ToList(), Font(_fontSize * 1, true), true, true, true, true);
     }
 
-    public byte[] GetBytes()
+    internal byte[] GetBytes()
     {
         var stream = new System.IO.MemoryStream();
 
@@ -165,11 +186,11 @@ public class PdfDrawer<T>
         return stream.ToArray();
     }
 
-    public void AddTableRows(bool headerOnEachPage = false)
+    internal void AddTableRows(IEnumerable<IDictionary<string, string>> records, bool headerOnEachPage = false)
     {
         var neddUpperLine = false;
 
-        foreach (var row in _table.GetRecordsForExport())
+        foreach (var row in records)
         {
             if (_currentY + 2 * DOCUMENT_PADDING + rowHeight > _pageHeight * pages)
             {
@@ -189,7 +210,7 @@ public class PdfDrawer<T>
                     neddUpperLine = true;
             }
 
-            AddRow(row.Values.ToList(), Font(FONT_SIZE), neddUpperLine, true, true, true);
+            AddRow(row.Values.ToList(), Font(_fontSize), neddUpperLine, true, true, true);
             neddUpperLine = false;
         }
     }
@@ -204,9 +225,9 @@ public class PdfDrawer<T>
         return y % _pageHeight;
     }
 
-    private static XFont Font(double fontSize, bool bold = false)
+    private XFont Font(double fontSize, bool bold = false)
     {
-        return new XFont(FONT_NAME, fontSize, bold ? XFontStyle.Bold : XFontStyle.Regular,
+        return new XFont(_fontName, fontSize, bold ? XFontStyle.Bold : XFontStyle.Regular,
             new XPdfFontOptions(PdfFontEncoding.Unicode));
     }
 }

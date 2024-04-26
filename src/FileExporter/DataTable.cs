@@ -16,15 +16,15 @@ using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace FileExporter;
 
-public class DataTable<T>
+internal class DataTable<T>
 {
     private readonly IEnumerable<PropertyData> _properties;
     private readonly IEnumerable<T> _records;
 
-    public string Name { get; set; }
-    public List<string> Headers { get; set; }
+    internal string Name { get; set; }
+    internal List<string> Headers { get; set; }
 
-    public DataTable()
+    internal DataTable()
     {
         _records = [];
         _properties = [];
@@ -32,7 +32,7 @@ public class DataTable<T>
         Headers = [];
     }
 
-    public DataTable(IEnumerable<T> data, string name)
+    internal DataTable(IEnumerable<T> data, string name)
         : this()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -53,7 +53,7 @@ public class DataTable<T>
         _records = data;
     }
 
-    public IEnumerable<IDictionary<string, string>> GetRecordsForExport()
+    internal IEnumerable<IDictionary<string, string>> GetRecordsForExport()
     {
         foreach (var dataRow in _records!)
         {
@@ -138,17 +138,28 @@ public class DataTable<T>
         return files;
     }
 
-    internal byte[] ToPdf(bool headerOnEachPage, PdfSharpCore.PageSize pageSize, PageOrientation pageOrientation)
+    internal List<byte[]> ToPdf(bool headerOnEachPage, string fontName, int fontSize, PdfSharpCore.PageSize pageSize, PageOrientation pageOrientation)
     {
-        var pdfDrawer = new PdfDrawer<T>(this, pageOrientation, pageSize);
+        var records = GetRecordsForExport();
 
-        pdfDrawer.AddSpacing(10);
-        pdfDrawer.AddDocumentHeader();
-        pdfDrawer.AddSpacing(10);
-        pdfDrawer.AddTableHeaders();
-        pdfDrawer.AddTableRows(headerOnEachPage);
+        var records_chunks = records.Chunk(Constants.PdfLinesCount);
 
-        return pdfDrawer.GetBytes();
+        var files = new List<byte[]>();
+
+        foreach (var item in records_chunks)
+        {
+            var pdfDrawer = new PdfDrawer<T>(this,fontName,fontSize, pageOrientation, pageSize);
+
+            pdfDrawer.AddSpacing(10);
+            pdfDrawer.AddDocumentHeader();
+            pdfDrawer.AddSpacing(10);
+            pdfDrawer.AddTableHeaders();
+            pdfDrawer.AddTableRows(item, headerOnEachPage);
+
+            files.Add(pdfDrawer.GetBytes());
+        }
+
+        return files;
     }
 
     private static bool IsCollectionType(Type type)

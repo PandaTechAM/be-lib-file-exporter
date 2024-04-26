@@ -21,19 +21,6 @@ public static class CommonExtensions
         return PandaBaseConverter.Base10ToBase36(convertedValue) ?? string.Empty;
     }
 
-    public static byte[] ToZip(this byte[] source, string filename)
-    {
-        using var memoryStream = new MemoryStream();
-        using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-
-        var entry = archive.CreateEntry(filename, CompressionLevel.Optimal);
-
-        using var entryStream = entry.Open();
-        entryStream.Write(source, 0, source.Length);
-
-        return memoryStream.ToArray();
-    }
-
     public static string ToValidName(this string name)
     {
         var invalidChars = "\0\u0003:\\/?*[]".ToCharArray();

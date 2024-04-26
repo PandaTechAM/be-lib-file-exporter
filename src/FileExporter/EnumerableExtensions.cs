@@ -20,14 +20,14 @@ public static class EnumerableExtensions
     {
         var datatable = new DataTable<T>(data, name);
 
-        var csvs = datatable.ToCsv();
+        var files = datatable.ToCsv();
 
-        if (csvs.Count == 1)
+        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
         {
-            return new ExportFile(datatable.Name, MimeTypes.CSV, csvs.First());
+            return new ExportFile(datatable.Name, MimeTypes.CSV, files.First());
         }
 
-        return ZipMultipeFiles(datatable.Name, MimeTypes.CSV, csvs);
+        return Zip(datatable.Name, MimeTypes.CSV, files);
     }
 
     public static ExportFile ToXlsx<T>(this IEnumerable<T> data) => ToXlsx(data, GetDisplayName<T>());
@@ -38,37 +38,47 @@ public static class EnumerableExtensions
 
         var files = datatable.ToXlsx();
 
-        if (files.Count == 1)
+        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
         {
             return new ExportFile(datatable.Name, MimeTypes.XLSX, files.First());
         }
 
-        return ZipMultipeFiles(datatable.Name, MimeTypes.XLSX, files);
+        return Zip(datatable.Name, MimeTypes.XLSX, files);
     }
 
-    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = false, PageSize pageSize = PageSize.A4,
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = false, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
     PageOrientation pageOrientation = PageOrientation.Landscape)
-    => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, pageSize, pageOrientation);
+    => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
-    public static ExportFile ToPdf<T>(this IEnumerable<T> data, string name, bool headerOnEachPage = false, PageSize pageSize = PageSize.A4,
-    PageOrientation pageOrientation = PageOrientation.Landscape)
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data,
+        string name,
+        bool headerOnEachPage = false,
+        string fontName = Constants.DefaultFontName,
+        int fontSize = Constants.DefaultFontSize,
+        PageSize pageSize = PageSize.A4,
+        PageOrientation pageOrientation = PageOrientation.Landscape)
     {
         var datatable = new DataTable<T>(data, name);
 
-        var pdfData = datatable.ToPdf(headerOnEachPage, pageSize, pageOrientation);
+        var files = datatable.ToPdf(headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
-        return new ExportFile(datatable.Name, MimeTypes.PDF, pdfData);
+        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
+        {
+            return new ExportFile(datatable.Name, MimeTypes.PDF, files.First());
+        }
+
+        return Zip(datatable.Name, MimeTypes.PDF, files);
     }
 
 
-    private static ExportFile ZipMultipeFiles(string fileName, MimeTypes mimeType, List<byte[]> files)
+    private static ExportFile Zip(string fileName, MimeTypes mimeType, List<byte[]> files)
     {
         using var memoryStream = new MemoryStream();
         using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
 
         for (int i = 0; i < files.Count; i++)
         {
-            var entry = archive.CreateEntry(fileName + $"_{i + 1}{mimeType.Extension}", CompressionLevel.Optimal);
+            var entry = archive.CreateEntry(fileName + Suffix(i), CompressionLevel.Optimal);
             using var entryStream = entry.Open();
             entryStream.Write(files[i], 0, files[i].Length);
         }
@@ -76,6 +86,8 @@ public static class EnumerableExtensions
         archive.Dispose(); //don't delete this line otherwize file will be corrupted
 
         return new ExportFile(fileName, MimeTypes.ZIP, memoryStream.ToArray());
+
+        string Suffix(int index) => files.Count == 1 ? $"{mimeType.Extension}" : $"_{index + 1}{mimeType.Extension}";
     }
 
     private static string GetDisplayName<T>()

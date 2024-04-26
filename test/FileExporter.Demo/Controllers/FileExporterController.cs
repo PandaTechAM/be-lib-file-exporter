@@ -7,22 +7,15 @@ namespace FileExporter.Demo.Controllers
 {
     [ApiController]
     [Route("api/")]
-    public class FileExporterController : Controller
+    public class FileExporterController(ApiDbContext context) : Controller
     {
-        private readonly ApiDbContext _context;
-
-        public FileExporterController(ApiDbContext context)
-        {
-            _context = context;
-        }
-
         [HttpPost("fill-database")]
         public IActionResult FillDatabase()
         {
-            _context.Database.EnsureDeleted();
-            _context.Database.EnsureCreated();
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
 
-            _context.Dummies.AddRange(new List<DummyTable>
+            context.Dummies.AddRange(new List<DummyTable>
                 {
                     new() { Id = 1, RelatedId = 18, Name = "Բարև բոլորին 1", Description = "Test this out, it's OK" },
                     new() { Id = 2, RelatedId = 18, Name = "Բարև բոլորին 2", Description = "Test this out, it's OK" },
@@ -44,7 +37,8 @@ namespace FileExporter.Demo.Controllers
                     new() { Id = 18, Name = "Բարև բոլորին 18", Description = "Test this out, it's OK" },
                     new() { Id = 19, Name = "Բարև բոլորին 19", Description = "Test this out, it's OK" },
                 });
-            _context.SaveChanges();
+
+            context.SaveChanges();
 
             return Ok();
         }
@@ -52,13 +46,7 @@ namespace FileExporter.Demo.Controllers
         [HttpGet("export-csv")]
         public IActionResult ExportCsv()
         {
-            var exportData = _context.Dummies.ToCsv();
-
-            //if (exportData.Data.Length > (10 * 1024 * 1024))
-            //{
-            //    exportData.Data = exportData.Data.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.csv");
-            //    return File(exportData.Data, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
-            //}
+            var exportData = context.Dummies.AsEnumerable().ToCsv();
 
             return exportData.ToFile();
         }
@@ -66,23 +54,17 @@ namespace FileExporter.Demo.Controllers
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
         {
-            var exportData = _context.Dummies.ToXlsx();
+            var exportData = context.Dummies.AsEnumerable().ToXlsx();
 
             return exportData.ToFile();
         }
 
         [HttpGet("export-pdf")]
-        public IActionResult ExportPdf(bool headersOnEachPage = false, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
+        public IActionResult ExportPdf(bool headersOnEachPage = false, string fontName = "Roboto", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
-            var exportData = _context.Dummies.ToPdf(headersOnEachPage, pageSize, pageOrientation);
+            var exportData = context.Dummies.AsEnumerable().ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
-            if (exportData.Data.Length > (10 * 1024 * 1024))
-            {
-                exportData.Data = exportData.Data.ToZip($"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
-                return File(exportData.Data, MimeTypes.ZIP, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.zip");
-            }
-
-            return File(exportData.Data, MimeTypes.PDF, $"Export_{_context.Dummies.FirstOrDefault()?.GetType().Name}.pdf");
+            return exportData.ToFile();
         }
     }
 }
