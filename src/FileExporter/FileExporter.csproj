@@ -19,17 +19,31 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Fonts\arial.ttf" />
+		<None Remove="Fonts\arialbd.ttf" />
+		<None Remove="Fonts\ariali.ttf" />
 		<None Remove="mime_types.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
-		<None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
+	  <Content Include="Fonts\arial.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Fonts\arialbd.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="Fonts\ariali.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\Logo.jpg" Pack="true" PackagePath="\" />
+		<None Include="..\..\Readme.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.102.2" />
-		<PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.3" />
 		<PackageReference Include="PandaTech.BaseConverter" Version="3.0.3" />

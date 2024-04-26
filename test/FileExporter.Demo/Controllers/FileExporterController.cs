@@ -60,7 +60,7 @@ namespace FileExporter.Demo.Controllers
         }
 
         [HttpGet("export-pdf")]
-        public IActionResult ExportPdf(bool headersOnEachPage = false, string fontName = "Roboto", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
+        public IActionResult ExportPdf(bool headersOnEachPage = false, string fontName = "Arial", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
             var exportData = context.Dummies.AsEnumerable().ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
