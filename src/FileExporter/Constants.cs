@@ -10,7 +10,7 @@ public class Constants
     public const int PdfLinesCount = 10_000; 
     public const int FileMaxSizeInBytes = 10 * 1024 * 1024; //10 MB
     public const string DateTimePlaceHolder = "{DateTime}";
-    public const string DefaultFontName = "Arial";
+    public const string DefaultFontName = "arial";
     public const int DefaultFontSize = 10;
 
     public static readonly Type[] NumericTypesWithNullables =
