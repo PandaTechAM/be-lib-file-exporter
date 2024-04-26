@@ -1,58 +1,47 @@
-## File Exporter
-Exports given data into csv, xls, xlsx and pdf formats.
+# FileExporter
 
-### Structure 
+FileExporter is a lightweight C# library designed to simplify file export operations in your .NET applications. With support for exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to quickly generate and download files.
 
-Package consists of static `FileExporter` class which contains all needed calls to export given data into supported types defined inside `ExportType` enum.
+## Features
 
-> Supported formats are: CSV, XLS, XLSX and PDF.
+- **Easy Exporting**: Simply call `ToCsv()`, `ToXlsx()`, or `ToPdf()` on your data collection to export to the desired format.
+- **Automatic Splitting**: Handles large datasets gracefully by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
+- **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
+- **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
 
-### Usage
+## Installation
 
-Install package `PandaTech.FileExporter` from Nexus.
+You can install FileExporter via NuGet Package Manager:
 
-##### Service
-Implement your service which will use the `PandaTech.FileExporter` package.
-```C#
-public class Service
-{
-    public byte[] XlsXlsxArray(List<string> list)
-    {
-        return FileExporter.ToExcelArray(GetDtos(list));
-    }
-
-    public byte[] CsvArray(List<string> list)
-    {
-        return FileExporter.ToCsvArray(GetDtos(list));
-    }
-
-    public byte[] PdfArray(List<string> list)
-    {
-        return FileExporter.ToExcelArray(GetDtos(list));
-    }
-}
+```bash
+Install-Package FileExporter
 ```
 
-##### Controller
-Use service calls to export returned byte[] data into given format from `ExportType` enum.
-```C#
-[HttpGet("export-to")]
-public IActionResult ExportTo([FromQuery] ExportType exportType, [FromQuery] List<string> data)
+## Usage
+Here's a quick example of how to use FileExporter to export data to a CSV file:
+
+```csharp
+using FileExporter;
+
+// Define your data
+var data = new List<MyDataClass>
 {
-    try
-    {
-        return exportType switch
-        {
-            ExportType.XLSX => File(_service.XlsXlsxArray(data), MimeTypes.XLSX, $"Export.xlsx"),
-            ExportType.XLS => File(_service.XlsXlsxArray(data), MimeTypes.XLS, $"Export.xls"),
-            ExportType.CSV => File(_service.CsvArray(data), MimeTypes.CSV, $"Export.csv"),
-            ExportType.PDF => File(_service.PdfArray(data), MimeTypes.PDF, $"Export.pdf"),
-            _ => NoContent() 
-        };
-    }
-    catch (Exception)
-    {
-        return BadRequest();
-    }
-}
+    new MyDataClass { Name = "John Doe", Age = 30, Email = "john@example.com" },
+    new MyDataClass { Name = "Jane Smith", Age = 25, Email = "jane@example.com" }
+};
+
+// Export data to CSV
+var exportedFile = data.ToCsv().ToFile();
+
+// Return the exported file to the caller
+return exportedFile;
 ```
+You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+## License
+
+This project is licensed under the MIT License.
