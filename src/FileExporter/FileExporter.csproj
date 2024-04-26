@@ -8,7 +8,7 @@
 		<Copyright>MIT</Copyright>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
-		<Version>3.0.1</Version>
+		<Version>3.0.2</Version>
 		<Company>PandaTech</Company>
 		<Title>Db models to files Exporter</Title>
 		<RepositoryType>lib</RepositoryType>
@@ -28,12 +28,15 @@
 	<ItemGroup>
 	  <Content Include="Fonts\arial.ttf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <PackageCopyToOutput>true</PackageCopyToOutput>
 	  </Content>
 	  <Content Include="Fonts\arialbd.ttf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <PackageCopyToOutput>true</PackageCopyToOutput>
 	  </Content>
 	  <Content Include="Fonts\ariali.ttf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <PackageCopyToOutput>true</PackageCopyToOutput>
 	  </Content>
 	</ItemGroup>
 
