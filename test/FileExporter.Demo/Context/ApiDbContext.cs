@@ -5,7 +5,7 @@ using BaseConverter.Attributes;
 
 namespace FileExporter.Demo.Context
 {
-    [DisplayName("Dummy Table - long name which must me 1-31 {DateTime}")]
+    [DisplayName("Dummy Table")]
     public class DummyTable
     {
         [PandaPropertyBaseConverter]
