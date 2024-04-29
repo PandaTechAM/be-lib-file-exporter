@@ -190,7 +190,7 @@ internal class PdfDrawer<T>
         return stream.ToArray();
     }
 
-    internal void AddTableRows(IEnumerable<IDictionary<string, string>> records, bool headerOnEachPage = false)
+    internal void AddTableRows(IEnumerable<IDictionary<string, string>> records, bool headerOnEachPage = true)
     {
         var neddUpperLine = false;
 
