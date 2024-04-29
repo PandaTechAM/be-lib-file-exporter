@@ -36,8 +36,12 @@ internal class PdfDrawer<T>
 
     static PdfDrawer()
     {
-        GlobalFontSettings.FontResolver = new FontResolver();
+        if (GlobalFontSettings.FontResolver is not FontResolver)
+        {
+            GlobalFontSettings.FontResolver = new FontResolver();
+        }
     }
+
     internal PdfDrawer(DataTable<T> dataTable, string fontName, int fontSize, PageOrientation pageOrientation, PageSize pageSize)
     {
         _name = dataTable.Name;

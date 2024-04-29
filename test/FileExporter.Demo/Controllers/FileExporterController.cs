@@ -63,6 +63,7 @@ namespace FileExporter.Demo.Controllers
         public IActionResult ExportPdf(bool headersOnEachPage = true, string fontName = "arial", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
             var exportData = context.Dummies.AsEnumerable().ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+            var exportData2 = context.Dummies.Select(x => new { Id = x.Id }).ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
             return exportData.ToFile();
         }
