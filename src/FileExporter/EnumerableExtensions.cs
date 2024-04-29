@@ -46,13 +46,13 @@ public static class EnumerableExtensions
         return Zip(datatable.Name, MimeTypes.XLSX, files);
     }
 
-    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = false, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = true, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
     PageOrientation pageOrientation = PageOrientation.Landscape)
     => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
     public static ExportFile ToPdf<T>(this IEnumerable<T> data,
         string name,
-        bool headerOnEachPage = false,
+        bool headerOnEachPage = true,
         string fontName = Constants.DefaultFontName,
         int fontSize = Constants.DefaultFontSize,
         PageSize pageSize = PageSize.A4,
