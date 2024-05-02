@@ -24,10 +24,10 @@ public static class EnumerableExtensions
 
         if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
         {
-            return new ExportFile(datatable.Name, MimeTypes.CSV, files.First());
+            return new ExportFile(datatable.Name, MimeTypes.Csv, files.First());
         }
 
-        return Zip(datatable.Name, MimeTypes.CSV, files);
+        return Zip(datatable.Name, MimeTypes.Csv, files);
     }
 
     public static ExportFile ToXlsx<T>(this IEnumerable<T> data) => ToXlsx(data, GetDisplayName<T>());
@@ -40,10 +40,10 @@ public static class EnumerableExtensions
 
         if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
         {
-            return new ExportFile(datatable.Name, MimeTypes.XLSX, files.First());
+            return new ExportFile(datatable.Name, MimeTypes.Xlsx, files.First());
         }
 
-        return Zip(datatable.Name, MimeTypes.XLSX, files);
+        return Zip(datatable.Name, MimeTypes.Xlsx, files);
     }
 
     public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = true, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
@@ -64,10 +64,10 @@ public static class EnumerableExtensions
 
         if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
         {
-            return new ExportFile(datatable.Name, MimeTypes.PDF, files.First());
+            return new ExportFile(datatable.Name, MimeTypes.Pdf, files.First());
         }
 
-        return Zip(datatable.Name, MimeTypes.PDF, files);
+        return Zip(datatable.Name, MimeTypes.Pdf, files);
     }
 
 
@@ -85,7 +85,7 @@ public static class EnumerableExtensions
 
         archive.Dispose(); //don't delete this line otherwize file will be corrupted
 
-        return new ExportFile(fileName, MimeTypes.ZIP, memoryStream.ToArray());
+        return new ExportFile(fileName, MimeTypes.Zip, memoryStream.ToArray());
 
         string Suffix(int index) => files.Count == 1 ? $"{mimeType.Extension}" : $"_{index + 1}{mimeType.Extension}";
     }

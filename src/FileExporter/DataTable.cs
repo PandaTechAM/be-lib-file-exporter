@@ -120,8 +120,15 @@ internal class DataTable<T>
             for (var i = 0; i < Headers.Count; i++)
             {
                 worksheet.Cell(1, i + 1).Value = Headers[i];
+                worksheet.Cell(1, i + 1).Style.Font.Bold = true;
             }
 
+            worksheet.SheetView.FreezeRows(1);
+            
+            worksheet.RangeUsed().SetAutoFilter(true);
+            
+            worksheet.Columns().AdjustToContents();
+            
             for (var i = 0; i < chunk.Length; i++)
             {
                 for (var j = 0; j < Headers.Count; j++)
