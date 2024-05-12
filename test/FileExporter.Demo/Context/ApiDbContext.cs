@@ -68,9 +68,16 @@ namespace FileExporter.Demo.Context
         D
     }
 
+    public class EmptyTable
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+    
     public class ApiDbContext : DbContext
     {
         public DbSet<DummyTable> Dummies { get; set; }
+        public DbSet<EmptyTable> EmptyTable { get; set; }
 
         public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options)
         {

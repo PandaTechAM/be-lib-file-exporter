@@ -55,7 +55,7 @@ internal class DataTable<T>
 
     internal IEnumerable<IDictionary<string, string>> GetRecordsForExport()
     {
-        foreach (var dataRow in _records!)
+        foreach (var dataRow in _records)
         {
             var row = new Dictionary<string, string>();
 
@@ -76,30 +76,30 @@ internal class DataTable<T>
     {
         var records = GetRecordsForExport();
 
-        var records_chunks = records.Chunk(Constants.CsvLinesCount);
+        var recordsChunks = records.Chunk(Constants.CsvLinesCount);
 
         var files = new List<byte[]>();
 
-        foreach (var chunk in records_chunks)
-        {
-            var csv = new StringBuilder();
-            csv.AppendLine(string.Join(",", Headers));
+        var csv = new StringBuilder();
+        csv.AppendLine(string.Join(",", Headers));
 
+        foreach (var chunk in recordsChunks)
+        {
             foreach (var record in chunk)
             {
                 csv.AppendLine(string.Join(",", record.Values.Select(Encapsulate)));
             }
-
-            var data = Encoding.UTF8
-                               .GetBytes(csv.ToString().Trim());
-
-            var file = Encoding.UTF8
-                            .GetPreamble()
-                            .Concat(data)
-                            .ToArray();
-
-            files.Add(file);
         }
+
+        var data = Encoding.UTF8
+            .GetBytes(csv.ToString().Trim());
+
+        var file = Encoding.UTF8
+            .GetPreamble()
+            .Concat(data)
+            .ToArray();
+
+        files.Add(file);
 
         return files;
     }
@@ -108,27 +108,25 @@ internal class DataTable<T>
     {
         var records = GetRecordsForExport();
 
-        var records_chunks = records.Chunk(Constants.ExcelLinesCount);
+        var recordsChunks = records.Chunk(Constants.ExcelLinesCount);
 
         var files = new List<byte[]>();
 
-        foreach (var chunk in records_chunks)
+        var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add(Name.ToValidName());
+
+        for (var i = 0; i < Headers.Count; i++)
         {
-            var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add(Name.ToValidName());
+            worksheet.Cell(1, i + 1).Value = Headers[i];
+            worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+        }
 
-            for (var i = 0; i < Headers.Count; i++)
-            {
-                worksheet.Cell(1, i + 1).Value = Headers[i];
-                worksheet.Cell(1, i + 1).Style.Font.Bold = true;
-            }
+        worksheet.SheetView.FreezeRows(1);
+        worksheet.RangeUsed().SetAutoFilter(true);
+        worksheet.Columns().AdjustToContents();
 
-            worksheet.SheetView.FreezeRows(1);
-            
-            worksheet.RangeUsed().SetAutoFilter(true);
-            
-            worksheet.Columns().AdjustToContents();
-            
+        foreach (var chunk in recordsChunks)
+        {
             for (var i = 0; i < chunk.Length; i++)
             {
                 for (var j = 0; j < Headers.Count; j++)
@@ -136,35 +134,37 @@ internal class DataTable<T>
                     worksheet.Cell(i + 2, j + 1).Value = chunk[i][Headers[j]];
                 }
             }
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            files.Add(stream.ToArray());
         }
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        files.Add(stream.ToArray());
 
         return files;
     }
 
-    internal List<byte[]> ToPdf(bool headerOnEachPage, string fontName, int fontSize, PdfSharpCore.PageSize pageSize, PageOrientation pageOrientation)
+    internal List<byte[]> ToPdf(bool headerOnEachPage, string fontName, int fontSize, PdfSharpCore.PageSize pageSize,
+        PageOrientation pageOrientation)
     {
         var records = GetRecordsForExport();
 
-        var records_chunks = records.Chunk(Constants.PdfLinesCount);
+        var recordsChunks = records.Chunk(Constants.PdfLinesCount);
 
         var files = new List<byte[]>();
 
-        foreach (var item in records_chunks)
+        var pdfDrawer = new PdfDrawer<T>(this, fontName, fontSize, pageOrientation, pageSize);
+
+        pdfDrawer.AddSpacing(10);
+        pdfDrawer.AddDocumentHeader();
+        pdfDrawer.AddSpacing(10);
+        pdfDrawer.AddTableHeaders();
+
+        foreach (var item in recordsChunks)
         {
-            var pdfDrawer = new PdfDrawer<T>(this,fontName,fontSize, pageOrientation, pageSize);
-
-            pdfDrawer.AddSpacing(10);
-            pdfDrawer.AddDocumentHeader();
-            pdfDrawer.AddSpacing(10);
-            pdfDrawer.AddTableHeaders();
             pdfDrawer.AddTableRows(item, headerOnEachPage);
-
-            files.Add(pdfDrawer.GetBytes());
         }
+
+        files.Add(pdfDrawer.GetBytes());
 
         return files;
     }
@@ -195,33 +195,33 @@ internal class DataTable<T>
                 stringValue = b ? "Yes" : "No";
                 break;
             default:
+            {
+                if (Constants.NumericTypesWithNullables.Contains(value.GetType())
+                    && hasBaseConverter)
                 {
-                    if (Constants.NumericTypesWithNullables.Contains(value.GetType())
-                        && hasBaseConverter)
-                    {
-                        stringValue = value.ToString().ToBase36String() ?? string.Empty;
-                    }
-                    else if (value.GetType().IsArray)
-                    {
-                        List<string> list = (from object? obj in (value as IEnumerable)!
-                                             select ConvertDataToString(obj, hasBaseConverter)).ToList();
-
-                        stringValue = string.Join(';', list);
-                    }
-                    else if (IsCollectionType(value.GetType()))
-                    {
-                        List<string> list = (from object? obj in (value as IEnumerable)!
-                                             select ConvertDataToString(obj, hasBaseConverter)).ToList();
-
-                        stringValue = string.Join(';', list);
-                    }
-                    else
-                    {
-                        stringValue = value.ToString() ?? string.Empty;
-                    }
-
-                    break;
+                    stringValue = value.ToString().ToBase36String() ?? string.Empty;
                 }
+                else if (value.GetType().IsArray)
+                {
+                    List<string> list = (from object? obj in (value as IEnumerable)!
+                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
+
+                    stringValue = string.Join(';', list);
+                }
+                else if (IsCollectionType(value.GetType()))
+                {
+                    List<string> list = (from object? obj in (value as IEnumerable)!
+                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
+
+                    stringValue = string.Join(';', list);
+                }
+                else
+                {
+                    stringValue = value.ToString() ?? string.Empty;
+                }
+
+                break;
+            }
         }
 
         return stringValue;
