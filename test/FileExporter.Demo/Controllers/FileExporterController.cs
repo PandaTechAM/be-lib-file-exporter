@@ -50,6 +50,14 @@ namespace FileExporter.Demo.Controllers
 
             return exportData.ToFile();
         }
+        
+        [HttpGet("export-csv-empty")]
+        public IActionResult ExportEmptyCsv()
+        {
+            var exportData = context.EmptyTable.AsEnumerable().ToCsv();
+
+            return exportData.ToFile();
+        }
 
         [HttpGet("export-xlsx")]
         public IActionResult ExportXlsx()
@@ -58,12 +66,27 @@ namespace FileExporter.Demo.Controllers
 
             return exportData.ToFile();
         }
+        
+        [HttpGet("export-xlsx-empty")]
+        public IActionResult ExportEmptyXlsx()
+        {
+            var exportData = context.EmptyTable.AsEnumerable().ToXlsx();
+
+            return exportData.ToFile();
+        }
 
         [HttpGet("export-pdf")]
         public IActionResult ExportPdf(bool headersOnEachPage = true, string fontName = "arial", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
         {
             var exportData = context.Dummies.AsEnumerable().ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
-            var exportData2 = context.Dummies.Select(x => new { Id = x.Id }).ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+
+            return exportData.ToFile();
+        }
+        
+        [HttpGet("export-pdf-empty")]
+        public IActionResult ExportEmptyPdf(bool headersOnEachPage = true, string fontName = "arial", int fontSize = 10, PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Portrait)
+        {
+            var exportData = context.EmptyTable.AsEnumerable().ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
             return exportData.ToFile();
         }

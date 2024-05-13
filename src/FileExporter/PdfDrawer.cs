@@ -65,10 +65,15 @@ internal class PdfDrawer<T>
 
         foreach (var t in _headers)
         {
+            var records = dataTable.GetRecordsForExport().ToArray();
+            double recordsMaxLength = 0;
+            if (records.Length != 0)
+            {
+                recordsMaxLength = records.Select(x => graphics.MeasureString(x[t], Font(_fontSize)).Width)
+                    .Max();
+            }
             _columnWidths.Add(
-                              Math.Max(dataTable.GetRecordsForExport()
-                                                .Select(x => graphics.MeasureString(x[t], Font(_fontSize)).Width)
-                                                .Max(),
+                              Math.Max(recordsMaxLength,
                                        graphics.MeasureString(t, Font(_fontSize, true)).Width) + 5);
         }
 
