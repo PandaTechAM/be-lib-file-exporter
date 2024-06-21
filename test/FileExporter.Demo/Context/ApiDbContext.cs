@@ -8,10 +8,10 @@ namespace FileExporter.Demo.Context
     [DisplayName("Dummy Table")]
     public class DummyTable
     {
-        [PandaPropertyBaseConverter]
+        [PropertyBaseConverter]
         [DisplayName("Dummy ID")]
         public long Id { get; set; }
-        [PandaPropertyBaseConverter]
+        [PropertyBaseConverter]
         [DisplayName("Related ID")]
         public long? RelatedId { get; set; }
         [DisplayName("Name - long name which must me 1-31")]
@@ -53,7 +53,7 @@ namespace FileExporter.Demo.Context
 
     public class DTO
     {
-        [PandaPropertyBaseConverter]
+        [PropertyBaseConverter]
         public long Id { get; set; }
         public string Name { get; set; } = null!;
 
