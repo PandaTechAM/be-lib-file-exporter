@@ -44,7 +44,7 @@ internal class DataTable<T>
             .Select(x => new PropertyData
             {
                 Property = x,
-                HasBaseConverter = x.GetCustomAttributes<PandaPropertyBaseConverterAttribute>().Any(),
+                HasBaseConverter = x.GetCustomAttributes<PropertyBaseConverter>().Any(),
                 Name = x.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? x.Name
             }).ToList();
 
