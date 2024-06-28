@@ -1,4 +1,4 @@
-﻿namespace FileExporter;
+﻿namespace FileExporter.Dtos;
 
 public class MimeTypes
 {

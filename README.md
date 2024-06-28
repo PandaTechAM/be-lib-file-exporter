@@ -8,6 +8,7 @@ FileExporter is a lightweight C# library designed to simplify file export operat
 - **Automatic Splitting**: Handles large datasets gracefully by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
 - **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
 - **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
+- **Helper Extension Methods**: Instead of using `ToCsv()`, `ToXlsx()`, or `ToPdf()` directly, you can use `ToRequestedFormat(ExportType.Excel)` to export data to the desired format.
 
 ## Installation
 

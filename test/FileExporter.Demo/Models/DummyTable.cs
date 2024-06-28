@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using BaseConverter.Attributes;
 
-namespace FileExporter.Demo.Context;
+namespace FileExporter.Demo.Models;
 
 [DisplayName("Dummy Table")]
 public class DummyTable

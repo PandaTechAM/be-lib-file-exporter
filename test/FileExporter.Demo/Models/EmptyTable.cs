@@ -1,4 +1,4 @@
-namespace FileExporter.Demo.Context;
+namespace FileExporter.Demo.Models;
 
 public class EmptyTable
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FileExporter;
+namespace FileExporter.Helpers;
 
 public class Constants
 {

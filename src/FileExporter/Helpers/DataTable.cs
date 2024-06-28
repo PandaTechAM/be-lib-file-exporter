@@ -8,13 +8,12 @@ using System.Reflection;
 using System.Text;
 using BaseConverter.Attributes;
 using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using FileExporter.Dtos;
+using FileExporter.Extensions;
 using Microsoft.OpenApi.Extensions;
-using PdfSharpCore;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
-namespace FileExporter;
+namespace FileExporter.Helpers;
 
 internal class DataTable<T>
 {

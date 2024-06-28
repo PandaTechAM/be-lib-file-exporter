@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
+﻿using System;
 using BaseConverter;
-using System;
-using PdfSharpCore;
+using FileExporter.Helpers;
 
-namespace FileExporter;
+namespace FileExporter.Extensions;
 
 public static class CommonExtensions
 {
