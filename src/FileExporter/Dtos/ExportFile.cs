@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace FileExporter;
+namespace FileExporter.Dtos;
 
 public class ExportFile(string name, MimeTypes mimeType, byte[] data)
 {

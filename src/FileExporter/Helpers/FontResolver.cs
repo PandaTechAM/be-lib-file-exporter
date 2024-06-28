@@ -1,13 +1,8 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using PdfSharpCore.Fonts;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using PdfSharpCore.Fonts;
 
-namespace FileExporter
+namespace FileExporter.Helpers
 {
     internal class FontResolver : IFontResolver
     {

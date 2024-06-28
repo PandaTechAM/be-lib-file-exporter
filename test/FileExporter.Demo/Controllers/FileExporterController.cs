@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using FileExporter;
 using FileExporter.Demo.Context;
+using FileExporter.Demo.Models;
+using FileExporter.Extensions;
 using PdfSharpCore;
 
 namespace FileExporter.Demo.Controllers

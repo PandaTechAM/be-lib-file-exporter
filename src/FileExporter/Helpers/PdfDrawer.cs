@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using PdfSharpCore;
 using PdfSharpCore.Drawing;
@@ -8,7 +7,7 @@ using PdfSharpCore.Fonts;
 using PdfSharpCore.Pdf;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
-namespace FileExporter;
+namespace FileExporter.Helpers;
 
 internal class PdfDrawer<T>
 {

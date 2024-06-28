@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FileExporter.Demo.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace FileExporter.Demo.Context
 {

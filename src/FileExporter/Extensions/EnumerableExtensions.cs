@@ -1,16 +1,16 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using PdfSharpCore;
+﻿using System;
 using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
-using System.Linq;
-using System.Security.Policy;
 using System.ComponentModel;
-using System;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
-using System.Xml.Schema;
+using FileExporter.Dtos;
+using FileExporter.Enums;
+using FileExporter.Helpers;
+using PdfSharpCore;
 
-namespace FileExporter;
+namespace FileExporter.Extensions;
 
 public static class EnumerableExtensions
 {
@@ -68,6 +68,17 @@ public static class EnumerableExtensions
         }
 
         return Zip(datatable.Name, MimeTypes.Pdf, files);
+    }
+    
+    public static ExportFile ToRequestedFormat<T>(this IEnumerable<T> data, ExportType type)
+    {
+        return type switch
+        {
+            ExportType.Excel => data.ToXlsx(),
+            ExportType.Csv => data.ToCsv(),
+            ExportType.Pdf => data.ToPdf(),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 
 
