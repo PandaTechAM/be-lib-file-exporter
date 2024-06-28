@@ -46,9 +46,10 @@ public static class EnumerableExtensions
         return Zip(datatable.Name, MimeTypes.Xlsx, files);
     }
 
-    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = true, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
-    PageOrientation pageOrientation = PageOrientation.Landscape)
-    => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = true,
+        string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,
+        PageSize pageSize = PageSize.A4, PageOrientation pageOrientation = PageOrientation.Landscape)
+        => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
     public static ExportFile ToPdf<T>(this IEnumerable<T> data,
         string name,
@@ -96,7 +97,8 @@ public static class EnumerableExtensions
 
         displayName ??= typeof(T).Name + " " + Constants.DateTimePlaceHolder;
 
-        displayName = displayName.Replace(Constants.DateTimePlaceHolder, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+        displayName =
+            displayName.Replace(Constants.DateTimePlaceHolder, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
         return displayName;
     }
 }
