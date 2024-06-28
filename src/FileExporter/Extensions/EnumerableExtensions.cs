@@ -70,7 +70,7 @@ public static class EnumerableExtensions
         return Zip(datatable.Name, MimeTypes.Pdf, files);
     }
     
-    public static ExportFile ToRequestedFormat<T>(this IEnumerable<T> data, ExportType type)
+    public static ExportFile ToFileFormat<T>(this IEnumerable<T> data, ExportType type)
     {
         return type switch
         {
