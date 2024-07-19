@@ -8,14 +8,14 @@
 		<Copyright>MIT</Copyright>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
-		<Version>3.1.1</Version>
+		<Version>3.1.2</Version>
 		<Company>PandaTech</Company>
 		<Title>Db models to files Exporter</Title>
 		<RepositoryType>lib</RepositoryType>
 		<PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-		<PackageReleaseNotes>new extension name change</PackageReleaseNotes>
+		<PackageReleaseNotes>Removed base converter dependency.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -49,7 +49,7 @@
 		<PackageReference Include="ClosedXML" Version="0.102.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-		<PackageReference Include="PandaTech.BaseConverter" Version="4.0.4" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.15" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.63" />
 	</ItemGroup>
 </Project>

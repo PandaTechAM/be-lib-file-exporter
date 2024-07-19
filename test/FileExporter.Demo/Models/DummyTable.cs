@@ -1,16 +1,13 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using BaseConverter.Attributes;
 
 namespace FileExporter.Demo.Models;
 
 [DisplayName("Dummy Table")]
 public class DummyTable
 {
-    [PropertyBaseConverter]
     [DisplayName("Dummy ID")]
     public long Id { get; set; }
-    [PropertyBaseConverter]
     [DisplayName("Related ID")]
     public long? RelatedId { get; set; }
     [DisplayName("Name - long name which must me 1-31")]
@@ -22,9 +19,9 @@ public class DummyTable
     public long? Average { get; set; } = 500;
     public int? Max { get; set; } = 0;
     public string Description { get; set; } = "Test, test";
-    [DisplayName("Creation Date")] 
+    [DisplayName("Creation Date")]
     public DateTime CreationDate { get; set; } = DateTime.UtcNow;
-    [DisplayName("Expiration Date")] 
+    [DisplayName("Expiration Date")]
     public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddDays(10);
     public string? Comment { get; set; }
     public DateTime Version { get; set; } = DateTime.UtcNow;
@@ -38,14 +35,14 @@ public class DummyTable
     };
 
     public List<string>? NullableList { get; set; }
-    [NotMapped] 
+    [NotMapped]
     public DTO DTO { get; set; } = new() { Name = "Name" };
 
-    [NotMapped] 
+    [NotMapped]
     public List<DTO>? Dtos { get; set; } = new List<DTO> { new DTO { Id = 1, Name = "1" } };
 
-    [NotMapped] 
+    [NotMapped]
     public MyEnum Enum { get; set; } = MyEnum.A;
-    [NotMapped] 
+    [NotMapped]
     public MyEnum[] EnumArray { get; set; } = { MyEnum.A, MyEnum.B, MyEnum.C, MyEnum.D };
 }
