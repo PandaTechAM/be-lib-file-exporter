@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using BaseConverter.Attributes;
 using ClosedXML.Excel;
 using FileExporter.Dtos;
 using FileExporter.Extensions;
@@ -43,7 +42,7 @@ internal class DataTable<T>
             .Select(x => new PropertyData
             {
                 Property = x,
-                HasBaseConverter = x.GetCustomAttributes<PropertyBaseConverter>().Any(),
+                HasBaseConverter = false,
                 Name = x.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? x.Name
             }).ToList();
 
@@ -198,7 +197,7 @@ internal class DataTable<T>
                 if (Constants.NumericTypesWithNullables.Contains(value.GetType())
                     && hasBaseConverter)
                 {
-                    stringValue = value.ToString().ToBase36String() ?? string.Empty;
+                    stringValue = value.ToString() ?? string.Empty;
                 }
                 else if (value.GetType().IsArray)
                 {
