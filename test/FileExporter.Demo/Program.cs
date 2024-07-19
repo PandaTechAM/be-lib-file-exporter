@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using FileExporter.Demo.Context;
+using FileExporter.Demo.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

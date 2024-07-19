@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using PdfSharpCore;
 using PdfSharpCore.Drawing;
@@ -8,7 +7,7 @@ using PdfSharpCore.Fonts;
 using PdfSharpCore.Pdf;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
-namespace FileExporter;
+namespace FileExporter.Helpers;
 
 internal class PdfDrawer<T>
 {
@@ -36,8 +35,12 @@ internal class PdfDrawer<T>
 
     static PdfDrawer()
     {
-        GlobalFontSettings.FontResolver = new FontResolver();
+        if (GlobalFontSettings.FontResolver is not FontResolver)
+        {
+            GlobalFontSettings.FontResolver = new FontResolver();
+        }
     }
+
     internal PdfDrawer(DataTable<T> dataTable, string fontName, int fontSize, PageOrientation pageOrientation, PageSize pageSize)
     {
         _name = dataTable.Name;
@@ -61,10 +64,15 @@ internal class PdfDrawer<T>
 
         foreach (var t in _headers)
         {
+            var records = dataTable.GetRecordsForExport().ToArray();
+            double recordsMaxLength = 0;
+            if (records.Length != 0)
+            {
+                recordsMaxLength = records.Select(x => graphics.MeasureString(x[t], Font(_fontSize)).Width)
+                    .Max();
+            }
             _columnWidths.Add(
-                              Math.Max(dataTable.GetRecordsForExport()
-                                                .Select(x => graphics.MeasureString(x[t], Font(_fontSize)).Width)
-                                                .Max(),
+                              Math.Max(recordsMaxLength,
                                        graphics.MeasureString(t, Font(_fontSize, true)).Width) + 5);
         }
 
@@ -190,7 +198,7 @@ internal class PdfDrawer<T>
         return stream.ToArray();
     }
 
-    internal void AddTableRows(IEnumerable<IDictionary<string, string>> records, bool headerOnEachPage = false)
+    internal void AddTableRows(IEnumerable<IDictionary<string, string>> records, bool headerOnEachPage = true)
     {
         var neddUpperLine = false;
 

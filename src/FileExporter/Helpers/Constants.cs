@@ -1,16 +1,16 @@
 ﻿using System;
 
-namespace FileExporter;
+namespace FileExporter.Helpers;
 
 public class Constants
 {
     public const int NameLength = 30;
-    public const int CsvLinesCount = 1_00; //todo :: change
-    public const int ExcelLinesCount = 1_0; //todo :: change
-    public const int PdfLinesCount = 100; //todo :: change
+    public const int CsvLinesCount = 1_000_000;
+    public const int ExcelLinesCount = 1_000_000;
+    public const int PdfLinesCount = 10_000; 
     public const int FileMaxSizeInBytes = 10 * 1024 * 1024; //10 MB
     public const string DateTimePlaceHolder = "{DateTime}";
-    public const string DefaultFontName = "Arial";
+    public const string DefaultFontName = "arial";
     public const int DefaultFontSize = 10;
 
     public static readonly Type[] NumericTypesWithNullables =
