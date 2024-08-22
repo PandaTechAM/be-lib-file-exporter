@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using FileExporter.Dtos;
 using FileExporter.Enums;
 using FileExporter.Helpers;
@@ -14,7 +12,8 @@ namespace FileExporter.Extensions;
 
 public static class EnumerableExtensions
 {
-    public static ExportFile ToCsv<T>(this IEnumerable<T> data) => ToCsv(data, GetDisplayName<T>());
+    public static ExportFile ToCsv<T>(this IEnumerable<T> data) => ToCsv(data, NamingHelper.GetDisplayName<T>());
+    public static ExportFile ToCsv<T>(this IEnumerable<T> data, IEnumerable<IPropertyRule> rules) => ToCsv(data, NamingHelper.GetDisplayName<T>(), rules);
 
     public static ExportFile ToCsv<T>(this IEnumerable<T> data, string name)
     {
@@ -22,33 +21,45 @@ public static class EnumerableExtensions
 
         var files = datatable.ToCsv();
 
-        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
-        {
-            return new ExportFile(datatable.Name, MimeTypes.Csv, files.First());
-        }
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Csv);
+    }
+    
+    public static ExportFile ToCsv<T>(this IEnumerable<T> data, string name, IEnumerable<IPropertyRule> rules)
+    {
+        var datatable = new DataTable<T>(data, name, rules);
 
-        return Zip(datatable.Name, MimeTypes.Csv, files);
+        var files = datatable.ToCsv();
+
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Csv);
     }
 
-    public static ExportFile ToXlsx<T>(this IEnumerable<T> data) => ToXlsx(data, GetDisplayName<T>());
+    public static ExportFile ToXlsx<T>(this IEnumerable<T> data) => ToXlsx(data, NamingHelper.GetDisplayName<T>());
+    public static ExportFile ToXlsx<T>(this IEnumerable<T> data, IEnumerable<IPropertyRule> rules) => ToXlsx(data, NamingHelper.GetDisplayName<T>(), rules);
 
     public static ExportFile ToXlsx<T>(this IEnumerable<T> data, string name)
     {
         var datatable = new DataTable<T>(data, name);
 
         var files = datatable.ToXlsx();
-
-        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
-        {
-            return new ExportFile(datatable.Name, MimeTypes.Xlsx, files.First());
-        }
-
-        return Zip(datatable.Name, MimeTypes.Xlsx, files);
+        
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Xlsx);
     }
+    
+    public static ExportFile ToXlsx<T>(this IEnumerable<T> data, string name, IEnumerable<IPropertyRule> rules)
+    {
+        var datatable = new DataTable<T>(data, name, rules);
 
+        var files = datatable.ToXlsx();
+
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Xlsx);
+    }
+    
     public static ExportFile ToPdf<T>(this IEnumerable<T> data, bool headerOnEachPage = true, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
     PageOrientation pageOrientation = PageOrientation.Landscape)
-    => ToPdf(data, GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+    => ToPdf(data, NamingHelper.GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data, IEnumerable<IPropertyRule> rules, bool headerOnEachPage = true, string fontName = Constants.DefaultFontName, int fontSize = Constants.DefaultFontSize,  PageSize pageSize = PageSize.A4,
+        PageOrientation pageOrientation = PageOrientation.Landscape)
+        => ToPdf(data, NamingHelper.GetDisplayName<T>(), headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
     public static ExportFile ToPdf<T>(this IEnumerable<T> data,
         string name,
@@ -62,19 +73,29 @@ public static class EnumerableExtensions
 
         var files = datatable.ToPdf(headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
-        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
-        {
-            return new ExportFile(datatable.Name, MimeTypes.Pdf, files.First());
-        }
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Pdf);
+    }
+    public static ExportFile ToPdf<T>(this IEnumerable<T> data,
+        string name,
+        IEnumerable<IPropertyRule> rules,
+        bool headerOnEachPage = true,
+        string fontName = Constants.DefaultFontName,
+        int fontSize = Constants.DefaultFontSize,
+        PageSize pageSize = PageSize.A4,
+        PageOrientation pageOrientation = PageOrientation.Landscape)
+    {
+        var datatable = new DataTable<T>(data, name, rules);
 
-        return Zip(datatable.Name, MimeTypes.Pdf, files);
+        var files = datatable.ToPdf(headerOnEachPage, fontName, fontSize, pageSize, pageOrientation);
+
+        return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Pdf);
     }
     
     public static ExportFile ToFileFormat<T>(this IEnumerable<T> data, ExportType type)
     {
         return type switch
         {
-            ExportType.Excel => data.ToXlsx(),
+            ExportType.Xlsx => data.ToXlsx(),
             ExportType.Csv => data.ToCsv(),
             ExportType.Pdf => data.ToPdf(),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
@@ -86,8 +107,8 @@ public static class EnumerableExtensions
     {
         using var memoryStream = new MemoryStream();
         using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-
-        for (int i = 0; i < files.Count; i++)
+{}
+        for (var i = 0; i < files.Count; i++)
         {
             var entry = archive.CreateEntry(fileName + Suffix(i), CompressionLevel.Optimal);
             using var entryStream = entry.Open();
@@ -100,14 +121,14 @@ public static class EnumerableExtensions
 
         string Suffix(int index) => files.Count == 1 ? $"{mimeType.Extension}" : $"_{index + 1}{mimeType.Extension}";
     }
-
-    private static string GetDisplayName<T>()
+    
+    private static ExportFile ReturnFileOrZippedVersion<T>(DataTable<T> dataTable, List<byte[]> files, MimeTypes type)
     {
-        var displayName = typeof(T).GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+        if (files.Count == 1 && files.First().Length < Constants.FileMaxSizeInBytes)
+        {
+            return new ExportFile(dataTable.Name, type, files.First());
+        }
 
-        displayName ??= typeof(T).Name + " " + Constants.DateTimePlaceHolder;
-
-        displayName = displayName.Replace(Constants.DateTimePlaceHolder, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
-        return displayName;
+        return Zip(dataTable.Name, MimeTypes.Xlsx, files);
     }
 }
