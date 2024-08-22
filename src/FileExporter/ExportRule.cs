@@ -31,8 +31,7 @@ public class ExportRule<TModel> where TModel : class
     protected PropertyRule<TProperty> RuleFor<TProperty>(Expression<Func<TModel, TProperty>> navigationExpression)
     {
         var rule = new PropertyRule<TProperty>(navigationExpression.Body as MemberExpression ??
-                                               throw new InvalidPropertyNameException("Invalid property name",
-                                                   string.Empty));
+                                               throw new InvalidPropertyNameException("Invalid property name"));
 
         var existingRule = _rules.FirstOrDefault(x => x.PropertyName() == rule.PropertyName());
 
@@ -99,7 +98,7 @@ public class PropertyRule<TProperty> : IPropertyRule
     public PropertyRule(MemberExpression navigationExpression)
     {
         _propertyName = navigationExpression.Member.Name ??
-                        throw new InvalidPropertyNameException("Invalid property name", _propertyName);
+                        throw new InvalidPropertyNameException($"Invalid property name {_propertyName}");
         _columnName = _propertyName;
     }
 

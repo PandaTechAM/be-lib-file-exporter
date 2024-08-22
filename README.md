@@ -37,6 +37,67 @@ var exportedFile = data.ToCsv().ToFile();
 // Return the exported file to the caller
 return exportedFile;
 ```
+Started from release 3.3.0 it's possible to export data by fluent rules.
+
+First of all you need to create `ExportRule` for your model.
+Then from constructor call `GenerateRules()` which will automatically create default rules for you related to given model.
+If you need custom setup, then call `RuleFor()` method and setup custom rules for your model properties. 
+Here is a quick demo to show how.
+
+This is a model sample:
+```csharp
+public class FileData
+{
+    public long Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? Comment { get; set; }
+}
+```
+
+This is an export rule sample:
+```csharp
+namespace FileExporter.Tests.ExportRuleTests;
+
+public class FileDataExportRule : ExportRule<FileData>
+{
+    public FileDataExportRule() : base("File Data")
+    {
+        GenerateRules();
+        
+        RuleFor(x => x.Id);
+        RuleFor(x => x.Name);
+        RuleFor(x => x.Description).WithDefaultValue("Default text here");
+        RuleFor(x => x.CreatedAt).WriteToColumn("Creation date")
+            .WithDefaultValue("22/02/2022");
+        RuleFor(x => x.Comment);
+    }
+}
+```
+in case of wrong property setup you will get `InvalidPropertyNameException` with message.
+
+Here is a sample of controller:
+```csharp
+namespace FileExporter.Demo.Controllers
+{
+    [ApiController]
+    [Route("api/")]
+    public class FileDataExportController(ApiDbContext context) : Controller
+    {
+        [HttpGet("export-xlsx-via-rules")]
+        public IActionResult ExportXlsxViaRules()
+        {
+            var exportData = context.FileData.ToList();
+
+            var rule = new FileDataExportRule();
+            
+            return rule.ToCsv(exportData).ToFile();
+        }
+    }
+}
+```
+
 You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
 
 ## Contributing

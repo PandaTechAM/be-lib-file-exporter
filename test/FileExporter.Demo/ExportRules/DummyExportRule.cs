@@ -24,9 +24,5 @@ public class DummyExportRule : ExportRule<DummyTable>
         RuleFor(x => x.Version).WriteToColumn("Version");
 
         RuleFor(x => x.DTO).WriteToColumn("Dto").WithDefaultValue("Default value");
-        // RuleFor(x => x.Dtos).WriteToColumn("List Dto");
-        // RuleFor(x => x.NullableList).WriteToColumn("List Nullable");
-        // RuleFor(x => x.Enum).WriteToColumn("Enum");
-        // RuleFor(x => x.EnumArray).WriteToColumn("Enum Array");
     }
 }

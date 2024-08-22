@@ -4,6 +4,8 @@ public class FileDataExportRule : ExportRule<FileData>
 {
     public FileDataExportRule() : base("File Data")
     {
+        GenerateRules();
+        
         RuleFor(x => x.Id);
         RuleFor(x => x.Name);
         RuleFor(x => x.Description).WithDefaultValue("Default text here");
