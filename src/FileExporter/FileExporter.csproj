@@ -8,14 +8,14 @@
 		<Copyright>MIT</Copyright>
 		<PackageIcon>Logo.jpg</PackageIcon>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
-		<Version>3.2.0</Version>
+		<Version>3.3.0</Version>
 		<Company>PandaTech</Company>
 		<Title>Db models to files Exporter</Title>
 		<RepositoryType>lib</RepositoryType>
 		<PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
 		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
 		<RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-		<PackageReleaseNotes>Removed base converter dependency.</PackageReleaseNotes>
+		<PackageReleaseNotes>Made library fluent with rules.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
