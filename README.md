@@ -4,11 +4,11 @@ FileExporter is a lightweight C# library that simplifies file export operations 
 
 ## Features
 
-Easy Exporting: Simply call ToCsv(), ToXlsx(), or ToPdf() on your data collection to export to the desired format.
-Automatic Splitting: Handles large datasets by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
-Flexible Configuration: Customize export settings such as column headers, delimiter, and more to suit your needs.
-Effortless Integration: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
-Helper Extension Methods: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(), ToXlsx(), or ToPdf().
+- **Easy Exporting**: Simply call ToCsv(), ToXlsx(), or ToPdf() on your data collection to export to the desired format.
+- **Automatic Splitting**: Handles large datasets by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
+- **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
+- **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
+- **Helper Extension Methods**: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(), ToXlsx(), or ToPdf().
 
 ## Installation
 
@@ -41,6 +41,7 @@ return exportedFile;
 Starting from release 3.3.0, FileExporter supports exporting data using fluent rules.
 
 ### Fluent Rules Example
+
 First, create an ExportRule for your model. In the constructor, call GenerateRules() to automatically create default rules based on the model. To customize the setup, use the RuleFor() method to configure specific rules for your model's properties. Here's a quick demonstration:
 
 ### Model Example:
@@ -56,6 +57,7 @@ public class FileData
 }
 ```
 ### Export Rule Example:
+
 This sample includes two constructors, one with a default name and one with a custom name.
 
 ```csharp
@@ -123,7 +125,9 @@ namespace FileExporter.Demo.Controllers
 You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
 
 ## Contributing
+
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
 ## License
+
 This project is licensed under the MIT License.
