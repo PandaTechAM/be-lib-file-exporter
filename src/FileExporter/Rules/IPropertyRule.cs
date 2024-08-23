@@ -1,6 +1,4 @@
-using System;
-
-namespace FileExporter;
+namespace FileExporter.Rules;
 
 public interface IPropertyRule
 {

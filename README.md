@@ -1,25 +1,26 @@
 # FileExporter
 
-FileExporter is a lightweight C# library designed to simplify file export operations in your .NET applications. With support for exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to quickly generate and download files.
+FileExporter is a lightweight C# library that simplifies file export operations in .NET applications. With support for exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to quickly generate and download files.
 
 ## Features
 
-- **Easy Exporting**: Simply call `ToCsv()`, `ToXlsx()`, or `ToPdf()` on your data collection to export to the desired format.
-- **Automatic Splitting**: Handles large datasets gracefully by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
-- **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
-- **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
-- **Helper Extension Methods**: Instead of using `ToCsv()`, `ToXlsx()`, or `ToPdf()` directly, you can use `ToFileFormat(ExportType.Excel)` to export data to the desired format.
+Easy Exporting: Simply call ToCsv(), ToXlsx(), or ToPdf() on your data collection to export to the desired format.
+Automatic Splitting: Handles large datasets by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
+Flexible Configuration: Customize export settings such as column headers, delimiter, and more to suit your needs.
+Effortless Integration: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
+Helper Extension Methods: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(), ToXlsx(), or ToPdf().
 
 ## Installation
 
-You can install FileExporter via NuGet Package Manager:
+You can install FileExporter via NuGet Package Manager by running the following command:
 
 ```bash
 Install-Package FileExporter
 ```
 
 ## Usage
-Here's a quick example of how to use FileExporter to export data to a CSV file:
+
+Here's a quick example of how to use FileExporter to export data to a CSV file with old way which is still supported:
 
 ```csharp
 using FileExporter;
@@ -37,14 +38,13 @@ var exportedFile = data.ToCsv().ToFile();
 // Return the exported file to the caller
 return exportedFile;
 ```
-Started from release 3.3.0 it's possible to export data by fluent rules.
+Starting from release 3.3.0, FileExporter supports exporting data using fluent rules.
 
-First of all you need to create `ExportRule` for your model.
-Then from constructor call `GenerateRules()` which will automatically create default rules for you related to given model.
-If you need custom setup, then call `RuleFor()` method and setup custom rules for your model properties. 
-Here is a quick demo to show how.
+### Fluent Rules Example
+First, create an ExportRule for your model. In the constructor, call GenerateRules() to automatically create default rules based on the model. To customize the setup, use the RuleFor() method to configure specific rules for your model's properties. Here's a quick demonstration:
 
-This is a model sample:
+### Model Example:
+
 ```csharp
 public class FileData
 {
@@ -55,29 +55,50 @@ public class FileData
     public string? Comment { get; set; }
 }
 ```
+### Export Rule Example:
+This sample includes two constructors, one with a default name and one with a custom name.
 
-This is an export rule sample:
 ```csharp
 namespace FileExporter.Tests.ExportRuleTests;
 
 public class FileDataExportRule : ExportRule<FileData>
 {
+    public FileDataExportRule()
+    {
+        GenerateRules();
+
+        // Custom rules
+        RuleFor(x => x.Description)
+            .WriteToColumn("Description")
+            .WithDefaultValue("Default text here");
+
+        RuleFor(x => x.CreatedAt)
+            .WriteToColumn("Creation date")
+            .WithDefaultValue("22/08/2024");
+    }
+    
+    // OR with custom name
     public FileDataExportRule() : base("File Data")
     {
         GenerateRules();
         
-        RuleFor(x => x.Id);
-        RuleFor(x => x.Name);
-        RuleFor(x => x.Description).WithDefaultValue("Default text here");
-        RuleFor(x => x.CreatedAt).WriteToColumn("Creation date")
-            .WithDefaultValue("22/02/2022");
-        RuleFor(x => x.Comment);
+        // Custom rules
+        RuleFor(x => x.Description)
+            .WriteToColumn("Description")
+            .WithDefaultValue("Default text here");
+
+        RuleFor(x => x.CreatedAt)
+            .WriteToColumn("Creation date")
+            .WithDefaultValue("22/08/2024");
     }
 }
 ```
-in case of wrong property setup you will get `InvalidPropertyNameException` with message.
+If a property is incorrectly set up, an InvalidPropertyNameException will be thrown with a relevant message.
 
-Here is a sample of controller:
+### Controller Example:
+
+Here is an example of how to integrate FileExporter into a web API controller:
+
 ```csharp
 namespace FileExporter.Demo.Controllers
 {
@@ -93,17 +114,16 @@ namespace FileExporter.Demo.Controllers
             var rule = new FileDataExportRule();
             
             return rule.ToCsv(exportData).ToFile();
+            // OR alternative solution with extension method
+            return rule.ToFileFormat(exportData, ExportType.Xlsx).ToFile();
         }
     }
 }
 ```
-
 You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
 
 ## Contributing
-
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
 ## License
-
 This project is licensed under the MIT License.

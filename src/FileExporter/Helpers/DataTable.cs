@@ -9,6 +9,7 @@ using System.Text;
 using ClosedXML.Excel;
 using FileExporter.Dtos;
 using FileExporter.Extensions;
+using FileExporter.Rules;
 using Microsoft.OpenApi.Extensions;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
