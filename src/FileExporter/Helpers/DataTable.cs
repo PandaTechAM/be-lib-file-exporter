@@ -9,6 +9,7 @@ using System.Text;
 using ClosedXML.Excel;
 using FileExporter.Dtos;
 using FileExporter.Extensions;
+using FileExporter.Rules;
 using Microsoft.OpenApi.Extensions;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
@@ -47,6 +48,49 @@ internal class DataTable<T>
             }).ToList();
 
         Headers = _properties.Select(x => x.Name).ToList();
+
+        _records = data;
+    }
+
+    internal DataTable(IEnumerable<T> data, string name, IEnumerable<IPropertyRule> rules)
+        : this()
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(data);
+
+        Name = name;
+
+        var modelProperties = typeof(T).GetProperties()
+            .ToDictionary(x => x.Name, x => x);
+
+        _properties = rules
+            .Select(x => new PropertyData
+            {
+                Property = modelProperties[x.PropertyName()],
+                HasBaseConverter = false,
+                Name = x.ColumnName()
+            }).ToList();
+
+        Headers = _properties.Select(x => x.Name).ToList();
+
+        var ruleByDefaultValue = rules
+            .Where(x => x.DefaultColumnValue() != null)
+            .ToDictionary(x => x.PropertyName(), x => x.DefaultColumnValue());
+
+        foreach (var model in data)
+        {
+            var properties = model!.GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                if (ruleByDefaultValue.TryGetValue(property.Name, out var value))
+                {
+                    if (!model.GetType().IsGenericType || model.GetType().Name.Contains("String"))
+                    {
+                        model.GetType().GetProperty(property.Name)!.SetValue(model, value);
+                    }
+                }
+            }
+        }
 
         _records = data;
     }

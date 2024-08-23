@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using FileExporter.Demo.Context;
+using FileExporter.Demo.ExportRules;
 using FileExporter.Demo.Models;
+using FileExporter.Enums;
 using FileExporter.Extensions;
+using FileExporter.Rules;
 using PdfSharpCore;
 
 namespace FileExporter.Demo.Controllers
@@ -94,6 +97,28 @@ namespace FileExporter.Demo.Controllers
                 .ToPdf(headersOnEachPage, fontName, fontSize, pageSize, pageOrientation);
 
             return exportData.ToFile();
+        }
+        
+        [HttpGet("export-xlsx-via-rules")]
+        public IActionResult ExportXlsxViaRules()
+        {
+            var exportData = context.Dummies.ToList();
+
+            var rule = new DummyExportRule();
+            
+            return rule.ToXlsx(exportData).ToFile();
+        }
+        
+        [HttpGet("export-xlsx-via-rules-with-name")]
+        public IActionResult ExportXlsxViaRulesWithName()
+        {
+            var exportData = context.Dummies.ToList();
+
+            var rule = new DummyExportRule("__Dummies__");
+            
+            return rule.ToXlsx(exportData).ToFile();
+            // OR
+            return rule.ToFileFormat(exportData, ExportType.Xlsx).ToFile();
         }
     }
 }

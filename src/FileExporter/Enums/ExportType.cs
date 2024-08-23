@@ -2,7 +2,7 @@
 
 public enum ExportType
 {
-    Excel = 1,
+    Xlsx = 1,
     Csv = 2,
     Pdf = 3
 }
