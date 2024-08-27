@@ -11,6 +11,7 @@ using FileExporter.Dtos;
 using FileExporter.Extensions;
 using FileExporter.Rules;
 using Microsoft.OpenApi.Extensions;
+using PdfSharpCore.Drawing;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace FileExporter.Helpers;
@@ -174,6 +175,7 @@ internal class DataTable<T>
                 for (var j = 0; j < Headers.Count; j++)
                 {
                     worksheet.Cell(i + 2, j + 1).Value = chunk[i][Headers[j]];
+                    worksheet.Cell(i + 2, j + 1).Style.NumberFormat.Format = "@";
                 }
             }
         }
