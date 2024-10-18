@@ -11,6 +11,7 @@ using FileExporter.Dtos;
 using FileExporter.Extensions;
 using FileExporter.Rules;
 using Microsoft.OpenApi.Extensions;
+using PdfSharpCore.Drawing;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace FileExporter.Helpers;
