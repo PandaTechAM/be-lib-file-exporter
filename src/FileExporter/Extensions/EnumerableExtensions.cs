@@ -142,6 +142,6 @@ public static class EnumerableExtensions
             return new ExportFile(dataTable.Name, type, files.First());
         }
 
-        return Zip(dataTable.Name, MimeTypes.Xlsx, files);
+        return Zip(dataTable.Name, type, files);
     }
 }
