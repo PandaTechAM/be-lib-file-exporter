@@ -1,14 +1,18 @@
 # FileExporter
 
-FileExporter is a lightweight C# library that simplifies file export operations in .NET applications. With support for exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to quickly generate and download files.
+FileExporter is a lightweight C# library that simplifies file export operations in .NET applications. With support for
+exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to
+quickly generate and download files.
 
 ## Features
 
 - **Easy Exporting**: Simply call ToCsv(), ToXlsx(), or ToPdf() on your data collection to export to the desired format.
-- **Automatic Splitting**: Handles large datasets by automatically splitting files if the maximum line count or file size is exceeded, then zipping them for easy download.
+- **Automatic Splitting**: Handles large datasets by automatically splitting files if the maximum line count or file
+  size is exceeded, then zipping them for easy download.
 - **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
 - **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
-- **Helper Extension Methods**: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(), ToXlsx(), or ToPdf().
+- **Helper Extension Methods**: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(),
+  ToXlsx(), or ToPdf().
 
 ## Installation
 
@@ -38,11 +42,14 @@ var exportedFile = data.ToCsv().ToFile();
 // Return the exported file to the caller
 return exportedFile;
 ```
+
 Starting from release 3.3.0, FileExporter supports exporting data using fluent rules.
 
 ### Fluent Rules Example
 
-First, create an ExportRule for your model. In the constructor, call GenerateRules() to automatically create default rules based on the model. To customize the setup, use the RuleFor() method to configure specific rules for your model's properties. Here's a quick demonstration:
+First, create an ExportRule for your model. In the constructor, call GenerateRules() to automatically create default
+rules based on the model. To customize the setup, use the RuleFor() method to configure specific rules for your model's
+properties. Here's a quick demonstration:
 
 ### Model Example:
 
@@ -56,6 +63,7 @@ public class FileData
     public string? Comment { get; set; }
 }
 ```
+
 ### Export Rule Example:
 
 This sample includes two constructors, one with a default name and one with a custom name.
@@ -95,6 +103,7 @@ public class FileDataExportRule : ExportRule<FileData>
     }
 }
 ```
+
 If a property is incorrectly set up, an InvalidPropertyNameException will be thrown with a relevant message.
 
 ### Controller Example:
@@ -122,6 +131,7 @@ namespace FileExporter.Demo.Controllers
     }
 }
 ```
+
 You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
 
 ## Contributing

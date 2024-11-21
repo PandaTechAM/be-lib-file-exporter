@@ -1,55 +1,54 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<PackageId>PandaTech.FileExporter</PackageId>
-		<Authors>PandaTech</Authors>
-		<Copyright>MIT</Copyright>
-		<PackageIcon>Logo.jpg</PackageIcon>
-		<PackageReadmeFile>Readme.md</PackageReadmeFile>
-		<Version>3.3.3</Version>
-		<Company>PandaTech</Company>
-		<Title>Db models to files Exporter</Title>
-		<RepositoryType>lib</RepositoryType>
-		<PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
-		<Description>Export table data into xls, xlsx, csv, pdf formats</Description>
-		<RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-		<PackageReleaseNotes>Made library fluent with rules.</PackageReleaseNotes>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <PackageId>PandaTech.FileExporter</PackageId>
+        <Authors>PandaTech</Authors>
+        <Copyright>MIT</Copyright>
+        <PackageIcon>Logo.jpg</PackageIcon>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <Version>4.0.0</Version>
+        <Company>PandaTech</Company>
+        <Title>Db models to files Exporter</Title>
+        <RepositoryType>lib</RepositoryType>
+        <PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
+        <Description>Export table data into xls, xlsx, csv, pdf formats</Description>
+        <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
+        <PackageReleaseNotes>Upgraded to .net 9</PackageReleaseNotes>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="Fonts\arial.ttf" />
-		<None Remove="Fonts\arialbd.ttf" />
-		<None Remove="Fonts\ariali.ttf" />
-		<None Remove="mime_types.json" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Remove="Fonts\arial.ttf"/>
+        <None Remove="Fonts\arialbd.ttf"/>
+        <None Remove="Fonts\ariali.ttf"/>
+        <None Remove="mime_types.json"/>
+    </ItemGroup>
 
-	<ItemGroup>
-	  <Content Include="Fonts\arial.ttf">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <PackageCopyToOutput>true</PackageCopyToOutput>
-	  </Content>
-	  <Content Include="Fonts\arialbd.ttf">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <PackageCopyToOutput>true</PackageCopyToOutput>
-	  </Content>
-	  <Content Include="Fonts\ariali.ttf">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		  <PackageCopyToOutput>true</PackageCopyToOutput>
-	  </Content>
-	</ItemGroup>
+    <ItemGroup>
+        <Content Include="Fonts\arial.ttf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <PackageCopyToOutput>true</PackageCopyToOutput>
+        </Content>
+        <Content Include="Fonts\arialbd.ttf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <PackageCopyToOutput>true</PackageCopyToOutput>
+        </Content>
+        <Content Include="Fonts\ariali.ttf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <PackageCopyToOutput>true</PackageCopyToOutput>
+        </Content>
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\..\Logo.jpg" Pack="true" PackagePath="\" />
-		<None Include="..\..\Readme.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
+        <None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="ClosedXML" Version="0.102.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-		<PackageReference Include="Microsoft.OpenApi" Version="1.6.15" />
-		<PackageReference Include="PdfSharpCore" Version="1.3.63" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ClosedXML" Version="0.104.2" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="PdfSharpCore" Version="1.3.65" />
+    </ItemGroup>
 </Project>
