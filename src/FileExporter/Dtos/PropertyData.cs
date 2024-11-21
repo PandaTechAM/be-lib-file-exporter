@@ -4,7 +4,7 @@ namespace FileExporter.Dtos;
 
 internal class PropertyData
 {
-    public PropertyInfo Property { get; internal set; }
-    public bool HasBaseConverter { get; internal set; }
-    public string Name { get; internal set; }
+   public required PropertyInfo Property { get; internal set; }
+   public bool HasBaseConverter { get; internal set; }
+   public required string Name { get; internal set; }
 }

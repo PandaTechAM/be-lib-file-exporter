@@ -5,36 +5,47 @@ namespace FileExporter.Rules;
 
 public class PropertyRule<TProperty> : IPropertyRule
 {
-    private readonly string _propertyName;
-    private string _columnName;
-    private string? _defaultValue;
+   private readonly string _propertyName;
+   private string _columnName;
+   private string? _defaultValue;
 
-    public PropertyRule(MemberExpression navigationExpression)
-    {
-        _propertyName = navigationExpression.Member.Name ??
-                        throw new InvalidPropertyNameException($"Invalid property name {_propertyName}");
-        _columnName = _propertyName;
-    }
+   public PropertyRule(MemberExpression navigationExpression)
+   {
+      _propertyName = navigationExpression.Member.Name ??
+                      throw new InvalidPropertyNameException($"Invalid property name {_propertyName}");
+      _columnName = _propertyName;
+   }
 
-    public string PropertyName() => _propertyName;
-    public string ColumnName() => _columnName;
-    public string? DefaultColumnValue() => _defaultValue;
+   public string PropertyName()
+   {
+      return _propertyName;
+   }
 
-    public PropertyRule<TProperty> WriteToColumn(string name)
-    {
-        _columnName = name;
-        return this;
-    }
+   public string ColumnName()
+   {
+      return _columnName;
+   }
 
-    public PropertyRule<TProperty> WithDefaultValue(string value)
-    {
-        var type = typeof(TProperty);
+   public string? DefaultColumnValue()
+   {
+      return _defaultValue;
+   }
 
-        if (type.IsGenericType || type.Name.Contains("String"))
-        {
-            _defaultValue = value;
-        }
+   public PropertyRule<TProperty> WriteToColumn(string name)
+   {
+      _columnName = name;
+      return this;
+   }
 
-        return this;
-    }
+   public PropertyRule<TProperty> WithDefaultValue(string value)
+   {
+      var type = typeof(TProperty);
+
+      if (type.IsGenericType || type.Name.Contains("String"))
+      {
+         _defaultValue = value;
+      }
+
+      return this;
+   }
 }

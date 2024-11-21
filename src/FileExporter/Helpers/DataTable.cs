@@ -11,274 +11,295 @@ using FileExporter.Dtos;
 using FileExporter.Extensions;
 using FileExporter.Rules;
 using Microsoft.OpenApi.Extensions;
-using PdfSharpCore.Drawing;
+using PdfSharpCore;
 using PageOrientation = PdfSharpCore.PageOrientation;
 
 namespace FileExporter.Helpers;
 
 internal class DataTable<T>
 {
-    private readonly IEnumerable<PropertyData> _properties;
-    private readonly IEnumerable<T> _records;
+   private readonly IEnumerable<PropertyData> _properties;
+   private readonly IEnumerable<T> _records;
 
-    internal string Name { get; set; }
-    internal List<string> Headers { get; set; }
+   internal DataTable()
+   {
+      _records = [];
+      _properties = [];
+      Name = string.Empty;
+      Headers = [];
+   }
 
-    internal DataTable()
-    {
-        _records = [];
-        _properties = [];
-        Name = string.Empty;
-        Headers = [];
-    }
+   internal DataTable(IEnumerable<T> data, string name)
+      : this()
+   {
+      ArgumentException.ThrowIfNullOrWhiteSpace(name);
+      ArgumentNullException.ThrowIfNull(data);
 
-    internal DataTable(IEnumerable<T> data, string name)
-        : this()
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(data);
+      Name = name;
 
-        Name = name;
+      _properties = typeof(T).GetProperties()
+                             .Select(x => new PropertyData
+                             {
+                                Property = x,
+                                HasBaseConverter = false,
+                                Name = x.GetCustomAttribute<DisplayNameAttribute>()
+                                        ?.DisplayName ?? x.Name
+                             })
+                             .ToList();
 
-        _properties = typeof(T).GetProperties()
-            .Select(x => new PropertyData
-            {
-                Property = x,
-                HasBaseConverter = false,
-                Name = x.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? x.Name
-            }).ToList();
+      Headers = _properties.Select(x => x.Name)
+                           .ToList();
 
-        Headers = _properties.Select(x => x.Name).ToList();
+      _records = data;
+   }
 
-        _records = data;
-    }
+   internal DataTable(IEnumerable<T> data, string name, IEnumerable<IPropertyRule> rules)
+      : this()
+   {
+      ArgumentException.ThrowIfNullOrWhiteSpace(name);
+      ArgumentNullException.ThrowIfNull(data);
 
-    internal DataTable(IEnumerable<T> data, string name, IEnumerable<IPropertyRule> rules)
-        : this()
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(data);
+      Name = name;
 
-        Name = name;
+      var modelProperties = typeof(T).GetProperties()
+                                     .ToDictionary(x => x.Name, x => x);
 
-        var modelProperties = typeof(T).GetProperties()
-            .ToDictionary(x => x.Name, x => x);
-
-        _properties = rules
-            .Select(x => new PropertyData
-            {
-                Property = modelProperties[x.PropertyName()],
-                HasBaseConverter = false,
-                Name = x.ColumnName()
-            }).ToList();
-
-        Headers = _properties.Select(x => x.Name).ToList();
-
-        var ruleByDefaultValue = rules
-            .Where(x => x.DefaultColumnValue() != null)
-            .ToDictionary(x => x.PropertyName(), x => x.DefaultColumnValue());
-
-        foreach (var model in data)
-        {
-            var properties = model!.GetType().GetProperties();
-            foreach (var property in properties)
-            {
-                if (ruleByDefaultValue.TryGetValue(property.Name, out var value))
-                {
-                    if (!model.GetType().IsGenericType || model.GetType().Name.Contains("String"))
+      _properties = rules
+                    .Select(x => new PropertyData
                     {
-                        model.GetType().GetProperty(property.Name)!.SetValue(model, value);
-                    }
-                }
-            }
-        }
+                       Property = modelProperties[x.PropertyName()],
+                       HasBaseConverter = false,
+                       Name = x.ColumnName()
+                    })
+                    .ToList();
 
-        _records = data;
-    }
+      Headers = _properties.Select(x => x.Name)
+                           .ToList();
 
-    internal IEnumerable<IDictionary<string, string>> GetRecordsForExport()
-    {
-        foreach (var dataRow in _records)
-        {
-            var row = new Dictionary<string, string>();
+      var ruleByDefaultValue = rules
+                               .Where(x => x.DefaultColumnValue() != null)
+                               .ToDictionary(x => x.PropertyName(), x => x.DefaultColumnValue());
 
-            foreach (var property in _properties)
+      foreach (var model in data)
+      {
+         var properties = model!.GetType()
+                                .GetProperties();
+         foreach (var property in properties)
+         {
+            if (ruleByDefaultValue.TryGetValue(property.Name, out var value))
             {
-                var value = property.Property.GetValue(dataRow);
-
-                var toString = ConvertDataToString(value, property.HasBaseConverter);
-
-                row.Add(property.Name, toString);
+               if (!model.GetType()
+                         .IsGenericType || model.GetType()
+                                                .Name
+                                                .Contains("String"))
+               {
+                  model.GetType()
+                       .GetProperty(property.Name)!.SetValue(model, value);
+               }
             }
+         }
+      }
 
-            yield return row;
-        }
-    }
+      _records = data;
+   }
 
-    internal List<byte[]> ToCsv()
-    {
-        var records = GetRecordsForExport();
+   internal string Name { get; set; }
+   internal List<string> Headers { get; set; }
 
-        var recordsChunks = records.Chunk(Constants.CsvLinesCount);
+   internal IEnumerable<IDictionary<string, string>> GetRecordsForExport()
+   {
+      foreach (var dataRow in _records)
+      {
+         var row = new Dictionary<string, string>();
 
-        var files = new List<byte[]>();
+         foreach (var property in _properties)
+         {
+            var value = property.Property.GetValue(dataRow);
 
-        var csv = new StringBuilder();
-        csv.AppendLine(string.Join(",", Headers));
+            var toString = ConvertDataToString(value, property.HasBaseConverter);
 
-        foreach (var chunk in recordsChunks)
-        {
-            foreach (var record in chunk)
+            row.Add(property.Name, toString);
+         }
+
+         yield return row;
+      }
+   }
+
+   internal List<byte[]> ToCsv()
+   {
+      var records = GetRecordsForExport();
+
+      var recordsChunks = records.Chunk(Constants.CsvLinesCount);
+
+      var files = new List<byte[]>();
+
+      var csv = new StringBuilder();
+      csv.AppendLine(string.Join(",", Headers));
+
+      foreach (var chunk in recordsChunks)
+      {
+         foreach (var record in chunk)
+         {
+            csv.AppendLine(string.Join(",", record.Values.Select(Encapsulate)));
+         }
+      }
+
+      var data = Encoding.UTF8
+                         .GetBytes(csv.ToString()
+                                      .Trim());
+
+      var file = Encoding.UTF8
+                         .GetPreamble()
+                         .Concat(data)
+                         .ToArray();
+
+      files.Add(file);
+
+      return files;
+   }
+
+   internal List<byte[]> ToXlsx()
+   {
+      var records = GetRecordsForExport();
+
+      var recordsChunks = records.Chunk(Constants.ExcelLinesCount);
+
+      var files = new List<byte[]>();
+
+      var workbook = new XLWorkbook();
+      var worksheet = workbook.Worksheets.Add(Name.ToValidName());
+
+      for (var i = 0; i < Headers.Count; i++)
+      {
+         worksheet.Cell(1, i + 1)
+                  .Value = Headers[i];
+         worksheet.Cell(1, i + 1)
+                  .Style.Font.Bold = true;
+      }
+
+      worksheet.SheetView.FreezeRows(1);
+      worksheet.RangeUsed()!
+               .SetAutoFilter(true);
+      worksheet.Columns()
+               .AdjustToContents();
+
+      foreach (var chunk in recordsChunks)
+      {
+         for (var i = 0; i < chunk.Length; i++)
+         {
+            for (var j = 0; j < Headers.Count; j++)
             {
-                csv.AppendLine(string.Join(",", record.Values.Select(Encapsulate)));
+               worksheet.Cell(i + 2, j + 1)
+                        .Value = chunk[i][Headers[j]];
+               worksheet.Cell(i + 2, j + 1)
+                        .Style.NumberFormat.Format = "@";
             }
-        }
+         }
+      }
 
-        var data = Encoding.UTF8
-            .GetBytes(csv.ToString().Trim());
+      using var stream = new MemoryStream();
+      workbook.SaveAs(stream);
+      files.Add(stream.ToArray());
 
-        var file = Encoding.UTF8
-            .GetPreamble()
-            .Concat(data)
-            .ToArray();
+      return files;
+   }
 
-        files.Add(file);
+   internal List<byte[]> ToPdf(bool headerOnEachPage,
+      string fontName,
+      int fontSize,
+      PageSize pageSize,
+      PageOrientation pageOrientation)
+   {
+      var records = GetRecordsForExport();
 
-        return files;
-    }
+      var recordsChunks = records.Chunk(Constants.PdfLinesCount);
 
-    internal List<byte[]> ToXlsx()
-    {
-        var records = GetRecordsForExport();
+      var files = new List<byte[]>();
 
-        var recordsChunks = records.Chunk(Constants.ExcelLinesCount);
+      var pdfDrawer = new PdfDrawer<T>(this, fontName, fontSize, pageOrientation, pageSize);
 
-        var files = new List<byte[]>();
+      pdfDrawer.AddSpacing(10);
+      pdfDrawer.AddDocumentHeader();
+      pdfDrawer.AddSpacing(10);
+      pdfDrawer.AddTableHeaders();
 
-        var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add(Name.ToValidName());
+      foreach (var item in recordsChunks)
+      {
+         pdfDrawer.AddTableRows(item, headerOnEachPage);
+      }
 
-        for (var i = 0; i < Headers.Count; i++)
-        {
-            worksheet.Cell(1, i + 1).Value = Headers[i];
-            worksheet.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+      files.Add(pdfDrawer.GetBytes());
 
-        worksheet.SheetView.FreezeRows(1);
-        worksheet.RangeUsed().SetAutoFilter(true);
-        worksheet.Columns().AdjustToContents();
+      return files;
+   }
 
-        foreach (var chunk in recordsChunks)
-        {
-            for (var i = 0; i < chunk.Length; i++)
+   private static bool IsCollectionType(Type type)
+   {
+      return type.GetInterface(nameof(ICollection)) != null;
+   }
+
+   private static string ConvertDataToString(object? value, bool hasBaseConverter)
+   {
+      string stringValue;
+      switch (value)
+      {
+         case null:
+            stringValue = string.Empty;
+            break;
+         case string s:
+            stringValue = s;
+            break;
+         case DateTime d:
+            stringValue = d.ToString("yyyy-MM-dd HH:mm:ss");
+            break;
+         case Enum e:
+            stringValue = e.GetDisplayName();
+            break;
+         case bool b:
+            stringValue = b ? "Yes" : "No";
+            break;
+         default:
+         {
+            if (Constants.NumericTypesWithNullables.Contains(value.GetType())
+                && hasBaseConverter)
             {
-                for (var j = 0; j < Headers.Count; j++)
-                {
-                    worksheet.Cell(i + 2, j + 1).Value = chunk[i][Headers[j]];
-                    worksheet.Cell(i + 2, j + 1).Style.NumberFormat.Format = "@";
-                }
+               stringValue = value.ToString() ?? string.Empty;
             }
-        }
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        files.Add(stream.ToArray());
-
-        return files;
-    }
-
-    internal List<byte[]> ToPdf(bool headerOnEachPage, string fontName, int fontSize, PdfSharpCore.PageSize pageSize,
-        PageOrientation pageOrientation)
-    {
-        var records = GetRecordsForExport();
-
-        var recordsChunks = records.Chunk(Constants.PdfLinesCount);
-
-        var files = new List<byte[]>();
-
-        var pdfDrawer = new PdfDrawer<T>(this, fontName, fontSize, pageOrientation, pageSize);
-
-        pdfDrawer.AddSpacing(10);
-        pdfDrawer.AddDocumentHeader();
-        pdfDrawer.AddSpacing(10);
-        pdfDrawer.AddTableHeaders();
-
-        foreach (var item in recordsChunks)
-        {
-            pdfDrawer.AddTableRows(item, headerOnEachPage);
-        }
-
-        files.Add(pdfDrawer.GetBytes());
-
-        return files;
-    }
-
-    private static bool IsCollectionType(Type type)
-    {
-        return type.GetInterface(nameof(ICollection)) != null;
-    }
-
-    private static string ConvertDataToString(object? value, bool hasBaseConverter)
-    {
-        string stringValue;
-        switch (value)
-        {
-            case null:
-                stringValue = string.Empty;
-                break;
-            case string s:
-                stringValue = s;
-                break;
-            case DateTime d:
-                stringValue = d.ToString("yyyy-MM-dd HH:mm:ss");
-                break;
-            case Enum e:
-                stringValue = e.GetDisplayName();
-                break;
-            case bool b:
-                stringValue = b ? "Yes" : "No";
-                break;
-            default:
+            else if (value.GetType()
+                          .IsArray)
             {
-                if (Constants.NumericTypesWithNullables.Contains(value.GetType())
-                    && hasBaseConverter)
-                {
-                    stringValue = value.ToString() ?? string.Empty;
-                }
-                else if (value.GetType().IsArray)
-                {
-                    List<string> list = (from object? obj in (value as IEnumerable)!
-                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
+               List<string> list = (from object? obj in (value as IEnumerable)!
+                                    select ConvertDataToString(obj, hasBaseConverter)).ToList();
 
-                    stringValue = string.Join(';', list);
-                }
-                else if (IsCollectionType(value.GetType()))
-                {
-                    List<string> list = (from object? obj in (value as IEnumerable)!
-                        select ConvertDataToString(obj, hasBaseConverter)).ToList();
-
-                    stringValue = string.Join(';', list);
-                }
-                else
-                {
-                    stringValue = value.ToString() ?? string.Empty;
-                }
-
-                break;
+               stringValue = string.Join(';', list);
             }
-        }
+            else if (IsCollectionType(value.GetType()))
+            {
+               List<string> list = (from object? obj in (value as IEnumerable)!
+                                    select ConvertDataToString(obj, hasBaseConverter)).ToList();
 
-        return stringValue;
-    }
+               stringValue = string.Join(';', list);
+            }
+            else
+            {
+               stringValue = value.ToString() ?? string.Empty;
+            }
 
-    private static string Encapsulate(string value)
-    {
-        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
-        {
-            value = value.Replace("\"", "\"\"");
-            value = $"\"{value}\"";
-        }
+            break;
+         }
+      }
 
-        return value;
-    }
+      return stringValue;
+   }
+
+   private static string Encapsulate(string value)
+   {
+      if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+      {
+         value = value.Replace("\"", "\"\"");
+         value = $"\"{value}\"";
+      }
+
+      return value;
+   }
 }
