@@ -213,7 +213,7 @@ namesFileExporter.TestsTests
                 var neededValue = atts.Length == 0 ? item.Name : (atts[0] as CustomDisplayNameAttribute)!.DisplayName;
 
                 var existingValue = item.GetCustomDisplayName();
-                
+
                 Assert.Equal(neededValue, existingValue); }
         }
 
@@ -231,7 +231,7 @@ namesFileExporter.TestsTests
         [Fact]
         public void testtsts()
         {
-            
+
             var ticks = "638224542870360200";
             long.TryParse(ticks, out long result3);
             //var newDate = new DateTime(result3, DateTimeKind.Utc);
@@ -249,3 +249,4 @@ namesFileExporter.TestsTests
         }
     }
 }*/
+
