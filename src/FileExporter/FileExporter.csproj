@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.0.3</Version>
+        <Version>4.0.4</Version>
         <Company>PandaTech</Company>
         <Title>Model to File</Title>
         <PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
         <Description>Export table data into xls, xlsx, csv, pdf formats</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-        <PackageReleaseNotes>Cleanup</PackageReleaseNotes>
+        <PackageReleaseNotes>Refactor exports, remove legacy tests, and update packages</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -38,8 +38,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ClosedXML" Version="0.104.2" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
         <PackageReference Include="PdfSharpCore" Version="1.3.67" />
     </ItemGroup>
 </Project>

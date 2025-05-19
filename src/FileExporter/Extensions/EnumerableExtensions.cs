@@ -133,39 +133,28 @@ public static class EnumerableExtensions
       return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Pdf);
    }
 
-   public static ExportFile ToFileFormat<T>(this IEnumerable<T> data, ExportType type)
+   private static ExportFile CreateZip(string baseName, MimeTypes innerType, IReadOnlyList<byte[]> parts)
    {
-      return type switch
+      using var ms  = new MemoryStream();                      
+      using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
       {
-         ExportType.Xlsx => data.ToXlsx(),
-         ExportType.Csv => data.ToCsv(),
-         ExportType.Pdf => data.ToPdf(),
-         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-      };
+         for (var i = 0; i < parts.Count; i++)
+         {
+            var entryName = parts.Count == 1
+               ? $"{baseName}{innerType.Extension}"          
+               : $"{baseName}_{i + 1}{innerType.Extension}"; 
+
+            var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
+
+            using var es = entry.Open();
+            es.Write(parts[i]);                               
+         }
+      }
+
+      // no extra ToArray();  MemoryStream already owns the buffer we need
+      return new ExportFile($"{baseName}.zip", MimeTypes.Zip, ms.GetBuffer()[..(int)ms.Length]);
    }
 
-   private static ExportFile Zip(string fileName, MimeTypes mimeType, List<byte[]> files)
-   {
-      using var memoryStream = new MemoryStream();
-      using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-      {
-      }
-      for (var i = 0; i < files.Count; i++)
-      {
-         var entry = archive.CreateEntry(fileName + Suffix(i), CompressionLevel.Optimal);
-         using var entryStream = entry.Open();
-         entryStream.Write(files[i], 0, files[i].Length);
-      }
-
-      archive.Dispose(); //don't delete this line otherwize file will be corrupted
-
-      return new ExportFile(fileName, MimeTypes.Zip, memoryStream.ToArray());
-
-      string Suffix(int index)
-      {
-         return files.Count == 1 ? $"{mimeType.Extension}" : $"_{index + 1}{mimeType.Extension}";
-      }
-   }
 
    private static ExportFile ReturnFileOrZippedVersion<T>(DataTable<T> dataTable, List<byte[]> files, MimeTypes type)
    {
@@ -175,6 +164,6 @@ public static class EnumerableExtensions
          return new ExportFile(dataTable.Name, type, files.First());
       }
 
-      return Zip(dataTable.Name, type, files);
+      return CreateZip(dataTable.Name, type, files);
    }
 }
