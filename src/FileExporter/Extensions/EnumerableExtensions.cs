@@ -133,21 +133,33 @@ public static class EnumerableExtensions
       return ReturnFileOrZippedVersion(datatable, files, MimeTypes.Pdf);
    }
 
+   public static ExportFile ToFileFormat<T>(this IEnumerable<T> data, ExportType type)
+   {
+      return type switch
+      {
+         ExportType.Xlsx => data.ToXlsx(),
+         ExportType.Csv => data.ToCsv(),
+         ExportType.Pdf => data.ToPdf(),
+         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+      };
+   }
+
+
    private static ExportFile CreateZip(string baseName, MimeTypes innerType, IReadOnlyList<byte[]> parts)
    {
-      using var ms  = new MemoryStream();                      
+      using var ms = new MemoryStream();
       using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
       {
          for (var i = 0; i < parts.Count; i++)
          {
             var entryName = parts.Count == 1
-               ? $"{baseName}{innerType.Extension}"          
-               : $"{baseName}_{i + 1}{innerType.Extension}"; 
+               ? $"{baseName}{innerType.Extension}"
+               : $"{baseName}_{i + 1}{innerType.Extension}";
 
             var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
 
             using var es = entry.Open();
-            es.Write(parts[i]);                               
+            es.Write(parts[i]);
          }
       }
 
