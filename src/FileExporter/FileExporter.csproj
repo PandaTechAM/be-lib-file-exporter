@@ -8,13 +8,13 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.0.7</Version>
+        <Version>4.1.0</Version>
         <Company>PandaTech</Company>
         <Title>Model to File</Title>
         <PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
         <Description>Export table data into xls, xlsx, csv, pdf formats</Description>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-        <PackageReleaseNotes>Nuget updates</PackageReleaseNotes>
+        <PackageReleaseNotes>Performance optimizations and naming bug fix</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

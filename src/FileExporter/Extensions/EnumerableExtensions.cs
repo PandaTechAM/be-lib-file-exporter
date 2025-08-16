@@ -155,16 +155,13 @@ public static class EnumerableExtensions
             var entryName = parts.Count == 1
                ? $"{baseName}{innerType.Extension}"
                : $"{baseName}_{i + 1}{innerType.Extension}";
-
             var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
-
             using var es = entry.Open();
             es.Write(parts[i]);
          }
       }
 
-      // no extra ToArray();  MemoryStream already owns the buffer we need
-      return new ExportFile($"{baseName}.zip", MimeTypes.Zip, ms.GetBuffer()[..(int)ms.Length]);
+      return new ExportFile(baseName, MimeTypes.Zip, ms.GetBuffer()[..(int)ms.Length]);
    }
 
 

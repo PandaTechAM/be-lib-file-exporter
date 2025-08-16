@@ -20,8 +20,9 @@ internal class DataTable<T>
 {
    private readonly IEnumerable<PropertyData> _properties;
    private readonly IEnumerable<T> _records;
+   private readonly Dictionary<string, object?> _defaults = new();
 
-   internal DataTable()
+   private DataTable()
    {
       _records = [];
       _properties = [];
@@ -64,39 +65,24 @@ internal class DataTable<T>
       var modelProperties = typeof(T).GetProperties()
                                      .ToDictionary(x => x.Name, x => x);
 
-      _properties = rules
-                    .Select(x => new PropertyData
-                    {
-                       Property = modelProperties[x.PropertyName()],
-                       HasBaseConverter = false,
-                       Name = x.ColumnName()
-                    })
-                    .ToList();
+      _properties = rules.Select(r => new PropertyData
+                         {
+                            Property = modelProperties[r.PropertyName()],
+                            HasBaseConverter = false,
+                            Name = r.ColumnName()
+                         })
+                         .ToList();
 
-      Headers = _properties.Select(x => x.Name)
+      Headers = _properties.Select(p => p.Name)
                            .ToList();
 
-      var ruleByDefaultValue = rules
-                               .Where(x => x.DefaultColumnValue() != null)
-                               .ToDictionary(x => x.PropertyName(), x => x.DefaultColumnValue());
-
-      foreach (var model in data)
+      // collect defaults per *model* property name
+      foreach (var r in rules)
       {
-         var properties = model!.GetType()
-                                .GetProperties();
-         foreach (var property in properties)
+         var def = r.DefaultColumnValue();
+         if (def != null)
          {
-            if (ruleByDefaultValue.TryGetValue(property.Name, out var value))
-            {
-               if (!model.GetType()
-                         .IsGenericType || model.GetType()
-                                                .Name
-                                                .Contains("String"))
-               {
-                  model.GetType()
-                       .GetProperty(property.Name)!.SetValue(model, value);
-               }
-            }
+            _defaults[r.PropertyName()] = def;
          }
       }
 
@@ -114,10 +100,15 @@ internal class DataTable<T>
 
          foreach (var property in _properties)
          {
-            var value = property.Property.GetValue(dataRow);
+            var raw = property.Property.GetValue(dataRow);
 
-            var toString = ConvertDataToString(value, property.HasBaseConverter);
+            // If the model value is null and we have a default for that model property, use it
+            if (raw is null && _defaults.TryGetValue(property.ModelPropertyName, out var def))
+            {
+               raw = def;
+            }
 
+            var toString = ConvertDataToString(raw, property.HasBaseConverter);
             row.Add(property.Name, toString);
          }
 
@@ -128,32 +119,28 @@ internal class DataTable<T>
    internal List<byte[]> ToCsv()
    {
       var records = GetRecordsForExport();
-
-      var recordsChunks = records.Chunk(Constants.CsvLinesCount);
+      var chunks = records.Chunk(Constants.CsvLinesCount);
 
       var files = new List<byte[]>();
 
-      var csv = new StringBuilder();
-      csv.AppendLine(string.Join(",", Headers));
-
-      foreach (var chunk in recordsChunks)
+      foreach (var chunk in chunks)
       {
+         var sb = new StringBuilder();
+         sb.AppendLine(string.Join(",", Headers));
+
          foreach (var record in chunk)
          {
-            csv.AppendLine(string.Join(",", record.Values.Select(Encapsulate)));
+            sb.AppendLine(string.Join(",", record.Values.Select(Encapsulate)));
          }
+
+         var data = Encoding.UTF8.GetBytes(sb.ToString()
+                                             .TrimEnd());
+         var file = Encoding.UTF8
+                            .GetPreamble()
+                            .Concat(data)
+                            .ToArray();
+         files.Add(file);
       }
-
-      var data = Encoding.UTF8
-                         .GetBytes(csv.ToString()
-                                      .Trim());
-
-      var file = Encoding.UTF8
-                         .GetPreamble()
-                         .Concat(data)
-                         .ToArray();
-
-      files.Add(file);
 
       return files;
    }
@@ -161,45 +148,52 @@ internal class DataTable<T>
    internal List<byte[]> ToXlsx()
    {
       var records = GetRecordsForExport();
-
       var recordsChunks = records.Chunk(Constants.ExcelLinesCount);
 
       var files = new List<byte[]>();
 
-      var workbook = new XLWorkbook();
-      var worksheet = workbook.Worksheets.Add(Name.ToValidName());
-
-      for (var i = 0; i < Headers.Count; i++)
-      {
-         worksheet.Cell(1, i + 1)
-                  .Value = Headers[i];
-         worksheet.Cell(1, i + 1)
-                  .Style.Font.Bold = true;
-      }
-
-      worksheet.SheetView.FreezeRows(1);
-      worksheet.RangeUsed()!
-               .SetAutoFilter(true);
-      worksheet.Columns()
-               .AdjustToContents();
-
       foreach (var chunk in recordsChunks)
       {
-         for (var i = 0; i < chunk.Length; i++)
+         using var workbook = new XLWorkbook();
+         var ws = workbook.Worksheets.Add(Name.ToValidName());
+
+         // header
+         for (var c = 0; c < Headers.Count; c++)
+         {
+            var cell = ws.Cell(1, c + 1);
+            cell.Value = Headers[c];
+            cell.Style.Font.Bold = true;
+         }
+
+         ws.SheetView.FreezeRows(1);
+         ws.Range(1, 1, 1, Headers.Count)
+           .SetAutoFilter();
+
+         // data
+         var row = 2;
+         foreach (var t in chunk)
          {
             for (var j = 0; j < Headers.Count; j++)
             {
-               worksheet.Cell(i + 2, j + 1)
-                        .Value = chunk[i][Headers[j]];
-               worksheet.Cell(i + 2, j + 1)
-                        .Style.NumberFormat.Format = "@";
+               var cell = ws.Cell(row, j + 1);
+               cell.Value = t[Headers[j]];
+               cell.Style.NumberFormat.Format = "@";
             }
-         }
-      }
 
-      using var stream = new MemoryStream();
-      workbook.SaveAs(stream);
-      files.Add(stream.ToArray());
+            row++;
+         }
+
+         // cheap width based on header only
+         for (var c = 1; c <= Headers.Count; c++)
+         {
+            ws.Column(c)
+              .Width = Math.Max(Headers[c - 1].Length + 2, 10);
+         }
+
+         using var stream = new MemoryStream();
+         workbook.SaveAs(stream);
+         files.Add(stream.ToArray());
+      }
 
       return files;
    }
