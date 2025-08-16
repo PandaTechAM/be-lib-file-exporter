@@ -162,12 +162,7 @@ public static class EnumerableExtensions
          }
       }
 
-      // Ensure exactly one ".zip" on the outer file
-      var outerName = baseName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
-         ? baseName
-         : $"{baseName}.zip";
-
-      return new ExportFile(outerName, MimeTypes.Zip, ms.ToArray());
+      return new ExportFile(baseName, MimeTypes.Zip, ms.ToArray());
    }
 
    private static ExportFile ReturnFileOrZippedVersion<T>(DataTable<T> dataTable, List<byte[]> files, MimeTypes type)

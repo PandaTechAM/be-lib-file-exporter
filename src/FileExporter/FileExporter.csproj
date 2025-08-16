@@ -8,7 +8,7 @@
         <Copyright>MIT</Copyright>
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.1.1</Version>
+        <Version>4.1.2</Version>
         <Company>PandaTech</Company>
         <Title>Model to File</Title>
         <PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
