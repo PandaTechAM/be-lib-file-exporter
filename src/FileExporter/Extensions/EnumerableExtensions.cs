@@ -155,15 +155,20 @@ public static class EnumerableExtensions
             var entryName = parts.Count == 1
                ? $"{baseName}{innerType.Extension}"
                : $"{baseName}_{i + 1}{innerType.Extension}";
+
             var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
             using var es = entry.Open();
             es.Write(parts[i]);
          }
       }
 
-      return new ExportFile(baseName, MimeTypes.Zip, ms.GetBuffer()[..(int)ms.Length]);
-   }
+      // Ensure exactly one ".zip" on the outer file
+      var outerName = baseName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+         ? baseName
+         : $"{baseName}.zip";
 
+      return new ExportFile(outerName, MimeTypes.Zip, ms.ToArray());
+   }
 
    private static ExportFile ReturnFileOrZippedVersion<T>(DataTable<T> dataTable, List<byte[]> files, MimeTypes type)
    {
