@@ -1,19 +1,31 @@
-using System;
-using System.ComponentModel;
-using System.Reflection;
+﻿using System;
+using System.Globalization;
 
 namespace FileExporter.Helpers;
 
 internal static class NamingHelper
 {
+   private const string DateTimePlaceholder = "{DateTime}";
+   private const int MaxNameLength = 30;
+
    internal static string GetDisplayName<T>()
    {
-      var displayName = typeof(T).GetCustomAttribute<DisplayNameAttribute>()
-                                 ?.DisplayName;
+      var type = typeof(T);
+      var displayName = type.Name + " " + DateTimePlaceholder;
+      var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+      displayName = displayName.Replace(DateTimePlaceholder, now);
+      return displayName.ToValidName(MaxNameLength);
+   }
+   
+   internal static string EnsureExtension(string name, string extension)
+   {
+      if (string.IsNullOrWhiteSpace(extension))
+      {
+         return name;
+      }
 
-      displayName ??= typeof(T).Name + " " + Constants.DateTimePlaceHolder;
-
-      displayName = displayName.Replace(Constants.DateTimePlaceHolder, DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
-      return displayName;
+      return name.EndsWith(extension, StringComparison.OrdinalIgnoreCase)
+         ? name
+         : name + extension;
    }
 }

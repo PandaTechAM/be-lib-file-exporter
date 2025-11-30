@@ -18,28 +18,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Fonts\arial.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Include="Fonts\arialbd.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Include="Fonts\ariali.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
         <None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
-        <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+        <PackageReference Include="SpreadCheetah" Version="1.24.0" />
     </ItemGroup>
 </Project>

@@ -1,51 +1,81 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using FileExporter.Enums;
 using FileExporter.Exceptions;
+using FileExporter.Helpers;
 
 namespace FileExporter.Rules;
 
-public class PropertyRule<TProperty> : IPropertyRule
+public sealed class PropertyRule<TProperty> : IPropertyRule
 {
-   private readonly string _propertyName;
-   private string _columnName;
-   private string? _defaultValue;
-
    public PropertyRule(MemberExpression navigationExpression)
    {
-      _propertyName = navigationExpression.Member.Name ??
-                      throw new InvalidPropertyNameException($"Invalid property name {_propertyName}");
-      _columnName = _propertyName;
+      PropertyName = navigationExpression.Member.Name ??
+                     throw new InvalidPropertyNameException("Invalid property name");
+
+      ColumnName = PropertyName.ToSpacedName();
    }
 
-   public string PropertyName()
-   {
-      return _propertyName;
-   }
+   public string PropertyName { get; }
+   public string ColumnName { get; private set; }
+   public string? DefaultValue { get; private set; }
 
-   public string ColumnName()
-   {
-      return _columnName;
-   }
+   public int? Order { get; private set; }
+   public bool IsIgnored { get; private set; }
 
-   public string? DefaultColumnValue()
-   {
-      return _defaultValue;
-   }
+   public ColumnFormatType FormatType { get; private set; } = ColumnFormatType.Default;
+   public int? Precision { get; private set; }
+   public int? ColumnWidth { get; private set; }
+   public EnumFormatMode EnumFormat { get; private set; } = EnumFormatMode.MixedIntAndName;
 
    public PropertyRule<TProperty> WriteToColumn(string name)
    {
-      _columnName = name;
+      if (!string.IsNullOrWhiteSpace(name))
+      {
+         ColumnName = name;
+      }
+
       return this;
    }
 
    public PropertyRule<TProperty> WithDefaultValue(string value)
    {
-      var type = typeof(TProperty);
+      DefaultValue = value;
+      return this;
+   }
 
-      if (type.IsGenericType || type.Name.Contains("String"))
-      {
-         _defaultValue = value;
-      }
+   public PropertyRule<TProperty> HasOrder(int order)
+   {
+      Order = order;
+      return this;
+   }
 
+   public PropertyRule<TProperty> Ignore()
+   {
+      IsIgnored = true;
+      return this;
+   }
+
+   public PropertyRule<TProperty> HasFormat(ColumnFormatType formatType)
+   {
+      FormatType = formatType;
+      return this;
+   }
+
+   public PropertyRule<TProperty> HasPrecision(int precision)
+   {
+      Precision = precision;
+      return this;
+   }
+
+   public PropertyRule<TProperty> HasWidth(int width)
+   {
+      ColumnWidth = width;
+      return this;
+   }
+
+   public PropertyRule<TProperty> AsEnum(EnumFormatMode mode)
+   {
+      EnumFormat = mode;
       return this;
    }
 }
