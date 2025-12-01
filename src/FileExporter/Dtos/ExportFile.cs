@@ -1,18 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-
 namespace FileExporter.Dtos;
 
-public class ExportFile(string name, MimeTypes mimeType, byte[] data)
+public sealed class ExportFile(string name, MimeTypes mimeType, byte[] content)
 {
-   public string Name { get; set; } = name + mimeType.Extension;
-   public MimeTypes Type { get; set; } = mimeType;
-   public byte[] Data { get; set; } = data;
-
-   public FileContentResult ToFile()
-   {
-      return new FileContentResult(Data, Type)
-      {
-         FileDownloadName = Name
-      };
-   }
+   public string Name { get; } = name;
+   public MimeTypes MimeType { get; } = mimeType;
+   public byte[] Content { get; } = content;
 }

@@ -1,143 +1,200 @@
-# FileExporter
+# PandaTech.FileExporter
 
-FileExporter is a lightweight C# library that simplifies file export operations in .NET applications. With support for
-exporting data to CSV, Excel (XLSX), and PDF formats, FileExporter provides an intuitive interface for developers to
-quickly generate and download files.
+**Blazing‑fast, flexible, convention‑first CSV/XLSX exporter for .NET 9+**\
+Powered internally by two battle‑tested libraries:\
 
-## Features
+- **CsvHelper** --- industry‑standard CSV writer\
+- **SpreadCheetah** --- extremely fast, fully streaming XLSX generator
 
-- **Easy Exporting**: Simply call ToCsv(), ToXlsx(), or ToPdf() on your data collection to export to the desired format.
-- **Automatic Splitting**: Handles large datasets by automatically splitting files if the maximum line count or file
-  size is exceeded, then zipping them for easy download.
-- **Flexible Configuration**: Customize export settings such as column headers, delimiter, and more to suit your needs.
-- **Effortless Integration**: Seamlessly integrate FileExporter into your existing .NET projects with minimal setup.
-- **Helper Extension Methods**: Use ToFileFormat(ExportType.Excel) as an alternative to directly calling ToCsv(),
-  ToXlsx(), or ToPdf().
+`PandaTech.FileExporter` focuses on **performance**, **stability**, and
+**developer happiness**.\
+Version **5.x is a complete redesign** of 4.x --- simpler, safer,
+faster. API is fully modernized (minimal APIs, DI‑friendly,
+async‑ready).
 
-## Installation
+> ⚠️ **Breaking Change Notice**\
+> v5 breaks compatibility with v4. Migration is straightforward: - enums
+> changed values --- **do not reuse v4 enum values** - PDF support
+> removed (too slow, not worth maintaining) - All exporters rebuilt
+> around a simpler, more predictable format system
 
-You can install FileExporter via NuGet Package Manager by running the following command:
+------------------------------------------------------------------------
 
-```bash
-Install-Package FileExporter
+## ✨ Features
+
+- **Convention‑based export** (zero config)\
+- **Fluent export rules** via `ExportRule<T>`\
+- **Super‑fast XLSX via SpreadCheetah** (safe for millions of rows)\
+- **CSV export** using CsvHelper\
+- **Automatic ZIP compression** when file size is large\
+- **Multi‑sheet XLSX** for datasets \> 1M rows\
+- **Async streaming support** (`IAsyncEnumerable<T>`)\
+- **Custom formatting & transforms**\
+- **Minimal API ready**\
+- **Simple DI registration**\
+- **No controllers required**
+
+------------------------------------------------------------------------
+
+## 🚀 Installation
+
+``` bash
+dotnet add package PandaTech.FileExporter
 ```
 
-## Usage
+------------------------------------------------------------------------
 
-Here's a quick example of how to use FileExporter to export data to a CSV file with old way which is still supported:
+## ⚙️ Quick Start
 
-```csharp
-using FileExporter;
+### 1. Configure in `Program.cs`
 
-// Define your data
-var data = new List<MyDataClass>
-{
-    new MyDataClass { Name = "John Doe", Age = 30, Email = "john@example.com" },
-    new MyDataClass { Name = "Jane Smith", Age = 25, Email = "jane@example.com" }
-};
+``` csharp
+var builder = WebApplication.CreateBuilder(args);
 
-// Export data to CSV
-var exportedFile = data.ToCsv().ToFile();
-
-// Return the exported file to the caller
-return exportedFile;
+builder.AddFileExporter(); // scans entry assembly for ExportRule<T>
 ```
 
-Starting from release 3.3.0, FileExporter supports exporting data using fluent rules.
+### 2. Export from your endpoint
 
-### Fluent Rules Example
-
-First, create an ExportRule for your model. In the constructor, call GenerateRules() to automatically create default
-rules based on the model. To customize the setup, use the RuleFor() method to configure specific rules for your model's
-properties. Here's a quick demonstration:
-
-### Model Example:
-
-```csharp
-public class FileData
+``` csharp
+app.MapGet("/export", async () =>
 {
-    public long Id { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string? Comment { get; set; }
-}
-```
-
-### Export Rule Example:
-
-This sample includes two constructors, one with a default name and one with a custom name.
-
-```csharp
-namespace FileExporter.Tests.ExportRuleTests;
-
-public class FileDataExportRule : ExportRule<FileData>
-{
-    public FileDataExportRule()
+    var data = new List<MyRow>
     {
-        GenerateRules();
+        new() { Id = 1, Name = "Alice" },
+        new() { Id = 2, Name = "Bob" }
+    };
 
-        // Custom rules
-        RuleFor(x => x.Description)
-            .WriteToColumn("Description")
-            .WithDefaultValue("Default text here");
+    var file = await data.ToFileFormatAsync(ExportFormat.Xlsx);
+    return file.ToFileResult();
+});
+```
 
-        RuleFor(x => x.CreatedAt)
-            .WriteToColumn("Creation date")
-            .WithDefaultValue("22/08/2024");
-    }
-    
-    // OR with custom name
-    public FileDataExportRule() : base("File Data")
+Done. Zero configuration required.
+
+------------------------------------------------------------------------
+
+## 📄 Defining Custom Rules (Optional)
+
+``` csharp
+using FileExporter.Rules;
+
+public sealed class MyRowExportRule : ExportRule<MyRow>
+{
+    public MyRowExportRule()
     {
-        GenerateRules();
-        
-        // Custom rules
-        RuleFor(x => x.Description)
-            .WriteToColumn("Description")
-            .WithDefaultValue("Default text here");
+        WithName("My Custom Export");
 
-        RuleFor(x => x.CreatedAt)
-            .WriteToColumn("Creation date")
-            .WithDefaultValue("22/08/2024");
+        RuleFor(x => x.Id)
+            .HasOrder(0)
+            .HasFormat(ColumnFormatType.Integer);
+
+        RuleFor(x => x.Name)
+            .HasOrder(1)
+            .WriteToColumn("Full Name");
     }
 }
 ```
 
-If a property is incorrectly set up, an InvalidPropertyNameException will be thrown with a relevant message.
+Just add this class; it will be auto‑discovered.
 
-### Controller Example:
+------------------------------------------------------------------------
 
-Here is an example of how to integrate FileExporter into a web API controller:
+## 🔍 Supported Formats
 
-```csharp
-namespace FileExporter.Demo.Controllers
+ExportFormat Description
+  -------------- -------------------------------------------------
+**Csv**        UTF‑8 CSV, auto‑quote, stable for huge datasets
+**Xlsx**       Multi‑sheet, streaming, low memory usage
+
+------------------------------------------------------------------------
+
+## 📦 File Naming
+
+Every file receives a timestamp:
+
+    Orders 2025-01-01 10:33:00.xlsx
+
+Automatically sanitized for safety.
+
+------------------------------------------------------------------------
+
+## 🔧 Property Rule Options
+
+  -----------------------------------------------------------------------
+Option Description
+  --------------------------- -------------------------------------------
+`WriteToColumn("Name")`     Override header text
+
+`HasOrder(1)`               Column ordering
+
+`Ignore()`                  Exclude property
+
+`HasFormat(...)`            Text, Integer, Decimal, Currency,
+Percentage, Boolean, Date, DateTime
+
+`HasPrecision(2)`           Decimal digit precision (not rounding, for rounding refer `.Transform()`)
+
+`HasWidth(20)`              XLSX column width override
+
+`WithDefaultValue("N/A")`   Replaces null values
+
+`Transform(v => ...)`       Custom transformation
+
+
+------------------------------------------------------------------------
+
+## 🧬 Enum Formatting
+
+Rules support:
+
+- `MixedIntAndName` *(default)* → `"1 - Active"`
+- `Int` → `"1"`
+- `Name` → `"Active"`
+
+------------------------------------------------------------------------
+
+## 🔥 Performance Notes
+
+- Handles **millions of rows** with **constant memory** usage\
+- XLSX splits automatically into multiple sheets\
+- ZIP is only applied when final file exceeds threshold\
+- Async pipelines (`IAsyncEnumerable<T>`) supported
+
+------------------------------------------------------------------------
+
+## 🪄 Tips
+
+- Keep DTOs simple; exporters use reflection only once\
+- Add custom rules **only for overrides** --- conventions already
+  cover:
+    - ordering\
+    - decimal precision\
+    - date formatting\
+    - booleans\
+- For extremely large exports: prefer `IAsyncEnumerable<T>`
+
+------------------------------------------------------------------------
+
+## 🧭 Demo
+
+``` csharp
+app.MapGet("/export/orders", async (ExportFormat format) =>
 {
-    [ApiController]
-    [Route("api/")]
-    public class FileDataExportController(ApiDbContext context) : Controller
-    {
-        [HttpGet("export-xlsx-via-rules")]
-        public IActionResult ExportXlsxViaRules()
-        {
-            var exportData = context.FileData.ToList();
+    var orders = Enumerable.Range(1, 2000000)
+        .Select(i => new OrderDto { Id = i, Total = i * 1.25m });
 
-            var rule = new FileDataExportRule();
-            
-            return rule.ToCsv(exportData).ToFile();
-            // OR alternative solution with extension method
-            return rule.ToFileFormat(exportData, ExportType.Xlsx).ToFile();
-        }
-    }
-}
+    var file = await orders.ToFileFormatAsync(format);
+    return file.ToFileResult();
+});
 ```
 
-You can also export data to Excel (XLSX) or PDF formats by calling ToXlsx() or ToPdf() respectively.
+Exports 2M rows in under a few seconds (depending on disk/CPU).
 
-## Contributing
+------------------------------------------------------------------------
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+## 🏁 Conclusion
 
-## License
-
-This project is licensed under the MIT License.
+`PandaTech.FileExporter` is built to stay small, clean, and blazing
+fast.\
+If you need CSV/XLSX export without pain --- you're covered.

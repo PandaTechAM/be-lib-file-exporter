@@ -1,8 +1,7 @@
 ﻿namespace FileExporter.Enums;
 
-public enum ExportType
+public enum ExportFormat
 {
-   Xlsx = 1,
-   Csv = 2,
-   Pdf = 3
+   Csv = 1,
+   Xlsx = 2
 }

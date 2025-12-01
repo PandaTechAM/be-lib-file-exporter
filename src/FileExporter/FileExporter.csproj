@@ -3,34 +3,44 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
+
         <PackageId>PandaTech.FileExporter</PackageId>
         <Authors>PandaTech</Authors>
+        <Company>PandaTech</Company>
+
         <Copyright>MIT</Copyright>
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>4.1.2</Version>
-        <Company>PandaTech</Company>
-        <Title>Model to File</Title>
-        <PackageTags>Pandatech, lib, export, xlsx, csv, pdf</PackageTags>
-        <Description>Export table data into xls, xlsx, csv, pdf formats</Description>
-        <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
-        <PackageReleaseNotes>Performance optimizations and naming bug fix</PackageReleaseNotes>
-    </PropertyGroup>
 
-    <ItemGroup>
-        <EmbeddedResource Include="Fonts\arial.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Include="Fonts\arialbd.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Include="Fonts\ariali.ttf">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-            <PackageCopyToOutput>true</PackageCopyToOutput>
-        </EmbeddedResource>
-    </ItemGroup>
+        <Version>5.0.0</Version>
+
+        <Title>PandaTech File Exporter</Title>
+
+        <PackageTags>
+            Pandatech;export;file;csv;xlsx;excel;spreadcheetah;csvhelper;exporter;dotnet;minimal-api;high-performance
+        </PackageTags>
+
+        <Description>
+            High-performance CSV and XLSX exporting library for .NET 9/10.
+            Built on CsvHelper and SpreadCheetah for maximum performance and stability.
+            Convention-based, customizable via ExportRule&lt;T&gt;, supports async streaming,
+            multi-sheet XLSX, auto-zip, column formatting, and minimal API integration.
+            Version 5 is a complete redesign of v4 with breaking changes and no PDF support.
+        </Description>
+
+        <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
+
+        <PackageReleaseNotes>
+            v5 major redesign. Breaking changes from v4.
+            - New rule system and naming engine
+            - Multi-sheet XLSX support
+            - Massive performance improvements
+            - Async streaming (IAsyncEnumerable)
+            - Removed PDF support
+            - Updated enum format modes
+            - Safer sanitization and file naming
+        </PackageReleaseNotes>
+    </PropertyGroup>
 
     <ItemGroup>
         <None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
@@ -38,8 +48,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
-        <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+        <PackageReference Include="SpreadCheetah" Version="1.24.0" />
     </ItemGroup>
 </Project>
