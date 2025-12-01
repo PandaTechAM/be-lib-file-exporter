@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FileExporter.Dtos;
+using FileExporter.Enums;
 using FileExporter.Helpers;
 using FileExporter.Rules;
 using SpreadCheetah;
@@ -15,8 +16,7 @@ namespace FileExporter.Exporters;
 
 internal static class XlsxExporter
 {
-   // Primary async API
-   public static async Task<ExportFile> ExportAsync<T>(IEnumerable<T> data,
+   internal static async Task<ExportFile> ExportAsync<T>(IEnumerable<T> data,
       ExportRule<T> rule,
       CancellationToken cancellationToken = default)
       where T : class
@@ -27,16 +27,45 @@ internal static class XlsxExporter
       var list = data as IList<T> ?? data.ToList();
       var totalRows = list.Count;
 
-      if (totalRows > ExportLimits.MaxXlsxRowsPerFile)
-      {
-         return CsvExporter.Export(list, rule);
-      }
-
       var columns = BuildColumns(rule);
 
       var baseName = rule.FileName;
-      var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Xlsx.Extension);
-      
+      var singleFileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Xlsx.Extension);
+
+      const int rowsPerSheet = ExportLimits.MaxXlsxRowsPerFile;
+
+      byte[] bytes;
+
+      if (totalRows <= rowsPerSheet)
+      {
+         // Single sheet
+         bytes = await CreateXlsxFileAsync(list, columns, rule, cancellationToken);
+      }
+      else
+      {
+         // Multi-sheet single workbook
+         bytes = await CreateMultiSheetXlsxFileAsync(list, columns, rule, rowsPerSheet, cancellationToken);
+      }
+
+      if (bytes.Length < ExportLimits.ZipThresholdBytes)
+      {
+         return new ExportFile(singleFileName, MimeTypes.Xlsx, bytes);
+      }
+
+      // Zip only when size threshold exceeded
+      return ZipHelper.CreateZip(baseName,
+         MimeTypes.Xlsx,
+         [
+            bytes
+         ]);
+   }
+
+   private static async Task<byte[]> CreateXlsxFileAsync<T>(IEnumerable<T> dataSlice,
+      List<ExportColumn> columns,
+      ExportRule<T> rule,
+      CancellationToken cancellationToken)
+      where T : class
+   {
       await using var ms = new MemoryStream();
 
       await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: cancellationToken))
@@ -51,7 +80,7 @@ internal static class XlsxExporter
          var headerStyleId = AddHeaderStyle(spreadsheet);
          await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
 
-         foreach (var item in list)
+         foreach (var item in dataSlice)
          {
             var row = new List<Cell>(columns.Count);
 
@@ -69,32 +98,10 @@ internal static class XlsxExporter
          await spreadsheet.FinishAsync(cancellationToken);
       }
 
-      var bytes = ms.ToArray();
-
-      if (bytes.Length < ExportLimits.ZipThresholdBytes)
-      {
-         return new ExportFile(fileName, MimeTypes.Xlsx, bytes);
-      }
-
-      var zipped = ZipHelper.CreateZip(fileName,
-         MimeTypes.Xlsx,
-         new List<byte[]>
-         {
-            bytes
-         });
-      return zipped;
+      return ms.ToArray();
    }
 
-   // Optional sync convenience wrapper if you still want it
-   public static ExportFile Export<T>(IEnumerable<T> data, ExportRule<T> rule)
-      where T : class
-   {
-      return ExportAsync(data, rule, CancellationToken.None)
-             .GetAwaiter()
-             .GetResult();
-   }
-
-   private static IReadOnlyList<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
+   private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
       where T : class
    {
       var modelType = typeof(T);
@@ -153,18 +160,148 @@ internal static class XlsxExporter
    {
       for (var i = 0; i < columns.Count; i++)
       {
-         var rule = columns[i].Rule;
-         var width = rule.ColumnWidth;
+         var col = columns[i];
+         var rule = col.Rule;
+         var propType = col.Property.PropertyType;
+         var underlying = Nullable.GetUnderlyingType(propType) ?? propType;
 
-         if (!width.HasValue)
+         double width;
+
+         if (rule.ColumnWidth.HasValue)
          {
-            var headerLength = rule.ColumnName.Length;
-            width = Math.Clamp(headerLength + 2, 10, 30);
+            width = rule.ColumnWidth.Value;
+         }
+         else
+         {
+            width = InferWidth(rule, underlying);
          }
 
-         options.Column(i + 1)
-                .Width = width.Value;
+         var columnOptions = options.Column(i + 1);
+         columnOptions.Width = width;
+
+         var format = BuildNumberFormat(rule, propType);
+
+         if (format is not null)
+         {
+            columnOptions.DefaultStyle = new Style
+            {
+               Format = NumberFormat.Custom(format)
+            };
+         }
       }
+   }
+
+   private static double InferWidth(IPropertyRule rule, Type underlyingType)
+   {
+      var formatType = rule.FormatType;
+
+      // If user explicitly chose Text, treat as text column
+      if (formatType == ColumnFormatType.Text)
+      {
+         return ColumnWidthDefaults.FromHeader(rule.ColumnName);
+      }
+
+      // Date / DateTime: either explicit format or type-based
+      if (formatType == ColumnFormatType.DateTime ||
+          underlyingType == typeof(DateTime) ||
+          underlyingType == typeof(DateOnly) ||
+          underlyingType == typeof(TimeOnly))
+      {
+         return ColumnWidthDefaults.DateTimeWidth;
+      }
+
+      if (formatType == ColumnFormatType.Date)
+      {
+         return ColumnWidthDefaults.DateWidth;
+      }
+
+      // Boolean
+      if (formatType == ColumnFormatType.Boolean ||
+          underlyingType == typeof(bool))
+      {
+         return ColumnWidthDefaults.BooleanWidth;
+      }
+
+      // Decimal-like
+      if (formatType == ColumnFormatType.Decimal ||
+          formatType == ColumnFormatType.Currency ||
+          formatType == ColumnFormatType.Percentage ||
+          underlyingType == typeof(decimal) || underlyingType == typeof(double) || underlyingType == typeof(float))
+      {
+         return ColumnWidthDefaults.ForDecimal(rule.Precision);
+      }
+
+      // Integer-ish
+      if (formatType == ColumnFormatType.Integer ||
+          underlyingType == typeof(int) || underlyingType == typeof(long) ||
+          underlyingType == typeof(short) || underlyingType == typeof(byte) ||
+          underlyingType == typeof(uint) || underlyingType == typeof(ulong) ||
+          underlyingType == typeof(ushort))
+      {
+         return ColumnWidthDefaults.IntegerWidth;
+      }
+
+      // Fallback: header-based heuristic for everything else
+      return ColumnWidthDefaults.FromHeader(rule.ColumnName);
+   }
+
+   private static string? BuildNumberFormat(IPropertyRule rule, Type propertyType)
+   {
+      var formatType = rule.FormatType;
+      var precision = rule.Precision;
+
+      if (formatType == ColumnFormatType.Text)
+      {
+         return null;
+      }
+
+      var underlying = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+      var isDecimalLike =
+         underlying == typeof(decimal) ||
+         underlying == typeof(double) ||
+         underlying == typeof(float);
+
+      if (isDecimalLike ||
+          formatType == ColumnFormatType.Decimal ||
+          formatType == ColumnFormatType.Currency ||
+          formatType == ColumnFormatType.Percentage)
+      {
+         var p = precision ?? 2;
+
+         return formatType switch
+         {
+            ColumnFormatType.Currency =>
+               p <= 0 ? "#,##0" : "#,##0." + new string('0', p),
+
+            ColumnFormatType.Percentage =>
+               p <= 0 ? "0%" : "0." + new string('0', p) + "%",
+
+            _ => p <= 0 ? "0" : "0." + new string('0', p)
+         };
+      }
+
+      if (formatType == ColumnFormatType.Integer ||
+          underlying == typeof(int) || underlying == typeof(long) ||
+          underlying == typeof(short) || underlying == typeof(byte) ||
+          underlying == typeof(uint) || underlying == typeof(ulong) ||
+          underlying == typeof(ushort))
+      {
+         return "0";
+      }
+
+      if (formatType == ColumnFormatType.DateTime ||
+          underlying == typeof(DateTime) || underlying == typeof(TimeOnly))
+      {
+         return "yyyy-mm-dd hh:mm:ss";
+      }
+
+      if (formatType == ColumnFormatType.Date || underlying == typeof(DateOnly))
+      {
+         return "yyyy-mm-dd";
+      }
+
+      return null;
    }
 
    private static Cell CreateCell(object value)
@@ -183,7 +320,92 @@ internal static class XlsxExporter
          double d => new Cell(d),
          decimal m => new Cell((double)m),
          DateTime dt => new Cell(dt),
+         DateOnly d => new Cell(d.ToDateTime(TimeOnly.MinValue)),
+         TimeOnly t => new Cell(DateTime.Today.Add(t.ToTimeSpan())),
          _ => new Cell(value.ToString() ?? string.Empty)
       };
+   }
+
+   private static async Task<byte[]> CreateMultiSheetXlsxFileAsync<T>(IList<T> list,
+      List<ExportColumn> columns,
+      ExportRule<T> rule,
+      int rowsPerSheet,
+      CancellationToken cancellationToken)
+      where T : class
+   {
+      await using var ms = new MemoryStream();
+
+      await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: cancellationToken))
+      {
+         // Sanitize once for sheet names
+         var sanitizedBaseName = rule.FileName.ToValidName(ExportLimits.MaxSheetNameLength);
+
+         var headerStyleId = AddHeaderStyle(spreadsheet);
+
+         var totalRows = list.Count;
+         var sheetIndex = 0;
+
+         for (var offset = 0; offset < totalRows; offset += rowsPerSheet, sheetIndex++)
+         {
+            var take = Math.Min(rowsPerSheet, totalRows - offset);
+
+            var sheetName = BuildSheetName(sanitizedBaseName, sheetIndex);
+
+            var options = new WorksheetOptions();
+            ApplyColumnWidths(options, columns);
+
+            await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
+            await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
+
+            for (var i = 0; i < take; i++)
+            {
+               var item = list[offset + i];
+               var row = new List<Cell>(columns.Count);
+
+               foreach (var column in columns)
+               {
+                  var raw = column.Property.GetValue(item);
+                  var formatted = ValueFormatter.FormatForXlsx(raw, column.Rule);
+
+                  row.Add(formatted == null ? new Cell(string.Empty) : CreateCell(formatted));
+               }
+
+               await spreadsheet.AddRowAsync(row, cancellationToken);
+            }
+         }
+
+         await spreadsheet.FinishAsync(cancellationToken);
+      }
+
+      return ms.ToArray();
+   }
+
+
+   private static string BuildSheetName(string baseName, int sheetIndex)
+   {
+      const int maxSheetNameLength = ExportLimits.MaxSheetNameLength;
+      if (sheetIndex == 0)
+      {
+         return baseName.Length <= maxSheetNameLength
+            ? baseName
+            : baseName[..maxSheetNameLength];
+      }
+
+      var suffix = "_" + (sheetIndex + 1);
+      var baseMaxLen = maxSheetNameLength - suffix.Length;
+
+      if (baseMaxLen <= 0)
+      {
+         var fallback = "Sheet" + suffix;
+         return fallback.Length <= maxSheetNameLength
+            ? fallback
+            : fallback[..maxSheetNameLength];
+      }
+
+      var trimmedBase = baseName.Length <= baseMaxLen
+         ? baseName
+         : baseName[..baseMaxLen];
+
+      return trimmedBase + suffix;
    }
 }

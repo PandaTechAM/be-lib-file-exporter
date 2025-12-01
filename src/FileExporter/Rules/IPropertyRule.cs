@@ -1,3 +1,4 @@
+using System;
 using FileExporter.Enums;
 
 namespace FileExporter.Rules;
@@ -15,4 +16,5 @@ public interface IPropertyRule
    int? Precision { get; }
    int? ColumnWidth { get; }
    EnumFormatMode EnumFormat { get; }
+   Func<object?, object?>? CustomTransform { get; }
 }

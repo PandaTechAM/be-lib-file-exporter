@@ -9,6 +9,11 @@ internal static class ValueFormatter
 {
    public static string FormatForCsv(object? value, IPropertyRule rule, CultureInfo culture)
    {
+      if (rule.CustomTransform is not null)
+      {
+         value = rule.CustomTransform(value);
+      }
+
       if (value == null)
       {
          return rule.DefaultValue ?? string.Empty;
@@ -36,30 +41,35 @@ internal static class ValueFormatter
 
       var precision = rule.Precision ?? 2;
 
-      switch (value)
+      var numeric = value switch
       {
-         case decimal dec:
-         {
-            var rounded = Math.Round(dec, precision);
-            return rounded.ToString($"F{precision}", culture);
-         }
-         case double dbl:
-         {
-            var rounded = Math.Round(dbl, precision);
-            return rounded.ToString($"F{precision}", culture);
-         }
-         case float fl:
-         {
-            var rounded = MathF.Round(fl, precision);
-            return rounded.ToString($"F{precision}", culture);
-         }
-      }
+         decimal dec => Math.Round(dec, precision)
+                            .ToString($"F{precision}", culture),
+         double dbl => Math.Round(dbl, precision)
+                           .ToString($"F{precision}", culture),
+         float fl => MathF.Round(fl, precision)
+                          .ToString($"F{precision}", culture),
+         _ => Convert.ToString(value, culture) ?? string.Empty
+      };
 
-      return Convert.ToString(value, culture) ?? string.Empty;
+      return rule.FormatType switch
+      {
+         ColumnFormatType.Currency => Equals(culture, CultureInfo.InvariantCulture)
+            ? numeric
+            : $"{culture.NumberFormat.CurrencySymbol}{numeric}",
+
+         ColumnFormatType.Percentage => $"{numeric}%",
+         _ => numeric
+      };
    }
 
    public static object? FormatForXlsx(object? value, IPropertyRule rule)
    {
+      if (rule.CustomTransform is not null)
+      {
+         value = rule.CustomTransform(value);
+      }
+
       if (value == null)
       {
          return rule.DefaultValue;
@@ -67,25 +77,7 @@ internal static class ValueFormatter
 
       var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
 
-      if (type.IsEnum)
-      {
-         return FormatEnumXlsx(value, rule);
-      }
-
-      if (!IsNumeric(type))
-      {
-         return value;
-      }
-
-      var precision = rule.Precision ?? 2;
-
-      return value switch
-      {
-         decimal dec => Math.Round(dec, precision),
-         double dbl => Math.Round(dbl, precision),
-         float fl => MathF.Round(fl, precision),
-         _ => value
-      };
+      return type.IsEnum ? FormatEnumXlsx(value, rule) : value;
    }
 
    private static string FormatEnumCsv(object value, IPropertyRule rule)

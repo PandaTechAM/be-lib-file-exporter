@@ -1,15 +1,8 @@
 namespace FileExporter.Dtos;
 
-public sealed class ExportFile
+public sealed class ExportFile(string name, MimeTypes mimeType, byte[] content)
 {
-   public ExportFile(string name, MimeTypes mimeType, byte[] content)
-   {
-      Name = name;
-      MimeType = mimeType;
-      Content = content;
-   }
-
-   public string Name { get; }
-   public MimeTypes MimeType { get; }
-   public byte[] Content { get; }
+   public string Name { get; } = name;
+   public MimeTypes MimeType { get; } = mimeType;
+   public byte[] Content { get; } = content;
 }

@@ -2,7 +2,6 @@
 using System.Reflection;
 using FileExporter.Helpers;
 using FileExporter.Rules;
-using FileExporter.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,18 +18,15 @@ public static class FileExporterBuilderExtensions
          ? assemblies
          :
          [
-            Assembly.GetEntryAssembly()!
+            Assembly.GetEntryAssembly()
+            ?? Assembly.GetExecutingAssembly()
          ];
 
       var registry = ExportRuleConfigurationLoader.LoadFromAssemblies(assembliesToScan);
 
-      // Initialize static runtime for extension methods
       FileExporterRuntime.Initialize(registry);
 
-      // Register registry + exporter for DI (optional but useful)
       builder.Services.AddSingleton<IExportRuleRegistry>(_ => registry);
-      builder.Services.AddSingleton<IFileExporter, Services.Implementations.FileExporter>();
-
       return builder;
    }
 }

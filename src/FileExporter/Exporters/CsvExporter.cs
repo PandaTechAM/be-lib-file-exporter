@@ -17,7 +17,6 @@ internal static class CsvExporter
       where T : class
    {
       ArgumentNullException.ThrowIfNull(data);
-
       ArgumentNullException.ThrowIfNull(rule);
 
       var columns = BuildColumns(rule);
@@ -61,12 +60,14 @@ internal static class CsvExporter
          return new ExportFile(fileName, MimeTypes.Csv, bytes);
       }
 
-      var zipped = ZipHelper.CreateZip(fileName,
+      // Use baseName (without extension) for zip entry naming
+      var zipped = ZipHelper.CreateZip(baseName,
          MimeTypes.Csv,
          new List<byte[]>
          {
             bytes
          });
+
       return zipped;
    }
 

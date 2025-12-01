@@ -2,6 +2,6 @@
 
 public enum ExportFormat
 {
-   Csv,
-   Xlsx
+   Csv = 1,
+   Xlsx = 2
 }

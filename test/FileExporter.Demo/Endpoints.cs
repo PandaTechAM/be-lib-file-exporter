@@ -11,7 +11,7 @@ public static class Endpoints
    {
       // 1) Small dataset
       app.MapGet("/export/dummy",
-         ([FromQuery] ExportFormat format) =>
+         async ([FromQuery] ExportFormat format) =>
          {
             var data = new List<DummyTable>
             {
@@ -37,16 +37,16 @@ public static class Endpoints
                }
             };
 
-            var exportFile = data.ToFileFormat(format);
+            var exportFile = await data.ToFileFormatAsync(format);
 
             return exportFile.ToFileResult();
          });
 
 // 2) >1M rows: request Xlsx to check fallback to CSV
       app.MapGet("/export/over-million",
-         ([FromQuery] ExportFormat format) =>
+         async ([FromQuery] ExportFormat format) =>
          {
-            const int rowCount = 1_000_010;
+            const int rowCount = 1_100_000;
 
             var data = Enumerable
                        .Range(1, rowCount)
@@ -61,14 +61,14 @@ public static class Endpoints
                           Dto = null
                        });
 
-            var exportFile = data.ToFileFormat(format);
+            var exportFile = await data.ToFileFormatAsync(format);
 
             return exportFile.ToFileResult();
          });
 
 // 3) Wide / many columns, varying text lengths
       app.MapGet("/export/wide",
-         ([FromQuery] ExportFormat format) =>
+         async ([FromQuery] ExportFormat format) =>
          {
             var data = new List<WideRow>();
 
@@ -89,7 +89,7 @@ public static class Endpoints
                });
             }
 
-            var exportFile = data.ToFileFormat(format);
+            var exportFile = await data.ToFileFormatAsync(format);
 
 
             return exportFile.ToFileResult();

@@ -24,6 +24,7 @@ internal static class ZipHelper
          }
       }
 
-      return new ExportFile(baseName, MimeTypes.Zip, ms.ToArray());
+      var zipName = NamingHelper.EnsureExtension(baseName, MimeTypes.Zip.Extension);
+      return new ExportFile(zipName, MimeTypes.Zip, ms.ToArray());
    }
 }

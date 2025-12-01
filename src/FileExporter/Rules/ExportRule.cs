@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using FileExporter.Enums;
-using FileExporter.Exceptions;
 using FileExporter.Helpers;
 
 namespace FileExporter.Rules;
@@ -15,29 +14,30 @@ public abstract class ExportRule<TModel> where TModel : class
    private readonly Dictionary<string, IPropertyRule> _rulesByProperty = new(StringComparer.Ordinal);
 
    protected ExportRule()
-      : this(NamingHelper.GetDisplayName<TModel>())
    {
-   }
-
-   protected ExportRule(string fileName)
-   {
-      FileName = fileName;
+      FileName = NamingHelper.GetDisplayName<TModel>();
       InitializeDefaultRules();
    }
 
-   public string FileName { get; }
+   internal string FileName { get; private set; }
 
-   public IReadOnlyList<IPropertyRule> Rules =>
+   internal IReadOnlyList<IPropertyRule> Rules =>
       _rules
          .Where(r => !r.IsIgnored)
          .OrderBy(r => r.Order ?? int.MaxValue)
          .ToList();
 
+   protected ExportRule<TModel> WithName(string name)
+   {
+      SetNameInternal(name);
+      return this;
+   }
+
    protected PropertyRule<TProperty> RuleFor<TProperty>(Expression<Func<TModel, TProperty>> navigationExpression)
    {
       if (navigationExpression.Body is not MemberExpression member)
       {
-         throw new InvalidPropertyNameException("Invalid property expression");
+         throw new ArgumentException("Invalid property expression");
       }
 
       var propertyName = member.Member.Name;
@@ -53,6 +53,16 @@ public abstract class ExportRule<TModel> where TModel : class
       _rules.Add(rule);
 
       return rule;
+   }
+
+   private void SetNameInternal(string name)
+   {
+      if (string.IsNullOrWhiteSpace(name))
+      {
+         throw new ArgumentException("File name can not be null or empty.", nameof(name));
+      }
+
+      FileName = NamingHelper.BuildDisplayName(name);
    }
 
    private void InitializeDefaultRules()
@@ -96,9 +106,14 @@ public abstract class ExportRule<TModel> where TModel : class
          return ColumnFormatType.Text;
       }
 
-      if (type == typeof(DateTime) || type == typeof(DateOnly) || type == typeof(TimeOnly))
+      if (type == typeof(DateTime) || type == typeof(TimeOnly))
       {
          return ColumnFormatType.DateTime;
+      }
+
+      if (type == typeof(DateOnly))
+      {
+         return ColumnFormatType.Date;
       }
 
       if (type == typeof(bool))
