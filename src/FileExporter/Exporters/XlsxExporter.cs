@@ -11,6 +11,7 @@ using FileExporter.Helpers;
 using FileExporter.Rules;
 using SpreadCheetah;
 using SpreadCheetah.Styling;
+using SpreadCheetah.Tables;
 using SpreadCheetah.Worksheets;
 
 namespace FileExporter.Exporters;
@@ -76,7 +77,12 @@ internal static class XlsxExporter
          var options = new WorksheetOptions();
          ApplyColumnWidths(options, columns);
 
+         options.FrozenRows = 1;
+
          await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
+
+         var table = new Table(TableStyle.Medium2);
+         spreadsheet.StartTable(table);
 
          var headerStyleId = AddHeaderStyle(spreadsheet);
          await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
@@ -101,6 +107,7 @@ internal static class XlsxExporter
 
       return ms.ToArray();
    }
+
 
    private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
       where T : class
@@ -309,26 +316,26 @@ internal static class XlsxExporter
    {
       return value switch
       {
-         string s   => new Cell(s),
-         bool b     => new Cell(b),
-         int i      => new Cell(i),
-         long l     => new Cell(l),
-         short sh   => new Cell(sh),
-         byte b8    => new Cell(b8),
-         uint ui    => new Cell((double)ui),
-         ulong ul   => new Cell((double)ul),
-         float f    => new Cell((double)f),
-         double d   => new Cell(d),
-         decimal m  => new Cell((double)m),
+         string s => new Cell(s),
+         bool b => new Cell(b),
+         int i => new Cell(i),
+         long l => new Cell(l),
+         short sh => new Cell(sh),
+         byte b8 => new Cell(b8),
+         uint ui => new Cell((double)ui),
+         ulong ul => new Cell((double)ul),
+         float f => new Cell((double)f),
+         double d => new Cell(d),
+         decimal m => new Cell((double)m),
 
          DateTime dt => CreateDateCell(dt),
-         DateOnly d  => CreateDateCell(d.ToDateTime(TimeOnly.MinValue)),
-         TimeOnly t  => CreateDateCell(DateTime.Today.Add(t.ToTimeSpan())),
+         DateOnly d => CreateDateCell(d.ToDateTime(TimeOnly.MinValue)),
+         TimeOnly t => CreateDateCell(DateTime.Today.Add(t.ToTimeSpan())),
 
          _ => new Cell(value.ToString() ?? string.Empty)
       };
    }
-   
+
    private static Cell CreateDateCell(DateTime dt)
    {
       try
@@ -355,9 +362,7 @@ internal static class XlsxExporter
 
       await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: cancellationToken))
       {
-         // Sanitize once for sheet names
          var sanitizedBaseName = rule.FileName.ToValidName(ExportLimits.MaxSheetNameLength);
-
          var headerStyleId = AddHeaderStyle(spreadsheet);
 
          var totalRows = list.Count;
@@ -366,13 +371,18 @@ internal static class XlsxExporter
          for (var offset = 0; offset < totalRows; offset += rowsPerSheet, sheetIndex++)
          {
             var take = Math.Min(rowsPerSheet, totalRows - offset);
-
             var sheetName = BuildSheetName(sanitizedBaseName, sheetIndex);
 
             var options = new WorksheetOptions();
             ApplyColumnWidths(options, columns);
 
+            options.FrozenRows = 1;
+
             await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
+
+            var table = new Table(TableStyle.Medium2);
+            spreadsheet.StartTable(table);
+
             await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
 
             for (var i = 0; i < take; i++)

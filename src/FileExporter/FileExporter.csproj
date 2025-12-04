@@ -12,7 +12,7 @@
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-        <Version>5.0.1</Version>
+        <Version>5.0.2</Version>
 
         <Title>PandaTech File Exporter</Title>
 
@@ -31,7 +31,7 @@
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
 
         <PackageReleaseNotes>
-           In case of wrong dates xlsx export will not throw an exception anymore but will export that row with string value instead.
+           In case of xlsx export, the data is in tables now and first row is freezed.
         </PackageReleaseNotes>
     </PropertyGroup>
 
