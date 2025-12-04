@@ -12,7 +12,7 @@
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-        <Version>5.0.0</Version>
+        <Version>5.0.1</Version>
 
         <Title>PandaTech File Exporter</Title>
 
@@ -31,14 +31,7 @@
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
 
         <PackageReleaseNotes>
-            v5 major redesign. Breaking changes from v4.
-            - New rule system and naming engine
-            - Multi-sheet XLSX support
-            - Massive performance improvements
-            - Async streaming (IAsyncEnumerable)
-            - Removed PDF support
-            - Updated enum format modes
-            - Safer sanitization and file naming
+           In case of wrong dates xlsx export will not throw an exception anymore but will export that row with string value instead.
         </PackageReleaseNotes>
     </PropertyGroup>
 

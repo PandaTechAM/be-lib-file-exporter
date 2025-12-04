@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -308,22 +309,39 @@ internal static class XlsxExporter
    {
       return value switch
       {
-         string s => new Cell(s),
-         bool b => new Cell(b),
-         int i => new Cell(i),
-         long l => new Cell(l),
-         short sh => new Cell(sh),
-         byte b8 => new Cell(b8),
-         uint ui => new Cell((double)ui),
-         ulong ul => new Cell((double)ul),
-         float f => new Cell((double)f),
-         double d => new Cell(d),
-         decimal m => new Cell((double)m),
-         DateTime dt => new Cell(dt),
-         DateOnly d => new Cell(d.ToDateTime(TimeOnly.MinValue)),
-         TimeOnly t => new Cell(DateTime.Today.Add(t.ToTimeSpan())),
+         string s   => new Cell(s),
+         bool b     => new Cell(b),
+         int i      => new Cell(i),
+         long l     => new Cell(l),
+         short sh   => new Cell(sh),
+         byte b8    => new Cell(b8),
+         uint ui    => new Cell((double)ui),
+         ulong ul   => new Cell((double)ul),
+         float f    => new Cell((double)f),
+         double d   => new Cell(d),
+         decimal m  => new Cell((double)m),
+
+         DateTime dt => CreateDateCell(dt),
+         DateOnly d  => CreateDateCell(d.ToDateTime(TimeOnly.MinValue)),
+         TimeOnly t  => CreateDateCell(DateTime.Today.Add(t.ToTimeSpan())),
+
          _ => new Cell(value.ToString() ?? string.Empty)
       };
+   }
+   
+   private static Cell CreateDateCell(DateTime dt)
+   {
+      try
+      {
+         return new Cell(dt);
+      }
+      catch (Exception)
+      {
+         // Fallback: keep the value, but as text to avoid breaking the whole export.
+         // ISO 8601 is unambiguous and sorts nicely in Excel.
+         var asText = dt.ToString("O", CultureInfo.InvariantCulture);
+         return new Cell(asText);
+      }
    }
 
    private static async Task<byte[]> CreateMultiSheetXlsxFileAsync<T>(IList<T> list,
