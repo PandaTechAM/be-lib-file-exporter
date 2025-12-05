@@ -12,7 +12,7 @@
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-        <Version>5.0.2</Version>
+        <Version>5.0.3</Version>
 
         <Title>PandaTech File Exporter</Title>
 
@@ -31,7 +31,7 @@
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
 
         <PackageReleaseNotes>
-           In case of xlsx export, the data is in tables now and first row is freezed.
+           Xlsx table style sheet has been removed.
         </PackageReleaseNotes>
     </PropertyGroup>
 
