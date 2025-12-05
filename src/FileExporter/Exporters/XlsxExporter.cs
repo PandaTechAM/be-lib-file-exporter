@@ -81,7 +81,7 @@ internal static class XlsxExporter
 
          await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
 
-         var table = new Table(TableStyle.Medium2);
+         var table = new Table(TableStyle.None);
          spreadsheet.StartTable(table);
 
          var headerStyleId = AddHeaderStyle(spreadsheet);
@@ -380,7 +380,7 @@ internal static class XlsxExporter
 
             await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
 
-            var table = new Table(TableStyle.Medium2);
+            var table = new Table(TableStyle.None);
             spreadsheet.StartTable(table);
 
             await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
