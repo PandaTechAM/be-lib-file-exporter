@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using FileExporter.Dtos;
@@ -24,7 +25,7 @@ internal static class CsvExporter
       var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Csv.Extension);
 
       using var ms = new MemoryStream();
-      using (var writer = new StreamWriter(ms, new System.Text.UTF8Encoding(true), leaveOpen: true))
+      using (var writer = new StreamWriter(ms, new UTF8Encoding(true), leaveOpen: true))
       {
          var config = new CsvConfiguration(CultureInfo.InvariantCulture)
          {

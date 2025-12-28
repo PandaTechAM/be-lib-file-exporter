@@ -10,7 +10,7 @@ internal static class ZipHelper
    public static ExportFile CreateZip(string baseName, MimeTypes innerType, IReadOnlyList<byte[]> parts)
    {
       using var ms = new MemoryStream();
-      using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+      using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, true))
       {
          for (var i = 0; i < parts.Count; i++)
          {

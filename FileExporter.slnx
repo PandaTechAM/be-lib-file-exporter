@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".github/workflows/main.yml" />
+    <File Path=".gitignore" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/FileExporter/FileExporter.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/FileExporter.Demo/FileExporter.Demo.csproj" />
+  </Folder>
+</Solution>
