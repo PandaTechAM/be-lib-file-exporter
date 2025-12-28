@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 
 namespace FileExporter.Helpers;
 
@@ -25,7 +26,7 @@ internal static class StringHelpers
          return name;
       }
 
-      var result = new System.Text.StringBuilder(name.Length * 2);
+      var result = new StringBuilder(name.Length * 2);
       result.Append(name[0]);
 
       for (var i = 1; i < name.Length; i++)

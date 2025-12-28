@@ -15,7 +15,7 @@ internal static class NamingHelper
       var typeName = ToDisplayTitle(type.Name);
       return BuildDisplayName(typeName);
    }
-   
+
    internal static string BuildDisplayName(string baseName)
    {
       if (string.IsNullOrWhiteSpace(baseName))
@@ -23,9 +23,9 @@ internal static class NamingHelper
          throw new ArgumentException("Base name can not be null or empty.", nameof(baseName));
       }
 
- 
+
       var name = ToDisplayTitle(baseName);
-      
+
       if (!name.Contains(DateTimePlaceholder, StringComparison.Ordinal))
       {
          name = $"{name} {DateTimePlaceholder}";
@@ -36,7 +36,7 @@ internal static class NamingHelper
 
       return name.ToValidName(MaxNameLength);
    }
-   
+
    internal static string ToDisplayTitle(string? identifier)
    {
       if (string.IsNullOrWhiteSpace(identifier))
@@ -57,7 +57,7 @@ internal static class NamingHelper
          var prevIsUpper = char.IsUpper(prev);
          var prevIsLetterOrDigit = char.IsLetterOrDigit(prev);
 
-       
+
          var shouldInsertSpace =
             i > 0 &&
             (

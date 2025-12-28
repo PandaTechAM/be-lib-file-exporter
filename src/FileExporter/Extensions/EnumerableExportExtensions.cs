@@ -12,16 +12,16 @@ namespace FileExporter.Extensions;
 public static class EnumerableExportExtensions
 {
    public static async Task<ExportFile> ToCsvAsync<T>(this IAsyncEnumerable<T> data,
-      CancellationToken cancellationToken = default)
+      CancellationToken ct = default)
       where T : class
    {
       ArgumentNullException.ThrowIfNull(data);
 
       var list = new List<T>();
 
-      await foreach (var item in data.WithCancellation(cancellationToken))
+      await foreach (var item in data.WithCancellation(ct))
       {
-         cancellationToken.ThrowIfCancellationRequested();
+         ct.ThrowIfCancellationRequested();
          list.Add(item);
       }
 
@@ -32,46 +32,46 @@ public static class EnumerableExportExtensions
    }
 
    public static async Task<ExportFile> ToXlsxAsync<T>(this IAsyncEnumerable<T> data,
-      CancellationToken cancellationToken = default)
+      CancellationToken ct = default)
       where T : class
    {
       ArgumentNullException.ThrowIfNull(data);
 
       var list = new List<T>();
 
-      await foreach (var item in data.WithCancellation(cancellationToken))
+      await foreach (var item in data.WithCancellation(ct))
       {
-         cancellationToken.ThrowIfCancellationRequested();
+         ct.ThrowIfCancellationRequested();
          list.Add(item);
       }
 
       var registry = FileExporterRuntime.Registry;
       var rule = registry.GetRule<T>();
 
-      return await XlsxExporter.ExportAsync(list, rule, cancellationToken);
+      return await XlsxExporter.ExportAsync(list, rule, ct);
    }
 
    public static async Task<ExportFile> ToFileFormatAsync<T>(this IAsyncEnumerable<T> data,
       ExportFormat format,
-      CancellationToken cancellationToken = default)
+      CancellationToken ct = default)
       where T : class
    {
       ArgumentNullException.ThrowIfNull(data);
 
       var list = new List<T>();
 
-      await foreach (var item in data.WithCancellation(cancellationToken))
+      await foreach (var item in data.WithCancellation(ct))
       {
-         cancellationToken.ThrowIfCancellationRequested();
+         ct.ThrowIfCancellationRequested();
          list.Add(item);
       }
 
-      return await list.ToFileFormatAsync(format, cancellationToken);
+      return await list.ToFileFormatAsync(format, ct);
    }
 
    public static async Task<ExportFile> ToFileFormatAsync<T>(this IEnumerable<T> data,
       ExportFormat format,
-      CancellationToken cancellationToken = default)
+      CancellationToken ct = default)
       where T : class
    {
       var registry = FileExporterRuntime.Registry;
@@ -79,8 +79,8 @@ public static class EnumerableExportExtensions
 
       return format switch
       {
-         ExportFormat.Csv  => CsvExporter.Export(data, rule),
-         ExportFormat.Xlsx => await XlsxExporter.ExportAsync(data, rule, cancellationToken),
+         ExportFormat.Csv => CsvExporter.Export(data, rule),
+         ExportFormat.Xlsx => await XlsxExporter.ExportAsync(data, rule, ct),
          _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
       };
    }

@@ -1,5 +1,4 @@
-﻿using System;
-using FileExporter.Dtos;
+﻿using FileExporter.Dtos;
 using Microsoft.AspNetCore.Http;
 
 namespace FileExporter.Extensions;

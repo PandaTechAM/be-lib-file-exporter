@@ -9,15 +9,15 @@ public class PropertyRule<TProperty> : IPropertyRule
 {
    private readonly string _propertyName;
    private string _columnName;
+   private int? _columnWidth;
+   private Func<object?, object?>? _customTransform;
    private string? _defaultValue;
+   private EnumFormatMode _enumFormat;
+   private ColumnFormatType _formatType;
+   private bool _isIgnored;
 
    private int? _order;
-   private bool _isIgnored;
-   private ColumnFormatType _formatType;
    private int? _precision;
-   private int? _columnWidth;
-   private EnumFormatMode _enumFormat;
-   private Func<object?, object?>? _customTransform;
 
    public PropertyRule(MemberExpression navigationExpression)
    {

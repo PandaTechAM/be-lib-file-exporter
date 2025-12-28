@@ -20,7 +20,7 @@ internal static class XlsxExporter
 {
    internal static async Task<ExportFile> ExportAsync<T>(IEnumerable<T> data,
       ExportRule<T> rule,
-      CancellationToken cancellationToken = default)
+      CancellationToken ct = default)
       where T : class
    {
       ArgumentNullException.ThrowIfNull(data);
@@ -41,12 +41,12 @@ internal static class XlsxExporter
       if (totalRows <= rowsPerSheet)
       {
          // Single sheet
-         bytes = await CreateXlsxFileAsync(list, columns, rule, cancellationToken);
+         bytes = await CreateXlsxFileAsync(list, columns, rule, ct);
       }
       else
       {
          // Multi-sheet single workbook
-         bytes = await CreateMultiSheetXlsxFileAsync(list, columns, rule, rowsPerSheet, cancellationToken);
+         bytes = await CreateMultiSheetXlsxFileAsync(list, columns, rule, rowsPerSheet, ct);
       }
 
       if (bytes.Length < ExportLimits.ZipThresholdBytes)
@@ -65,12 +65,12 @@ internal static class XlsxExporter
    private static async Task<byte[]> CreateXlsxFileAsync<T>(IEnumerable<T> dataSlice,
       List<ExportColumn> columns,
       ExportRule<T> rule,
-      CancellationToken cancellationToken)
+      CancellationToken ct)
       where T : class
    {
       await using var ms = new MemoryStream();
 
-      await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: cancellationToken))
+      await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: ct))
       {
          var sheetName = rule.FileName.ToValidName(30);
 
@@ -79,13 +79,13 @@ internal static class XlsxExporter
 
          options.FrozenRows = 1;
 
-         await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
+         await spreadsheet.StartWorksheetAsync(sheetName, options, ct);
 
          var table = new Table(TableStyle.None);
          spreadsheet.StartTable(table);
 
          var headerStyleId = AddHeaderStyle(spreadsheet);
-         await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
+         await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, ct);
 
          foreach (var item in dataSlice)
          {
@@ -99,10 +99,10 @@ internal static class XlsxExporter
                row.Add(formatted == null ? new Cell(string.Empty) : CreateCell(formatted));
             }
 
-            await spreadsheet.AddRowAsync(row, cancellationToken);
+            await spreadsheet.AddRowAsync(row, ct);
          }
 
-         await spreadsheet.FinishAsync(cancellationToken);
+         await spreadsheet.FinishAsync(ct);
       }
 
       return ms.ToArray();
@@ -152,7 +152,7 @@ internal static class XlsxExporter
    private static async Task AddHeaderRowAsync(Spreadsheet spreadsheet,
       IReadOnlyList<ExportColumn> columns,
       StyleId headerStyleId,
-      CancellationToken cancellationToken)
+      CancellationToken ct)
    {
       var headers = new string[columns.Count];
 
@@ -161,7 +161,7 @@ internal static class XlsxExporter
          headers[i] = columns[i].Rule.ColumnName;
       }
 
-      await spreadsheet.AddHeaderRowAsync(headers, headerStyleId, cancellationToken);
+      await spreadsheet.AddHeaderRowAsync(headers, headerStyleId, ct);
    }
 
    private static void ApplyColumnWidths(WorksheetOptions options, IReadOnlyList<ExportColumn> columns)
@@ -355,12 +355,12 @@ internal static class XlsxExporter
       List<ExportColumn> columns,
       ExportRule<T> rule,
       int rowsPerSheet,
-      CancellationToken cancellationToken)
+      CancellationToken ct)
       where T : class
    {
       await using var ms = new MemoryStream();
 
-      await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: cancellationToken))
+      await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: ct))
       {
          var sanitizedBaseName = rule.FileName.ToValidName(ExportLimits.MaxSheetNameLength);
          var headerStyleId = AddHeaderStyle(spreadsheet);
@@ -378,12 +378,12 @@ internal static class XlsxExporter
 
             options.FrozenRows = 1;
 
-            await spreadsheet.StartWorksheetAsync(sheetName, options, token: cancellationToken);
+            await spreadsheet.StartWorksheetAsync(sheetName, options, ct);
 
             var table = new Table(TableStyle.None);
             spreadsheet.StartTable(table);
 
-            await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, cancellationToken);
+            await AddHeaderRowAsync(spreadsheet, columns, headerStyleId, ct);
 
             for (var i = 0; i < take; i++)
             {
@@ -398,11 +398,11 @@ internal static class XlsxExporter
                   row.Add(formatted == null ? new Cell(string.Empty) : CreateCell(formatted));
                }
 
-               await spreadsheet.AddRowAsync(row, cancellationToken);
+               await spreadsheet.AddRowAsync(row, ct);
             }
          }
 
-         await spreadsheet.FinishAsync(cancellationToken);
+         await spreadsheet.FinishAsync(ct);
       }
 
       return ms.ToArray();
