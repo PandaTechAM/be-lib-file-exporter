@@ -12,7 +12,7 @@
         <PackageIcon>Logo.jpg</PackageIcon>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
 
-        <Version>6.0.1</Version>
+        <Version>6.0.2</Version>
 
         <Title>PandaTech File Exporter</Title>
 
@@ -31,7 +31,7 @@
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
 
         <PackageReleaseNotes>
-            dotnet 10 upgrade
+            nuget updates
         </PackageReleaseNotes>
 
         <!-- Never run analyzers as part of compilation (local, CI, dotnet build/test/publish) -->
@@ -51,10 +51,10 @@
 
     <ItemGroup>
         <PackageReference Include="CsvHelper" Version="33.1.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
-        <PackageReference Include="SpreadCheetah" Version="1.25.0" />
-        <PackageReference Include="Pandatech.Analyzers" Version="1.6.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="10.17.0.131074">
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2"/>
+        <PackageReference Include="SpreadCheetah" Version="1.25.0"/>
+        <PackageReference Include="Pandatech.Analyzers" Version="2.1.0"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="10.18.0.131500">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
