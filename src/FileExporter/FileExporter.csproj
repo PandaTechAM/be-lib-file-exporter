@@ -1,62 +1,67 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <IsPackable>true</IsPackable>
 
         <PackageId>PandaTech.FileExporter</PackageId>
         <Authors>PandaTech</Authors>
-        <Company>PandaTech</Company>
+        <Description>High-performance CSV and XLSX exporting library for .NET 8+ built on CsvHelper and SpreadCheetah. Convention-based with fluent ExportRule API, supports async streaming, multi-sheet XLSX (1M+ rows), auto-zip for large files, column formatting, decimal precision, enum handling, and minimal API integration. Zero-config with intelligent defaults.</Description>
+        <PackageTags>export;csv;xlsx;excel;spreadcheetah;csvhelper;file-export;async;streaming;multi-sheet;minimal-api;high-performance;dotnet</PackageTags>
 
-        <Copyright>MIT</Copyright>
-        <PackageIcon>Logo.jpg</PackageIcon>
-        <PackageReadmeFile>Readme.md</PackageReadmeFile>
-
-        <Version>6.0.2</Version>
-
-        <Title>PandaTech File Exporter</Title>
-
-        <PackageTags>
-            Pandatech;export;file;csv;xlsx;excel;spreadcheetah;csvhelper;exporter;dotnet;minimal-api;high-performance
-        </PackageTags>
-
-        <Description>
-            High-performance CSV and XLSX exporting library for .NET 9/10.
-            Built on CsvHelper and SpreadCheetah for maximum performance and stability.
-            Convention-based, customizable via ExportRule&lt;T&gt;, supports async streaming,
-            multi-sheet XLSX, auto-zip, column formatting, and minimal API integration.
-            Version 5 is a complete redesign of v4 with breaking changes and no PDF support.
-        </Description>
-
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/PandaTechAM/be-lib-file-exporter</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/PandaTechAM/be-lib-file-exporter</PackageProjectUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-        <PackageReleaseNotes>
-            nuget updates
-        </PackageReleaseNotes>
+        <PackageIcon>Logo.jpg</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
 
-        <!-- Never run analyzers as part of compilation (local, CI, dotnet build/test/publish) -->
+        <Version>7.0.0</Version>
+        <PackageReleaseNotes>Multi-target net8.0/9.0/10.0, framework-first dependencies, updated CsvHelper and SpreadCheetah to latest versions</PackageReleaseNotes>
+
+        <!-- Build quality -->
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- Source/symbols -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+        <!-- Analyzer behavior -->
         <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-
-        <!-- Keep background/live analysis in the IDE -->
         <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-
-        <!-- Optional: ensure code-style analyzers don't run during build either -->
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\Logo.jpg" Pack="true" PackagePath="\"/>
-        <None Include="..\..\Readme.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\Logo.jpg" Pack="true" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
+    <!-- ASP.NET Core for WebApplicationBuilder and Minimal API -->
     <ItemGroup>
-        <PackageReference Include="CsvHelper" Version="33.1.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2"/>
-        <PackageReference Include="SpreadCheetah" Version="1.25.0"/>
-        <PackageReference Include="Pandatech.Analyzers" Version="2.1.0"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="10.18.0.131500">
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <!-- Core export dependencies - latest stable versions -->
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
+        <PackageReference Include="SpreadCheetah" Version="1.25.0" />
+    </ItemGroup>
+
+    <!-- Analyzers (all frameworks) -->
+    <ItemGroup>
+        <PackageReference Include="Pandatech.Analyzers" Version="[2.1.0]" PrivateAssets="all" />
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="[10.19.0.132793]">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
+
 </Project>
