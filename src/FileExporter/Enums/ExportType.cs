@@ -1,7 +1,11 @@
 ﻿namespace FileExporter.Enums;
 
+/// <summary>Target file format for an export operation.</summary>
 public enum ExportFormat
 {
-   Csv = 1,
-   Xlsx = 2
+    /// <summary>Comma-separated values (.csv).</summary>
+    Csv = 1,
+
+    /// <summary>Excel spreadsheet (.xlsx).</summary>
+    Xlsx = 2
 }

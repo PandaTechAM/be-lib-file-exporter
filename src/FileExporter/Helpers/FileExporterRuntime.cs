@@ -1,19 +1,18 @@
-﻿using System;
-using FileExporter.Rules;
+﻿using FileExporter.Rules;
 
 namespace FileExporter.Helpers;
 
 internal static class FileExporterRuntime
 {
-   private static IExportRuleRegistry? _registry;
+    private static IExportRuleRegistry? _registry;
 
-   public static IExportRuleRegistry Registry =>
-      _registry ??
-      throw new InvalidOperationException(
-         "FileExporter is not initialized. Call builder.AddFileExporter(...) at application startup.");
+    public static IExportRuleRegistry Registry =>
+        _registry ??
+        throw new InvalidOperationException(
+            "FileExporter is not initialized. Call builder.AddFileExporter(...) at application startup.");
 
-   public static void Initialize(IExportRuleRegistry registry)
-   {
-      _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-   }
+    public static void Initialize(IExportRuleRegistry registry)
+    {
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+    }
 }
