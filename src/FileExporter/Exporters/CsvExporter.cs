@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -14,88 +10,88 @@ namespace FileExporter.Exporters;
 
 internal static class CsvExporter
 {
-   public static ExportFile Export<T>(IEnumerable<T> data, ExportRule<T> rule)
-      where T : class
-   {
-      ArgumentNullException.ThrowIfNull(data);
-      ArgumentNullException.ThrowIfNull(rule);
+    public static ExportFile Export<T>(IEnumerable<T> data, ExportRule<T> rule)
+        where T : class
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentNullException.ThrowIfNull(rule);
 
-      var columns = BuildColumns(rule);
-      var baseName = rule.FileName;
-      var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Csv.Extension);
+        var columns = BuildColumns(rule);
+        var baseName = rule.FileName;
+        var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Csv.Extension);
 
-      using var ms = new MemoryStream();
-      using (var writer = new StreamWriter(ms, new UTF8Encoding(true), leaveOpen: true))
-      {
-         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-         {
-            HasHeaderRecord = true
-         };
+        using var ms = new MemoryStream();
+        using (var writer = new StreamWriter(ms, new UTF8Encoding(true), leaveOpen: true))
+        {
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true
+            };
 
-         using var csv = new CsvWriter(writer, config);
+            using var csv = new CsvWriter(writer, config);
 
-         foreach (var column in columns)
-         {
-            csv.WriteField(column.Rule.ColumnName);
-         }
-
-         csv.NextRecord();
-
-         foreach (var item in data)
-         {
             foreach (var column in columns)
             {
-               var raw = column.Property.GetValue(item);
-               var formatted = ValueFormatter.FormatForCsv(raw, column.Rule, CultureInfo.InvariantCulture);
-               csv.WriteField(formatted);
+                csv.WriteField(column.Rule.ColumnName);
             }
 
             csv.NextRecord();
-         }
-      }
 
-      var bytes = ms.ToArray();
+            foreach (var item in data)
+            {
+                foreach (var column in columns)
+                {
+                    var raw = column.Property.GetValue(item);
+                    var formatted = ValueFormatter.FormatForCsv(raw, column.Rule, CultureInfo.InvariantCulture);
+                    csv.WriteField(formatted);
+                }
 
-      if (bytes.Length < ExportLimits.ZipThresholdBytes)
-      {
-         return new ExportFile(fileName, MimeTypes.Csv, bytes);
-      }
+                csv.NextRecord();
+            }
+        }
 
-      // Use baseName (without extension) for zip entry naming
-      var zipped = ZipHelper.CreateZip(baseName,
-         MimeTypes.Csv,
-         new List<byte[]>
-         {
-            bytes
-         });
+        var bytes = ms.ToArray();
 
-      return zipped;
-   }
+        if (bytes.Length < ExportLimits.ZipThresholdBytes)
+        {
+            return new ExportFile(fileName, MimeTypes.Csv, bytes);
+        }
 
-   private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
-      where T : class
-   {
-      var modelType = typeof(T);
-      var properties = modelType
-                       .GetProperties()
-                       .ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
+        // Use baseName (without extension) for zip entry naming
+        var zipped = ZipHelper.CreateZip(baseName,
+            MimeTypes.Csv,
+            new List<byte[]>
+            {
+                bytes
+            });
 
-      var columns = new List<ExportColumn>();
+        return zipped;
+    }
 
-      foreach (var r in rule.Rules)
-      {
-         if (!properties.TryGetValue(r.PropertyName, out var property))
-         {
-            continue;
-         }
+    private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
+        where T : class
+    {
+        var modelType = typeof(T);
+        var properties = modelType
+            .GetProperties()
+            .ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
 
-         columns.Add(new ExportColumn
-         {
-            Property = property,
-            Rule = r
-         });
-      }
+        var columns = new List<ExportColumn>();
 
-      return columns;
-   }
+        foreach (var r in rule.Rules)
+        {
+            if (!properties.TryGetValue(r.PropertyName, out var property))
+            {
+                continue;
+            }
+
+            columns.Add(new ExportColumn
+            {
+                Property = property,
+                Rule = r
+            });
+        }
+
+        return columns;
+    }
 }
