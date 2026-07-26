@@ -157,6 +157,43 @@ public enum EnumFormatMode
 }
 ```
 
+A value that is not a declared member has no name, so `MixedIntAndName` and `Name` both render the bare number
+(`7`). Supply an `EnumLabelResolver` to render something other than the C# member name — see below.
+
+## Per-Request Options
+
+An `ExportRule` is discovered once at `AddFileExporter` boot and cached for the process lifetime, so nothing on it
+can vary per request. `ExportOptions` is the hook that can. Pass it to any export extension method; every property is
+optional and falls back to the rule.
+
+```csharp
+var options = new ExportOptions
+{
+    FileName = "Bestellungen {DateTime}", // used verbatim; {DateTime} is optional
+    SheetName = "Bestellungen",           // XLSX only, truncated to 31 characters
+    ColumnHeaders = new Dictionary<string, string>
+    {
+        [nameof(Order.Status)] = "Status",
+        [nameof(Order.TotalAmount)] = "Gesamtbetrag"
+    },
+    EnumLabelResolver = value => labelByValue.TryGetValue(value, out var label) ? label : string.Empty
+};
+
+var file = await orders.ToFileFormatAsync(ExportFormat.Xlsx, options);
+```
+
+Headers, enum labels and names are plain strings, so any language or alphabet works — the file name is written to
+`Content-Disposition` verbatim and the workbook is UTF-8 throughout.
+
+| Property            | Effect                                                                                          |
+|---------------------|-------------------------------------------------------------------------------------------------|
+| `FileName`          | Base name, used verbatim. No extension — the format's is appended. `{DateTime}` is substituted if present, but never appended. |
+| `SheetName`         | Worksheet name (XLSX). Defaults to the rule's name without its timestamp.                        |
+| `ColumnHeaders`     | Header text per column, keyed by **model property name**. Missing or blank entries keep the rule's header. Column selection and order stay the rule's job. |
+| `EnumLabelResolver` | Renders an enum as text, honouring `EnumFormatMode`: `MixedIntAndName` still emits `"1 - {label}"` and `Int` is still a bare number. Returning null or whitespace falls back to the member name. Called once per enum cell, so close over a resolved lookup rather than querying per value. |
+
+Nothing here mutates the shared rule, so concurrent requests can use different languages safely.
+
 ## Advanced Features
 
 ### Multi-Sheet XLSX
@@ -242,13 +279,29 @@ typeof(Product) → "Product 2024-01-15 14:30:00"
 ```csharp
 WithName("Sales Report {DateTime}")
 // Output: "Sales Report 2024-01-15 14:30:00"
+
+WithName("Sales Report {DateTime} Final")
+// Output: "Sales Report 2024-01-15 14:30:00 Final"
 ```
+
+A name containing `{DateTime}` is taken exactly as written — no title-casing is applied, since you have already
+spelled it the way you want it.
 
 **Fixed name:**
 
 ```csharp
 WithName("Monthly_Export")
-// Output: "Monthly Export 2024-01-15 14:30:00" (DateTime still appended)
+// Output: "Monthly_Export 2024-01-15 14:30:00" (DateTime still appended)
+```
+
+The timestamp is resolved **per export**, not when the rule is constructed, so every download carries the time it was
+actually requested. Names are capped at 100 characters.
+
+**Per-request name:**
+
+```csharp
+await data.ToFileFormatAsync(ExportFormat.Xlsx, new ExportOptions { FileName = "Q1 Orders" });
+// Output: "Q1 Orders.xlsx" — used verbatim, no timestamp appended
 ```
 
 ## Extension Methods
@@ -258,6 +311,7 @@ WithName("Monthly_Export")
 ```csharp
 var file = await data.ToFileFormatAsync(ExportFormat.Csv);
 var file = await data.ToFileFormatAsync(ExportFormat.Xlsx);
+var file = await data.ToFileFormatAsync(ExportFormat.Xlsx, options);
 ```
 
 ### IAsyncEnumerable<T>
@@ -266,7 +320,13 @@ var file = await data.ToFileFormatAsync(ExportFormat.Xlsx);
 var file = await asyncData.ToCsvAsync();
 var file = await asyncData.ToXlsxAsync();
 var file = await asyncData.ToFileFormatAsync(ExportFormat.Csv);
+var file = await asyncData.ToCsvAsync(options);
+var file = await asyncData.ToXlsxAsync(options);
+var file = await asyncData.ToFileFormatAsync(ExportFormat.Csv, options);
 ```
+
+An undefined `ExportFormat` — including the `0` an omitted query-string value binds to — throws
+`ArgumentOutOfRangeException` before any work is done.
 
 ### ExportFile
 
@@ -301,7 +361,21 @@ Built on industry-standard libraries:
 |----------------------|---------------|--------------------------------|
 | XLSX rows per sheet  | 1,048,575     | Auto-creates additional sheets |
 | XLSX sheet name      | 31 characters | Auto-truncates                 |
+| File name            | 100 characters| Auto-truncates                 |
 | File size before zip | 10 MB         | Auto-compresses to ZIP         |
+
+## Upgrading to 8.0.0
+
+Public API is source-compatible — every 7.x call still compiles. Four behaviours changed:
+
+| Change                                                                                            | Why |
+|---------------------------------------------------------------------------------------------------|-----|
+| The file name's timestamp is stamped at export time, not at rule construction                       | A rule is a singleton, so every download shared the process's start time |
+| The worksheet name is the rule's name **without** its timestamp                                    | It used to be the stamped name truncated to 30 characters |
+| `MixedIntAndName` / `Name` render an undefined enum value as the bare number                       | XLSX wrote `"7 - "` and CSV wrote `"7 - 7"` |
+| `ColumnFormatType.Percentage` treats the value as a fraction in CSV, matching XLSX                  | `0.5532` read `0.55%` in CSV and `55.32%` in XLSX |
+| `WithName("... {DateTime} ...")` actually substitutes the placeholder                               | Title-casing rewrote it to `{Date Time}` first, so the literal token shipped in the file name |
+| Name cap raised from 30 to 100 characters                                                          | 30 minus a 19-character timestamp truncated almost every real name |
 
 ## Complete Example
 

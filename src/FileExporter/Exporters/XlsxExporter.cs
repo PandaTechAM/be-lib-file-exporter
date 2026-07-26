@@ -14,6 +14,7 @@ internal static class XlsxExporter
 {
     internal static async Task<ExportFile> ExportAsync<T>(IEnumerable<T> data,
         ExportRule<T> rule,
+        ExportOptions? options = null,
         CancellationToken ct = default)
         where T : class
     {
@@ -23,10 +24,17 @@ internal static class XlsxExporter
         var list = data as IList<T> ?? data.ToList();
         var totalRows = list.Count;
 
-        var columns = BuildColumns(rule);
+        var columns = ExportColumnBuilder.Build(rule, options);
 
-        var baseName = rule.FileName;
+        var baseName = NamingHelper.ResolveFileName(options?.FileName, rule.FileNameTemplate);
         var singleFileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Xlsx.Extension);
+
+        // The worksheet name is the rule's name without its timestamp, not the stamped file name: the old behaviour
+        // truncated "Orders 2026-07-26 12:00:00" at 30 characters and put that on the tab.
+        var requestedSheetName = options?.SheetName;
+
+        var sheetName = (string.IsNullOrWhiteSpace(requestedSheetName) ? rule.DisplayName : requestedSheetName)
+            .ToValidName(ExportLimits.MaxSheetNameLength);
 
         const int rowsPerSheet = ExportLimits.MaxXlsxRowsPerFile;
 
@@ -35,12 +43,12 @@ internal static class XlsxExporter
         if (totalRows <= rowsPerSheet)
         {
             // Single sheet
-            bytes = await CreateXlsxFileAsync(list, columns, rule, ct);
+            bytes = await CreateXlsxFileAsync(list, columns, sheetName, options, ct);
         }
         else
         {
             // Multi-sheet single workbook
-            bytes = await CreateMultiSheetXlsxFileAsync(list, columns, rule, rowsPerSheet, ct);
+            bytes = await CreateMultiSheetXlsxFileAsync(list, columns, sheetName, options, rowsPerSheet, ct);
         }
 
         if (bytes.Length < ExportLimits.ZipThresholdBytes)
@@ -58,7 +66,8 @@ internal static class XlsxExporter
 
     private static async Task<byte[]> CreateXlsxFileAsync<T>(IEnumerable<T> dataSlice,
         List<ExportColumn> columns,
-        ExportRule<T> rule,
+        string sheetName,
+        ExportOptions? exportOptions,
         CancellationToken ct)
         where T : class
     {
@@ -66,7 +75,7 @@ internal static class XlsxExporter
 
         await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: ct))
         {
-            var sheetName = rule.FileName.ToValidName(30);
+            var enumLabelResolver = exportOptions?.EnumLabelResolver;
 
             var options = new WorksheetOptions();
             ApplyColumnWidths(options, columns);
@@ -88,7 +97,7 @@ internal static class XlsxExporter
                 foreach (var column in columns)
                 {
                     var raw = column.Property.GetValue(item);
-                    var formatted = ValueFormatter.FormatForXlsx(raw, column.Rule);
+                    var formatted = ValueFormatter.FormatForXlsx(raw, column.Rule, enumLabelResolver);
 
                     row.Add(formatted == null ? new Cell(string.Empty) : CreateCell(formatted));
                 }
@@ -100,34 +109,6 @@ internal static class XlsxExporter
         }
 
         return ms.ToArray();
-    }
-
-
-    private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
-        where T : class
-    {
-        var modelType = typeof(T);
-        var properties = modelType
-            .GetProperties()
-            .ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
-
-        var columns = new List<ExportColumn>();
-
-        foreach (var r in rule.Rules)
-        {
-            if (!properties.TryGetValue(r.PropertyName, out var property))
-            {
-                continue;
-            }
-
-            columns.Add(new ExportColumn
-            {
-                Property = property,
-                Rule = r
-            });
-        }
-
-        return columns;
     }
 
     private static StyleId AddHeaderStyle(Spreadsheet spreadsheet)
@@ -152,7 +133,7 @@ internal static class XlsxExporter
 
         for (var i = 0; i < columns.Count; i++)
         {
-            headers[i] = columns[i].Rule.ColumnName;
+            headers[i] = columns[i].Header;
         }
 
         await spreadsheet.AddHeaderRowAsync(headers, headerStyleId, ct);
@@ -175,7 +156,7 @@ internal static class XlsxExporter
             }
             else
             {
-                width = InferWidth(rule, underlying);
+                width = InferWidth(rule, col.Header, underlying);
             }
 
             var columnOptions = options.Column(i + 1);
@@ -193,14 +174,14 @@ internal static class XlsxExporter
         }
     }
 
-    private static double InferWidth(IPropertyRule rule, Type underlyingType)
+    private static double InferWidth(IPropertyRule rule, string header, Type underlyingType)
     {
         var formatType = rule.FormatType;
 
         // If user explicitly chose Text, treat as text column
         if (formatType == ColumnFormatType.Text)
         {
-            return ColumnWidthDefaults.FromHeader(rule.ColumnName);
+            return ColumnWidthDefaults.FromHeader(header);
         }
 
         // Date / DateTime: either explicit format or type-based
@@ -244,7 +225,7 @@ internal static class XlsxExporter
         }
 
         // Fallback: header-based heuristic for everything else
-        return ColumnWidthDefaults.FromHeader(rule.ColumnName);
+        return ColumnWidthDefaults.FromHeader(header);
     }
 
     private static string? BuildNumberFormat(IPropertyRule rule, Type propertyType)
@@ -347,7 +328,8 @@ internal static class XlsxExporter
 
     private static async Task<byte[]> CreateMultiSheetXlsxFileAsync<T>(IList<T> list,
         List<ExportColumn> columns,
-        ExportRule<T> rule,
+        string sheetName,
+        ExportOptions? exportOptions,
         int rowsPerSheet,
         CancellationToken ct)
         where T : class
@@ -356,7 +338,7 @@ internal static class XlsxExporter
 
         await using (var spreadsheet = await Spreadsheet.CreateNewAsync(ms, cancellationToken: ct))
         {
-            var sanitizedBaseName = rule.FileName.ToValidName(ExportLimits.MaxSheetNameLength);
+            var enumLabelResolver = exportOptions?.EnumLabelResolver;
             var headerStyleId = AddHeaderStyle(spreadsheet);
 
             var totalRows = list.Count;
@@ -365,14 +347,14 @@ internal static class XlsxExporter
             for (var offset = 0; offset < totalRows; offset += rowsPerSheet, sheetIndex++)
             {
                 var take = Math.Min(rowsPerSheet, totalRows - offset);
-                var sheetName = BuildSheetName(sanitizedBaseName, sheetIndex);
+                var currentSheetName = BuildSheetName(sheetName, sheetIndex);
 
                 var options = new WorksheetOptions();
                 ApplyColumnWidths(options, columns);
 
                 options.FrozenRows = 1;
 
-                await spreadsheet.StartWorksheetAsync(sheetName, options, ct);
+                await spreadsheet.StartWorksheetAsync(currentSheetName, options, ct);
 
                 var table = new Table(TableStyle.None);
                 spreadsheet.StartTable(table);
@@ -387,7 +369,7 @@ internal static class XlsxExporter
                     foreach (var column in columns)
                     {
                         var raw = column.Property.GetValue(item);
-                        var formatted = ValueFormatter.FormatForXlsx(raw, column.Rule);
+                        var formatted = ValueFormatter.FormatForXlsx(raw, column.Rule, enumLabelResolver);
 
                         row.Add(formatted == null ? new Cell(string.Empty) : CreateCell(formatted));
                     }

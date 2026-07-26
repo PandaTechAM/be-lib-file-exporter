@@ -21,8 +21,8 @@
     <PackageIcon>Logo.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <Version>7.0.1</Version>
-    <PackageReleaseNotes>Tooling modernization: dependency updates, XML documentation on public APIs, standardized editorconfig/gitignore/global.json.</PackageReleaseNotes>
+    <Version>8.0.0</Version>
+    <PackageReleaseNotes>Adds ExportOptions for per-request overrides: localized column headers, an enum label resolver, and explicit file/sheet names — none of which were reachable before, because an ExportRule is a boot-time singleton. The file name's timestamp is now stamped at export time instead of at rule construction, and the name cap is raised from 30 to 100 characters. An undefined export format is rejected explicitly. Behaviour fixes: MixedIntAndName no longer renders "7 - " for undefined enum values, CSV percentages now agree with XLSX, WithName's {DateTime} placeholder is actually substituted instead of shipping as a literal, and the worksheet name no longer carries a truncated timestamp.</PackageReleaseNotes>
 
     <!-- Build quality -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>

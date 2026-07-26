@@ -10,15 +10,16 @@ namespace FileExporter.Exporters;
 
 internal static class CsvExporter
 {
-    public static ExportFile Export<T>(IEnumerable<T> data, ExportRule<T> rule)
+    public static ExportFile Export<T>(IEnumerable<T> data, ExportRule<T> rule, ExportOptions? options = null)
         where T : class
     {
         ArgumentNullException.ThrowIfNull(data);
         ArgumentNullException.ThrowIfNull(rule);
 
-        var columns = BuildColumns(rule);
-        var baseName = rule.FileName;
+        var columns = ExportColumnBuilder.Build(rule, options);
+        var baseName = NamingHelper.ResolveFileName(options?.FileName, rule.FileNameTemplate);
         var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Csv.Extension);
+        var enumLabelResolver = options?.EnumLabelResolver;
 
         using var ms = new MemoryStream();
         using (var writer = new StreamWriter(ms, new UTF8Encoding(true), leaveOpen: true))
@@ -32,7 +33,7 @@ internal static class CsvExporter
 
             foreach (var column in columns)
             {
-                csv.WriteField(column.Rule.ColumnName);
+                csv.WriteField(column.Header);
             }
 
             csv.NextRecord();
@@ -42,7 +43,10 @@ internal static class CsvExporter
                 foreach (var column in columns)
                 {
                     var raw = column.Property.GetValue(item);
-                    var formatted = ValueFormatter.FormatForCsv(raw, column.Rule, CultureInfo.InvariantCulture);
+                    var formatted = ValueFormatter.FormatForCsv(raw,
+                        column.Rule,
+                        CultureInfo.InvariantCulture,
+                        enumLabelResolver);
                     csv.WriteField(formatted);
                 }
 
@@ -58,40 +62,6 @@ internal static class CsvExporter
         }
 
         // Use baseName (without extension) for zip entry naming
-        var zipped = ZipHelper.CreateZip(baseName,
-            MimeTypes.Csv,
-            new List<byte[]>
-            {
-                bytes
-            });
-
-        return zipped;
-    }
-
-    private static List<ExportColumn> BuildColumns<T>(ExportRule<T> rule)
-        where T : class
-    {
-        var modelType = typeof(T);
-        var properties = modelType
-            .GetProperties()
-            .ToDictionary(p => p.Name, p => p, StringComparer.Ordinal);
-
-        var columns = new List<ExportColumn>();
-
-        foreach (var r in rule.Rules)
-        {
-            if (!properties.TryGetValue(r.PropertyName, out var property))
-            {
-                continue;
-            }
-
-            columns.Add(new ExportColumn
-            {
-                Property = property,
-                Rule = r
-            });
-        }
-
-        return columns;
+        return ZipHelper.CreateZip(baseName, MimeTypes.Csv, [bytes]);
     }
 }

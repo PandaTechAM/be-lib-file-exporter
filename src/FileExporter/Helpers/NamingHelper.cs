@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 
 namespace FileExporter.Helpers;
@@ -6,34 +6,66 @@ namespace FileExporter.Helpers;
 internal static class NamingHelper
 {
     private const string DateTimePlaceholder = "{DateTime}";
-    private const int MaxNameLength = 30;
+    private const string TimestampFormat = "yyyy-MM-dd HH:mm:ss";
 
-    internal static string GetDisplayName<T>()
-    {
-        var type = typeof(T);
-        var typeName = ToDisplayTitle(type.Name);
-        return BuildDisplayName(typeName);
-    }
+    /// <summary>
+    ///     Cap for a resolved file name. It has to hold a readable base name plus a 19-character timestamp, so the
+    ///     old value of 30 truncated almost every real name mid-word.
+    /// </summary>
+    private const int MaxNameLength = 100;
 
-    internal static string BuildDisplayName(string baseName)
+    /// <summary>
+    ///     Turns a rule's configured name into a template: title-cased, with a <c>{DateTime}</c> placeholder appended
+    ///     when the caller did not place one. Nothing is substituted here — see <see cref="Stamp" />.
+    /// </summary>
+    internal static string BuildTemplate(string baseName)
     {
         if (string.IsNullOrWhiteSpace(baseName))
         {
             throw new ArgumentException("Base name can not be null or empty.", nameof(baseName));
         }
 
-
-        var name = ToDisplayTitle(baseName);
-
-        if (!name.Contains(DateTimePlaceholder, StringComparison.Ordinal))
+        // A name that positions the placeholder itself is taken exactly as written. Title-casing it would rewrite
+        // "{DateTime}" to "{Date Time}" — ToDisplayTitle reads it as two words — and Stamp could never match it again.
+        if (baseName.Contains(DateTimePlaceholder, StringComparison.Ordinal))
         {
-            name = $"{name} {DateTimePlaceholder}";
+            return baseName.Trim();
         }
 
-        var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        name = name.Replace(DateTimePlaceholder, now, StringComparison.Ordinal);
+        return $"{ToDisplayTitle(baseName)} {DateTimePlaceholder}";
+    }
 
-        return name.ToValidName(MaxNameLength);
+    /// <summary>The template with its placeholder removed, for naming a worksheet.</summary>
+    internal static string WithoutTimestamp(string template)
+    {
+        var words = template
+            .Replace(DateTimePlaceholder, " ", StringComparison.Ordinal)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return string.Join(' ', words);
+    }
+
+    /// <summary>
+    ///     Substitutes <c>{DateTime}</c> with the current UTC time and sanitizes the result. Called at export time,
+    ///     never at rule construction: an <c>ExportRule</c> is a boot-time singleton, so stamping it in the constructor
+    ///     froze every download at the pod's start time.
+    /// </summary>
+    internal static string Stamp(string template)
+    {
+        var now = DateTime.UtcNow.ToString(TimestampFormat, CultureInfo.InvariantCulture);
+
+        return template
+            .Replace(DateTimePlaceholder, now, StringComparison.Ordinal)
+            .ToValidName(MaxNameLength);
+    }
+
+    /// <summary>
+    ///     Resolves the base file name for one export. An explicit per-request name wins and is used verbatim; only
+    ///     the rule's own name carries an automatic timestamp.
+    /// </summary>
+    internal static string ResolveFileName(string? requested, string ruleTemplate)
+    {
+        return Stamp(string.IsNullOrWhiteSpace(requested) ? ruleTemplate : requested);
     }
 
     internal static string ToDisplayTitle(string? identifier)
