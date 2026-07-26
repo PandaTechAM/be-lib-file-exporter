@@ -1,4 +1,5 @@
 ﻿using FileExporter.Demo.Models;
+using FileExporter.Dtos;
 using FileExporter.Enums;
 using FileExporter.Extensions;
 using Microsoft.AspNetCore.Mvc;
@@ -91,6 +92,59 @@ public static class Endpoints
 
                 var exportFile = await data.ToFileFormatAsync(format);
 
+
+                return exportFile.ToFileResult();
+            });
+
+// 4) Per-request overrides: localized headers, localized enum labels, explicit file and sheet names
+        app.MapGet("/export/localized",
+            async ([FromQuery] ExportFormat format) =>
+            {
+                var data = new List<DummyTable>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        RelatedId = 10,
+                        Name = "First",
+                        Comment = "Hello",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10),
+                        DefaultEnum = DefaultEnum.Vazgen
+                    },
+                    new()
+                    {
+                        Id = 2,
+                        RelatedId = 20,
+                        Name = "Second",
+                        Comment = "World",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(5),
+                        DefaultEnum = (DefaultEnum)7 // undefined member: renders as "7", not "7 - "
+                    }
+                };
+
+                var labels = new Dictionary<DefaultEnum, string>
+                {
+                    [DefaultEnum.Vardan] = "Erste Option",
+                    [DefaultEnum.Vazgen] = "Zweite Option"
+                };
+
+                var options = new ExportOptions
+                {
+                    FileName = "Bestellungen {DateTime}",
+                    SheetName = "Bestellungen",
+                    ColumnHeaders = new Dictionary<string, string>
+                    {
+                        [nameof(DummyTable.Id)] = "Nummer",
+                        [nameof(DummyTable.Name)] = "Bezeichnung",
+                        [nameof(DummyTable.DefaultEnum)] = "Status"
+                    },
+                    EnumLabelResolver = value =>
+                        value is DefaultEnum e && labels.TryGetValue(e, out var label) ? label : string.Empty
+                };
+
+                var exportFile = await data.ToFileFormatAsync(format, options);
 
                 return exportFile.ToFileResult();
             });

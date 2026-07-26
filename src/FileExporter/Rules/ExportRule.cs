@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using System.Reflection;
 using FileExporter.Enums;
 using FileExporter.Helpers;
@@ -17,11 +18,21 @@ public abstract class ExportRule<TModel> where TModel : class
     /// <summary>Seeds a rule for every public readable property with format inferred from its type.</summary>
     protected ExportRule()
     {
-        FileName = NamingHelper.GetDisplayName<TModel>();
+        SetNameInternal(typeof(TModel).Name);
         InitializeDefaultRules();
     }
 
-    internal string FileName { get; private set; }
+    /// <summary>
+    ///     The configured name with its <c>{DateTime}</c> placeholder still unresolved. A rule instance lives for the
+    ///     process lifetime, so the timestamp is substituted per export, not here.
+    /// </summary>
+    internal string FileNameTemplate { get; private set; }
+
+    /// <summary>
+    ///     The configured name without its timestamp, used as the default worksheet name. Never blank — a name of
+    ///     just <c>"{DateTime}"</c> falls back to the model type, because a worksheet must have a name.
+    /// </summary>
+    internal string DisplayName { get; private set; }
 
     internal IReadOnlyList<IPropertyRule> Rules =>
         _rules
@@ -59,6 +70,7 @@ public abstract class ExportRule<TModel> where TModel : class
         return rule;
     }
 
+    [MemberNotNull(nameof(FileNameTemplate), nameof(DisplayName))]
     private void SetNameInternal(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -66,7 +78,13 @@ public abstract class ExportRule<TModel> where TModel : class
             throw new ArgumentException("File name can not be null or empty.", nameof(name));
         }
 
-        FileName = NamingHelper.BuildDisplayName(name);
+        FileNameTemplate = NamingHelper.BuildTemplate(name);
+
+        var withoutTimestamp = NamingHelper.WithoutTimestamp(FileNameTemplate);
+
+        DisplayName = string.IsNullOrWhiteSpace(withoutTimestamp)
+            ? NamingHelper.ToDisplayTitle(typeof(TModel).Name)
+            : withoutTimestamp;
     }
 
     private void InitializeDefaultRules()
