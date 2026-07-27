@@ -31,7 +31,7 @@ internal static class ValueFormatter
         switch (value)
         {
             case bool b:
-                return b ? "Yes" : "No";
+                return FormatBooleanAsText(b);
             case DateTime dt:
                 return dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
@@ -89,6 +89,13 @@ internal static class ValueFormatter
 
         var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
 
+        // Written as text, not as a logical cell: Excel renders TRUE/FALSE in the viewer's UI language and no number
+        // format overrides that, so the same file read "TRUE" for one operator and "ИСТИНА" for the next.
+        if (value is bool flag)
+        {
+            return FormatBooleanAsText(flag);
+        }
+
         if (!type.IsEnum)
         {
             return value;
@@ -98,6 +105,14 @@ internal static class ValueFormatter
         return rule.EnumFormat == EnumFormatMode.Int
             ? Convert.ToInt64(value, CultureInfo.InvariantCulture)
             : FormatEnumAsText(value, rule, enumLabelResolver);
+    }
+
+    /// <summary>
+    ///     One implementation for both formats, so CSV and XLSX cannot drift apart again.
+    /// </summary>
+    private static string FormatBooleanAsText(bool value)
+    {
+        return value ? "Yes" : "No";
     }
 
     /// <summary>

@@ -115,6 +115,11 @@ Without configuration, the library automatically:
 | `bool`              | Yes/No             | 8               | Yes                 |
 | `enum`              | Mixed int + name   | Based on header | 1 - Active          |
 
+An explicit `HasFormat(...)` always wins over the inferred format, so `HasFormat(Date)` on a `DateTime` drops the
+time part and `HasFormat(Integer)` on a `decimal` drops the decimal places. Booleans are written as the text
+`Yes`/`No` in both formats: a logical cell renders in the viewer's own Excel UI language, which no number format
+can override.
+
 ### Column Configuration API
 
 | Method                           | Description              | Example                                 |

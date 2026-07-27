@@ -21,8 +21,21 @@
     <PackageIcon>Logo.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <Version>8.0.0</Version>
-    <PackageReleaseNotes>Adds ExportOptions for per-request overrides: localized column headers, an enum label resolver, and explicit file/sheet names — none of which were reachable before, because an ExportRule is a boot-time singleton. The file name's timestamp is now stamped at export time instead of at rule construction, and the name cap is raised from 30 to 100 characters. An undefined export format is rejected explicitly. Behaviour fixes: MixedIntAndName no longer renders "7 - " for undefined enum values, CSV percentages now agree with XLSX, WithName's {DateTime} placeholder is actually substituted instead of shipping as a literal, and the worksheet name no longer carries a truncated timestamp.</PackageReleaseNotes>
+    <Version>8.1.0</Version>
+    <PackageReleaseNotes>Two format fixes, both bringing XLSX in line with what the library already documents.
+
+Booleans are written as the text Yes/No rather than as logical cells. A logical cell renders in the viewer's Excel UI
+language (TRUE/FALSE, &#x0418;&#x0421;&#x0422;&#x0418;&#x041D;&#x0410;/&#x041B;&#x041E;&#x0416;&#x042C;) and no number format overrides that, so the same file read differently for
+different operators, and disagreed with CSV, which has always written Yes/No. Both formats now share one
+implementation, as enum rendering already does.
+
+A declared HasFormat now wins over the property's CLR type. The type was tested first, so HasFormat(Date) was dead on
+a DateTime property (it always got date + time) and HasFormat(Integer) was dead on a decimal (it always kept its
+decimal places). Columns that declare nothing are unaffected.
+
+Previous release notes follow.
+
+8.0.0 — Adds ExportOptions for per-request overrides: localized column headers, an enum label resolver, and explicit file/sheet names — none of which were reachable before, because an ExportRule is a boot-time singleton. The file name's timestamp is now stamped at export time instead of at rule construction, and the name cap is raised from 30 to 100 characters. An undefined export format is rejected explicitly. Behaviour fixes: MixedIntAndName no longer renders "7 - " for undefined enum values, CSV percentages now agree with XLSX, WithName's {DateTime} placeholder is actually substituted instead of shipping as a literal, and the worksheet name no longer carries a truncated timestamp.</PackageReleaseNotes>
 
     <!-- Build quality -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
