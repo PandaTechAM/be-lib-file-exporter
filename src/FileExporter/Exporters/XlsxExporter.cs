@@ -233,39 +233,40 @@ internal static class XlsxExporter
         var formatType = rule.FormatType;
         var precision = rule.Precision;
 
-        if (formatType == ColumnFormatType.Text)
+        // Boolean columns are written as text, so a number format would have nothing to act on.
+        if (formatType is ColumnFormatType.Text or ColumnFormatType.Boolean)
         {
             return null;
         }
 
-        var underlying = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+        var p = precision ?? 2;
 
-        var isDecimalLike =
-            underlying == typeof(decimal) ||
-            underlying == typeof(double) ||
-            underlying == typeof(float);
-
-        if (isDecimalLike ||
-            formatType == ColumnFormatType.Decimal ||
-            formatType == ColumnFormatType.Currency ||
-            formatType == ColumnFormatType.Percentage)
+        // A declared format wins over the property's CLR type. It used to be the other way round, which made
+        // HasFormat(Date) dead on a DateTime and HasFormat(Integer) dead on a decimal: the type arm matched first.
+        var declared = formatType switch
         {
-            var p = precision ?? 2;
+            ColumnFormatType.Currency => p <= 0 ? "#,##0" : "#,##0." + new string('0', p),
+            ColumnFormatType.Percentage => p <= 0 ? "0%" : "0." + new string('0', p) + "%",
+            ColumnFormatType.Decimal => p <= 0 ? "0" : "0." + new string('0', p),
+            ColumnFormatType.Integer => "0",
+            ColumnFormatType.Date => "yyyy-mm-dd",
+            ColumnFormatType.DateTime => "yyyy-mm-dd hh:mm:ss",
+            _ => null
+        };
 
-            return formatType switch
-            {
-                ColumnFormatType.Currency =>
-                    p <= 0 ? "#,##0" : "#,##0." + new string('0', p),
-
-                ColumnFormatType.Percentage =>
-                    p <= 0 ? "0%" : "0." + new string('0', p) + "%",
-
-                _ => p <= 0 ? "0" : "0." + new string('0', p)
-            };
+        if (declared is not null)
+        {
+            return declared;
         }
 
-        if (formatType == ColumnFormatType.Integer ||
-            underlying == typeof(int) || underlying == typeof(long) ||
+        var underlying = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+        if (underlying == typeof(decimal) || underlying == typeof(double) || underlying == typeof(float))
+        {
+            return p <= 0 ? "0" : "0." + new string('0', p);
+        }
+
+        if (underlying == typeof(int) || underlying == typeof(long) ||
             underlying == typeof(short) || underlying == typeof(byte) ||
             underlying == typeof(uint) || underlying == typeof(ulong) ||
             underlying == typeof(ushort))
@@ -273,18 +274,12 @@ internal static class XlsxExporter
             return "0";
         }
 
-        if (formatType == ColumnFormatType.DateTime ||
-            underlying == typeof(DateTime) || underlying == typeof(TimeOnly))
+        if (underlying == typeof(DateTime) || underlying == typeof(TimeOnly))
         {
             return "yyyy-mm-dd hh:mm:ss";
         }
 
-        if (formatType == ColumnFormatType.Date || underlying == typeof(DateOnly))
-        {
-            return "yyyy-mm-dd";
-        }
-
-        return null;
+        return underlying == typeof(DateOnly) ? "yyyy-mm-dd" : null;
     }
 
     private static Cell CreateCell(object value)
