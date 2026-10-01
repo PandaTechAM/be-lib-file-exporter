@@ -149,6 +149,86 @@ public static class Endpoints
                 return exportFile.ToFileResult();
             });
 
+// 5) Latin, Cyrillic and Armenian with the dram sign, glyphs no embedded font has, line breaks and an unbreakable token
+        app.MapGet("/export/multilingual",
+            async ([FromQuery] ExportFormat format) =>
+            {
+                var data = new List<DummyTable>
+                {
+                    new()
+                    {
+                        Id = 1,
+                        Name = "Latin",
+                        Comment = "The quick brown fox jumps over the lazy dog",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    },
+                    new()
+                    {
+                        Id = 2,
+                        Name = "Cyrillic",
+                        Comment = "Съешь же ещё этих мягких французских булок",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    },
+                    new()
+                    {
+                        Id = 3,
+                        Name = "Armenian",
+                        Comment = "Բարեւ աշխարհ, 12 500 ֏ (and the rare ՠ ֈ ֍ ֎)",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    },
+                    new()
+                    {
+                        Id = 4,
+                        Name = "Missing glyphs",
+                        Comment = "Lari ₾ and CJK 中文 draw as empty boxes; the export never fails",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    },
+                    new()
+                    {
+                        Id = 5,
+                        Name = "Line breaks",
+                        Comment = "First line\r\nSecond line\nThird line",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    },
+                    new()
+                    {
+                        Id = 6,
+                        Name = "Long token",
+                        Comment = new string('W', 300),
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow.AddDays(10)
+                    }
+                };
+
+                var exportFile = await data.ToFileFormatAsync(format);
+
+                return exportFile.ToFileResult();
+            });
+
+// 6) One row past the PDF limit: Pdf throws ExportRowLimitExceededException, Csv and Xlsx export every row
+        app.MapGet("/export/over-pdf-limit",
+            async ([FromQuery] ExportFormat format) =>
+            {
+                var data = Enumerable
+                    .Range(1, 100_001)
+                    .Select(i => new DummyTable
+                    {
+                        Id = i,
+                        Name = $"Row {i}",
+                        CreationDate = DateTime.UtcNow,
+                        ExpirationDate = DateTime.UtcNow
+                    });
+
+                var exportFile = await data.ToFileFormatAsync(format);
+
+                return exportFile.ToFileResult();
+            });
+
         return app;
     }
 }

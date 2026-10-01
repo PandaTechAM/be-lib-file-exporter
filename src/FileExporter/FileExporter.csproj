@@ -9,8 +9,8 @@
 
     <PackageId>PandaTech.FileExporter</PackageId>
     <Authors>PandaTech</Authors>
-    <Description>High-performance CSV and XLSX exporting library for .NET 8+ built on CsvHelper and SpreadCheetah. Convention-based with fluent ExportRule API, supports async streaming, multi-sheet XLSX (1M+ rows), auto-zip for large files, column formatting, decimal precision, enum handling, and minimal API integration. Zero-config with intelligent defaults.</Description>
-    <PackageTags>export;csv;xlsx;excel;spreadcheetah;csvhelper;file-export;async;streaming;multi-sheet;minimal-api;high-performance;dotnet</PackageTags>
+    <Description>High-performance CSV, XLSX and PDF exporting library for .NET 8+ built on CsvHelper, SpreadCheetah and PDFsharp. Convention-based with fluent ExportRule API, supports async streaming, multi-sheet XLSX (1M+ rows), paginated PDF tables with automatic layout and embedded fonts, auto-zip for large files, column formatting, decimal precision, enum handling, and minimal API integration. Zero-config with intelligent defaults.</Description>
+    <PackageTags>export;csv;xlsx;excel;pdf;spreadcheetah;csvhelper;pdfsharp;file-export;async;streaming;multi-sheet;minimal-api;high-performance;dotnet</PackageTags>
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
@@ -21,8 +21,12 @@
     <PackageIcon>Logo.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <Version>8.1.0</Version>
-    <PackageReleaseNotes>Two format fixes, both bringing XLSX in line with what the library already documents.
+    <Version>8.2.0</Version>
+    <PackageReleaseNotes>8.2.0: PDF export, additive. ExportFormat.Pdf (3) goes through the same entry points, rules and ExportOptions as CSV and XLSX: ToFileFormatAsync dispatches it and ToPdfAsync mirrors ToCsvAsync and ToXlsxAsync. A PDF is a paginated table with automatic column widths and wrapping, the header row on every page and an "x / y" footer, on a page chosen from A4 portrait to A2 landscape; SheetName (or the rule's name) titles it. The fonts (DejaVu Sans Condensed and Noto Sans Armenian, renamed internally to FileExporter Sans Condensed and FileExporter Sans Armenian so they never clash with an application's own copies in PDFsharp's process-wide font cache) are embedded in the assembly and loaded from memory; no font file is copied to the application. PDFsharp's global font resolver is not set. An application that sets its own must do so at startup, before the first PDF export: PDFsharp refuses a new resolver once any font was loaded. A PDF holds at most 100,000 rows: a larger export throws ExportRowLimitExceededException before anything is rendered. As for CSV and XLSX, an output of 10 MB or more is returned as a zip. New dependency: PDFsharp 6.2.4 (MIT), which adds nine PdfSharp*.dll assemblies (about 1.6 MB) to the application's output; FileExporter.dll grows by about 1.4 MB of fonts, whose licences (Bitstream Vera/Arev, SIL OFL 1.1) are in the package's licenses folder.
+
+Previous release notes follow.
+
+8.1.0: Two format fixes, both bringing XLSX in line with what the library already documents.
 
 Booleans are written as the text Yes/No rather than as logical cells. A logical cell renders in the viewer's Excel UI
 language (TRUE/FALSE, &#x0418;&#x0421;&#x0422;&#x0418;&#x041D;&#x0410;/&#x041B;&#x041E;&#x0416;&#x042C;) and no number format overrides that, so the same file read differently for
@@ -57,6 +61,18 @@ Previous release notes follow.
     <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
+  <!-- PDF fonts live only inside the assembly, loaded from memory: never copied to output, never packed as content -->
+  <ItemGroup>
+    <None Remove="Pdf\Fonts\*.ttf"/>
+    <EmbeddedResource Include="Pdf\Fonts\*.ttf" LogicalName="FileExporter.Fonts.%(Filename)%(Extension)"/>
+    <None Remove="Pdf\Fonts\*.txt"/>
+    <None Include="Pdf\Fonts\*.txt" Pack="true" PackagePath="licenses\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FileExporter.Tests"/>
+  </ItemGroup>
+
   <!-- ASP.NET Core for WebApplicationBuilder and Minimal API -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App"/>
@@ -65,6 +81,7 @@ Previous release notes follow.
   <!-- Core export dependencies - latest stable versions -->
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0"/>
+    <PackageReference Include="PDFsharp" Version="6.2.4"/>
     <PackageReference Include="SpreadCheetah" Version="1.28.0"/>
   </ItemGroup>
 

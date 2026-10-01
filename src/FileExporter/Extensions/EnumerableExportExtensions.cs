@@ -5,7 +5,9 @@ using FileExporter.Helpers;
 
 namespace FileExporter.Extensions;
 
-/// <summary>Extension methods that export sequences to CSV or XLSX using the registered export rule for the element type.</summary>
+/// <summary>
+///     Extension methods that export sequences to CSV, XLSX or PDF using the registered export rule for the element type.
+/// </summary>
 public static class EnumerableExportExtensions
 {
     /// <summary>
@@ -25,7 +27,7 @@ public static class EnumerableExportExtensions
         CancellationToken ct = default)
         where T : class
     {
-        var list = await MaterializeAsync(data, ct);
+        var list = await MaterializeAsync(data, ExportFormat.Csv, ct);
 
         return CsvExporter.Export(list, FileExporterRuntime.Registry.GetRule<T>(), options);
     }
@@ -47,12 +49,36 @@ public static class EnumerableExportExtensions
         CancellationToken ct = default)
         where T : class
     {
-        var list = await MaterializeAsync(data, ct);
+        var list = await MaterializeAsync(data, ExportFormat.Xlsx, ct);
 
         return await XlsxExporter.ExportAsync(list, FileExporterRuntime.Registry.GetRule<T>(), options, ct);
     }
 
-    /// <summary>Materializes an async sequence and exports it in the given <paramref name="format" /> (CSV or XLSX).</summary>
+    /// <summary>
+    ///     Materializes an async sequence and exports it as a PDF file using the registered rule for
+    ///     <typeparamref name="T" />.
+    /// </summary>
+    public static async Task<ExportFile> ToPdfAsync<T>(this IAsyncEnumerable<T> data,
+        CancellationToken ct = default)
+        where T : class
+    {
+        return await data.ToPdfAsync(null, ct);
+    }
+
+    /// <summary>Materializes an async sequence and exports it as a PDF file, applying per-request overrides.</summary>
+    public static async Task<ExportFile> ToPdfAsync<T>(this IAsyncEnumerable<T> data,
+        ExportOptions? options,
+        CancellationToken ct = default)
+        where T : class
+    {
+        var list = await MaterializeAsync(data, ExportFormat.Pdf, ct);
+
+        return await PdfExporter.ExportAsync(list, FileExporterRuntime.Registry.GetRule<T>(), options, ct);
+    }
+
+    /// <summary>
+    ///     Materializes an async sequence and exports it in the given <paramref name="format" /> (CSV, XLSX or PDF).
+    /// </summary>
     public static async Task<ExportFile> ToFileFormatAsync<T>(this IAsyncEnumerable<T> data,
         ExportFormat format,
         CancellationToken ct = default)
@@ -70,13 +96,13 @@ public static class EnumerableExportExtensions
     {
         EnsureSupported(format);
 
-        var list = await MaterializeAsync(data, ct);
+        var list = await MaterializeAsync(data, format, ct);
 
         return await list.ToFileFormatAsync(format, options, ct);
     }
 
     /// <summary>
-    ///     Exports a sequence in the given <paramref name="format" /> (CSV or XLSX) using the registered rule for
+    ///     Exports a sequence in the given <paramref name="format" /> (CSV, XLSX or PDF) using the registered rule for
     ///     <typeparamref name="T" />.
     /// </summary>
     public static async Task<ExportFile> ToFileFormatAsync<T>(this IEnumerable<T> data,
@@ -88,7 +114,7 @@ public static class EnumerableExportExtensions
     }
 
     /// <summary>
-    ///     Exports a sequence in the given <paramref name="format" /> (CSV or XLSX), applying the per-request
+    ///     Exports a sequence in the given <paramref name="format" /> (CSV, XLSX or PDF), applying the per-request
     ///     <paramref name="options" />.
     /// </summary>
     /// <remarks>
@@ -109,20 +135,33 @@ public static class EnumerableExportExtensions
         return format switch
         {
             ExportFormat.Csv => CsvExporter.Export(data, rule, options),
+            ExportFormat.Pdf => await PdfExporter.ExportAsync(data, rule, options, ct),
             _ => await XlsxExporter.ExportAsync(data, rule, options, ct)
         };
     }
 
-    private static async Task<List<T>> MaterializeAsync<T>(IAsyncEnumerable<T> data, CancellationToken ct)
+    /// <summary>
+    ///     Buffers an async sequence for the exporters. A PDF stops one row past its limit, which is enough for the
+    ///     exporter to reject it, so an oversized source is never read to the end.
+    /// </summary>
+    private static async Task<List<T>> MaterializeAsync<T>(IAsyncEnumerable<T> data,
+        ExportFormat format,
+        CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(data);
 
+        var maxCount = format == ExportFormat.Pdf ? ExportLimits.MaxPdfRows + 1 : int.MaxValue;
         var list = new List<T>();
 
         await foreach (var item in data.WithCancellation(ct))
         {
             ct.ThrowIfCancellationRequested();
             list.Add(item);
+
+            if (list.Count == maxCount)
+            {
+                break;
+            }
         }
 
         return list;
@@ -134,14 +173,14 @@ public static class EnumerableExportExtensions
     /// </summary>
     private static void EnsureSupported(ExportFormat format)
     {
-        if (format is ExportFormat.Csv or ExportFormat.Xlsx)
+        if (format is ExportFormat.Csv or ExportFormat.Xlsx or ExportFormat.Pdf)
         {
             return;
         }
 
         throw new ArgumentOutOfRangeException(nameof(format),
             format,
-            $"Unsupported export format. Use {nameof(ExportFormat.Csv)} (1) or {nameof(ExportFormat.Xlsx)} (2). "
-            + "A missing or unbound query-string value arrives here as 0.");
+            $"Unsupported export format. Use {nameof(ExportFormat.Csv)} (1), {nameof(ExportFormat.Xlsx)} (2) or "
+            + $"{nameof(ExportFormat.Pdf)} (3). A missing or unbound query-string value arrives here as 0.");
     }
 }

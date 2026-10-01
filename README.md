@@ -1,7 +1,7 @@
 # PandaTech.FileExporter
 
-High-performance CSV and XLSX exporting library for .NET 8+ with convention-based defaults, fluent configuration, async
-streaming, multi-sheet support, and automatic compression.
+High-performance CSV, XLSX and PDF exporting library for .NET 8+ with convention-based defaults, fluent configuration,
+async streaming, multi-sheet support, paginated PDF tables, and automatic compression.
 
 ## Installation
 
@@ -34,6 +34,9 @@ var csvFile = await products.ToFileFormatAsync(ExportFormat.Csv);
 
 // XLSX export with multi-sheet support for large datasets
 var excelFile = await products.ToFileFormatAsync(ExportFormat.Xlsx);
+
+// PDF export: a paginated table with automatic column widths and page size
+var pdfFile = await products.ToFileFormatAsync(ExportFormat.Pdf);
 
 // Return from minimal API
 return csvFile.ToFileResult();
@@ -117,7 +120,7 @@ Without configuration, the library automatically:
 
 An explicit `HasFormat(...)` always wins over the inferred format, so `HasFormat(Date)` on a `DateTime` drops the
 time part and `HasFormat(Integer)` on a `decimal` drops the decimal places. Booleans are written as the text
-`Yes`/`No` in both formats: a logical cell renders in the viewer's own Excel UI language, which no number format
+`Yes`/`No` in every format: a logical cell renders in the viewer's own Excel UI language, which no number format
 can override.
 
 ### Column Configuration API
@@ -126,7 +129,7 @@ can override.
 |----------------------------------|--------------------------|-----------------------------------------|
 | `WriteToColumn(string)`          | Set column header        | `.WriteToColumn("Full Name")`           |
 | `HasOrder(int)`                  | Set column position      | `.HasOrder(1)`                          |
-| `HasWidth(int)`                  | Set column width (chars) | `.HasWidth(25)`                         |
+| `HasWidth(int)`                  | Set column width (chars; preferred width in PDF) | `.HasWidth(25)`                         |
 | `HasFormat(ColumnFormatType)`    | Set format type          | `.HasFormat(ColumnFormatType.Currency)` |
 | `HasPrecision(int)`              | Set decimal places       | `.HasPrecision(4)`                      |
 | `WithEnumFormat(EnumFormatMode)` | Enum display mode        | `.WithEnumFormat(EnumFormatMode.Name)`  |
@@ -150,6 +153,9 @@ public enum ColumnFormatType
     Boolean       // Yes/No
 }
 ```
+
+A PDF writes each value the way Excel displays it under the XLSX number format: `Currency` as `12,500.00`,
+`Percentage` as `55.32%`, `Date` as `2024-01-15`, `DateTime` as `2024-01-15 14:30:00`. CSV keeps its own conventions.
 
 ### Enum Formatting
 
@@ -175,7 +181,7 @@ optional and falls back to the rule.
 var options = new ExportOptions
 {
     FileName = "Bestellungen {DateTime}", // used verbatim; {DateTime} is optional
-    SheetName = "Bestellungen",           // XLSX only, truncated to 31 characters
+    SheetName = "Bestellungen",           // XLSX sheet (31 characters max) and PDF title
     ColumnHeaders = new Dictionary<string, string>
     {
         [nameof(Order.Status)] = "Status",
@@ -193,11 +199,58 @@ Headers, enum labels and names are plain strings, so any language or alphabet wo
 | Property            | Effect                                                                                          |
 |---------------------|-------------------------------------------------------------------------------------------------|
 | `FileName`          | Base name, used verbatim. No extension — the format's is appended. `{DateTime}` is substituted if present, but never appended. |
-| `SheetName`         | Worksheet name (XLSX). Defaults to the rule's name without its timestamp.                        |
+| `SheetName`         | Worksheet name (XLSX, truncated to 31 characters) and PDF title (not truncated). Defaults to the rule's name without its timestamp. |
 | `ColumnHeaders`     | Header text per column, keyed by **model property name**. Missing or blank entries keep the rule's header. Column selection and order stay the rule's job. |
 | `EnumLabelResolver` | Renders an enum as text, honouring `EnumFormatMode`: `MixedIntAndName` still emits `"1 - {label}"` and `Int` is still a bare number. Returning null or whitespace falls back to the member name. Called once per enum cell, so close over a resolved lookup rather than querying per value. |
 
 Nothing here mutates the shared rule, so concurrent requests can use different languages safely.
+
+## PDF
+
+`ExportFormat.Pdf` renders the same columns, headers and values as CSV and XLSX into a paginated table, through the
+same entry points. There are no PDF-only options: everything comes from the export rule and `ExportOptions`.
+
+- **Layout**: column widths follow the content (sampled from up to 5,000 rows) and text wraps inside its column; a word
+  longer than its column breaks by character, and explicit line breaks are kept. `HasWidth(n)` sets a column's
+  preferred width to n times the width of a `0`. Numeric columns are right-aligned, header included.
+- **Page size**: the first of A4 portrait, A4 landscape, A3 landscape and A2 landscape that holds the table
+  comfortably, with 8 pt text on A4 and 7 pt on A3 and A2. A table no page holds comfortably goes on A2 landscape and
+  wraps harder there.
+- **Every page** repeats the title and the header row, and carries an `x / y` page number.
+- **Title**: `ExportOptions.SheetName`, else the rule's name (`WithName`) without its timestamp. It is drawn on one
+  line and cut with an ellipsis when wider than the page; the document's title metadata keeps the whole text.
+- **Fonts**: DejaVu Sans Condensed and Noto Sans Armenian are embedded in the library assembly and loaded from memory.
+  The consuming application ships no font files and needs no system fonts, so a Linux container renders exactly like
+  a developer machine. They cover Latin, Cyrillic and the full Armenian block; a character neither font has (CJK, for
+  example) is drawn as an empty box and never fails the export. Internally they are renamed to FileExporter Sans
+  Condensed and FileExporter Sans Armenian: PDFsharp caches fonts process-wide by name, and the original names would
+  clash with your application's own copy of either font.
+- **PDFsharp's global font resolver is not set.** If your application also uses PDFsharp and sets
+  `GlobalFontSettings.FontResolver`, set it at startup, before the first export: PDFsharp refuses a new resolver once
+  any font was loaded.
+- **Row limit**: at most 100,000 rows per PDF. A larger export throws `ExportRowLimitExceededException` (with `Format`
+  and `Limit`) before any value is formatted, and a lazy source is read only one row past the limit. Use CSV or XLSX
+  for more rows.
+- **Size**: as for CSV and XLSX, a PDF of 10 MB or more is returned as a ZIP holding it.
+- **Concurrency**: a large PDF keeps a core busy for seconds and stays in memory until saved, so at most half the
+  processor count render at once per process. Other exports wait their turn, honouring their `CancellationToken`.
+
+```csharp
+app.MapGet("/export/orders/pdf", async (AppDbContext db, CancellationToken ct) =>
+{
+    var orders = await db.Orders.ToListAsync(ct);
+
+    try
+    {
+        var file = await orders.ToFileFormatAsync(ExportFormat.Pdf, new ExportOptions { SheetName = "Orders Q1" }, ct);
+        return file.ToFileResult();
+    }
+    catch (ExportRowLimitExceededException ex)
+    {
+        return Results.BadRequest($"PDF exports are limited to {ex.Limit} rows.");
+    }
+});
+```
 
 ## Advanced Features
 
@@ -214,7 +267,7 @@ var file = await hugeDataset.ToFileFormatAsync(ExportFormat.Xlsx);
 
 ### Auto-Compression
 
-Files >10MB automatically compress to ZIP:
+Files of 10 MB or more, in any format, are returned as a ZIP:
 
 ```csharp
 var largeExport = await data.ToFileFormatAsync(ExportFormat.Csv);
@@ -316,6 +369,7 @@ await data.ToFileFormatAsync(ExportFormat.Xlsx, new ExportOptions { FileName = "
 ```csharp
 var file = await data.ToFileFormatAsync(ExportFormat.Csv);
 var file = await data.ToFileFormatAsync(ExportFormat.Xlsx);
+var file = await data.ToFileFormatAsync(ExportFormat.Pdf);
 var file = await data.ToFileFormatAsync(ExportFormat.Xlsx, options);
 ```
 
@@ -324,9 +378,11 @@ var file = await data.ToFileFormatAsync(ExportFormat.Xlsx, options);
 ```csharp
 var file = await asyncData.ToCsvAsync();
 var file = await asyncData.ToXlsxAsync();
+var file = await asyncData.ToPdfAsync();
 var file = await asyncData.ToFileFormatAsync(ExportFormat.Csv);
 var file = await asyncData.ToCsvAsync(options);
 var file = await asyncData.ToXlsxAsync(options);
+var file = await asyncData.ToPdfAsync(options);
 var file = await asyncData.ToFileFormatAsync(ExportFormat.Csv, options);
 ```
 
@@ -352,7 +408,8 @@ return file.ToFileResult();
 Built on industry-standard libraries:
 
 - **CsvHelper** (33.1.0) - Fast, reliable CSV parsing/writing
-- **SpreadCheetah** (1.25.0) - High-performance XLSX generation
+- **SpreadCheetah** (1.28.0) - High-performance XLSX generation
+- **PDFsharp** (6.2.4) - PDF writing; the table layout is this library's own
 
 **Benchmarks** (1M rows, 10 columns):
 
@@ -360,14 +417,32 @@ Built on industry-standard libraries:
 - XLSX export: ~8 seconds, ~40MB file
 - Memory: Streaming-based, low memory footprint
 
+**PDF** (100,000 rows, measured on a developer laptop): 10 columns on A4 in ~3 seconds (6.6 MB); 27 columns on A2
+landscape in ~7 seconds (returned zipped, 11 MB), at about 0.6 GB peak memory including the input rows.
+
 ## Limits
 
-| Feature              | Limit         | Behavior                       |
-|----------------------|---------------|--------------------------------|
-| XLSX rows per sheet  | 1,048,575     | Auto-creates additional sheets |
-| XLSX sheet name      | 31 characters | Auto-truncates                 |
-| File name            | 100 characters| Auto-truncates                 |
-| File size before zip | 10 MB         | Auto-compresses to ZIP         |
+| Feature              | Limit         | Behavior                                         |
+|----------------------|---------------|--------------------------------------------------|
+| XLSX rows per sheet  | 1,048,575     | Auto-creates additional sheets                   |
+| XLSX sheet name      | 31 characters | Auto-truncates                                   |
+| PDF rows per file    | 100,000       | Rejected with `ExportRowLimitExceededException`  |
+| PDF page size        | A4 to A2      | Chosen automatically from the table's width      |
+| File name            | 100 characters| Auto-truncates                                   |
+| File size before zip | 10 MB         | Auto-compresses to ZIP                           |
+
+## Upgrading to 8.2.0
+
+Additive: no existing call changes behaviour.
+
+- New: `ExportFormat.Pdf` (3), `MimeTypes.Pdf`, `ToPdfAsync` on `IAsyncEnumerable<T>`, and
+  `FileExporter.Exceptions.ExportRowLimitExceededException`.
+- `ToFileFormatAsync` accepts `ExportFormat.Pdf`. An endpoint that binds `ExportFormat` from the request and validates
+  it as a defined enum value now accepts 3 as well.
+- New dependency: PDFsharp 6.2.4 (MIT), which adds nine `PdfSharp*.dll` assemblies (about 1.6 MB) to your output.
+  `FileExporter.dll` grows by about 1.4 MB of embedded fonts; no font file is copied.
+- The embedded fonts keep their own licences, shipped in the package's `licenses/` folder: DejaVu (Bitstream Vera and
+  Arev font licence) and Noto Sans Armenian (SIL Open Font License 1.1).
 
 ## Upgrading to 8.0.0
 

@@ -26,7 +26,7 @@ public interface IPropertyRule
     /// <summary>Decimal places for numeric formats; null uses the default.</summary>
     int? Precision { get; }
 
-    /// <summary>Column width in the XLSX output; null uses the default.</summary>
+    /// <summary>Column width in characters (XLSX) or preferred width in zeros (PDF); null uses the default.</summary>
     int? ColumnWidth { get; }
 
     /// <summary>How enum values are rendered.</summary>

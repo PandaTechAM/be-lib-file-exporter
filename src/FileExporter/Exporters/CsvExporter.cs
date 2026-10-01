@@ -18,7 +18,6 @@ internal static class CsvExporter
 
         var columns = ExportColumnBuilder.Build(rule, options);
         var baseName = NamingHelper.ResolveFileName(options?.FileName, rule.FileNameTemplate);
-        var fileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Csv.Extension);
         var enumLabelResolver = options?.EnumLabelResolver;
 
         using var ms = new MemoryStream();
@@ -54,14 +53,6 @@ internal static class CsvExporter
             }
         }
 
-        var bytes = ms.ToArray();
-
-        if (bytes.Length < ExportLimits.ZipThresholdBytes)
-        {
-            return new ExportFile(fileName, MimeTypes.Csv, bytes);
-        }
-
-        // Use baseName (without extension) for zip entry naming
-        return ZipHelper.CreateZip(baseName, MimeTypes.Csv, [bytes]);
+        return ExportFileFactory.Create(baseName, MimeTypes.Csv, ms.ToArray());
     }
 }
