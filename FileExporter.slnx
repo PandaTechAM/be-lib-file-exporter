@@ -11,5 +11,6 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/FileExporter.Demo/FileExporter.Demo.csproj"/>
+    <Project Path="test/FileExporter.Tests/FileExporter.Tests.csproj"/>
   </Folder>
 </Solution>

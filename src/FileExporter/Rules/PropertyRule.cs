@@ -81,7 +81,10 @@ public class PropertyRule<TProperty> : IPropertyRule
         return this;
     }
 
-    /// <summary>Sets the column width in the XLSX output.</summary>
+    /// <summary>
+    ///     Sets the column width in characters in the XLSX output; in a PDF it is the column's preferred width, that
+    ///     many times the width of a <c>0</c>.
+    /// </summary>
     public PropertyRule<TProperty> HasWidth(int width)
     {
         _columnWidth = width;

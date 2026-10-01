@@ -6,6 +6,10 @@ namespace FileExporter.Helpers;
 
 internal static class ValueFormatter
 {
+    private const string DateFormat = "yyyy-MM-dd";
+    private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+    private const string TimeFormat = "HH:mm:ss";
+
     public static string FormatForCsv(object? value,
         IPropertyRule rule,
         CultureInfo culture,
@@ -33,7 +37,7 @@ internal static class ValueFormatter
             case bool b:
                 return FormatBooleanAsText(b);
             case DateTime dt:
-                return dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                return dt.ToString(DateTimeFormat, CultureInfo.InvariantCulture);
         }
 
         if (!IsNumeric(type))
@@ -108,7 +112,97 @@ internal static class ValueFormatter
     }
 
     /// <summary>
-    ///     One implementation for both formats, so CSV and XLSX cannot drift apart again.
+    ///     A PDF is read, not re-imported, so the reference is what Excel displays under the XLSX number formats, not
+    ///     what CSV writes. As there, a declared format wins over the CLR type.
+    /// </summary>
+    public static string FormatForPdf(object? value,
+        IPropertyRule rule,
+        Func<Enum, string>? enumLabelResolver = null)
+    {
+        if (rule.CustomTransform is not null)
+        {
+            value = rule.CustomTransform(value);
+        }
+
+        if (value == null)
+        {
+            return rule.DefaultValue ?? string.Empty;
+        }
+
+        var type = value.GetType();
+
+        if (type.IsEnum)
+        {
+            return FormatEnumAsText(value, rule, enumLabelResolver);
+        }
+
+        var invariant = CultureInfo.InvariantCulture;
+
+        return value switch
+        {
+            bool flag => FormatBooleanAsText(flag),
+            DateTime dateTime => dateTime.ToString(rule.FormatType == ColumnFormatType.Date ? DateFormat : DateTimeFormat,
+                invariant),
+            DateOnly date => date.ToString(DateFormat, invariant),
+            TimeOnly time => time.ToString(TimeFormat, invariant),
+            IFormattable number when IsNumeric(type) => FormatNumberForPdf(number, rule),
+            _ => Convert.ToString(value, invariant) ?? string.Empty
+        };
+    }
+
+    /// <summary>
+    ///     Numbers read right-aligned, as Excel aligns them. A declared numeric format decides; otherwise the CLR type
+    ///     does, unless the column is declared as text.
+    /// </summary>
+    public static bool IsRightAlignedInPdf(IPropertyRule rule, Type propertyType)
+    {
+        return rule.FormatType switch
+        {
+            ColumnFormatType.Integer or ColumnFormatType.Decimal or ColumnFormatType.Currency
+                or ColumnFormatType.Percentage => true,
+            ColumnFormatType.Text => false,
+            _ => IsNumeric(Nullable.GetUnderlyingType(propertyType) ?? propertyType)
+        };
+    }
+
+    private static string FormatNumberForPdf(IFormattable number, IPropertyRule rule)
+    {
+        var invariant = CultureInfo.InvariantCulture;
+        var precision = rule.Precision ?? 2;
+
+        return rule.FormatType switch
+        {
+            ColumnFormatType.Currency => number.ToString($"N{precision}", invariant),
+            ColumnFormatType.Percentage => FormatPercentageForPdf(number, precision),
+            ColumnFormatType.Decimal => number.ToString($"F{precision}", invariant),
+            ColumnFormatType.Integer => number.ToString("F0", invariant),
+            ColumnFormatType.Default when number is decimal or double or float =>
+                number.ToString($"F{precision}", invariant),
+            _ => number.ToString(null, invariant)
+        };
+    }
+
+    /// <summary>
+    ///     A percentage column holds a fraction, as in Excel's "0.00%" format. The "P" specifier is not used: under the
+    ///     invariant culture it writes "55.32 %", with a space Excel does not show.
+    /// </summary>
+    private static string FormatPercentageForPdf(IFormattable number, int precision)
+    {
+        var invariant = CultureInfo.InvariantCulture;
+        var format = $"F{precision}";
+
+        var scaled = number switch
+        {
+            double d => (d * 100).ToString(format, invariant),
+            float f => (f * 100d).ToString(format, invariant),
+            _ => (Convert.ToDecimal(number, invariant) * 100M).ToString(format, invariant)
+        };
+
+        return scaled + "%";
+    }
+
+    /// <summary>
+    ///     One implementation for all formats, so CSV, XLSX and PDF cannot drift apart again.
     /// </summary>
     private static string FormatBooleanAsText(bool value)
     {
@@ -116,7 +210,7 @@ internal static class ValueFormatter
     }
 
     /// <summary>
-    ///     One implementation for both formats, so CSV and XLSX cannot drift apart again.
+    ///     One implementation for all formats, so CSV, XLSX and PDF cannot drift apart again.
     /// </summary>
     private static string FormatEnumAsText(object value, IPropertyRule rule, Func<Enum, string>? enumLabelResolver)
     {

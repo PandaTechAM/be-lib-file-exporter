@@ -10,6 +10,9 @@ public sealed class MimeTypes
     public static readonly MimeTypes Xlsx =
         new("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx");
 
+    /// <summary>PDF: <c>application/pdf</c> with a <c>.pdf</c> extension.</summary>
+    public static readonly MimeTypes Pdf = new("application/pdf", ".pdf");
+
     /// <summary>ZIP: <c>application/zip</c> with a <c>.zip</c> extension, used when large exports are zipped.</summary>
     public static readonly MimeTypes Zip = new("application/zip", ".zip");
 

@@ -20,8 +20,9 @@ public sealed class ExportOptions
     public string? FileName { get; set; }
 
     /// <summary>
-    ///     Worksheet name for XLSX exports, truncated to Excel's 31-character limit. Ignored for CSV. Null or blank
-    ///     uses the rule's name without its timestamp.
+    ///     Worksheet name for XLSX exports, truncated to Excel's 31-character limit, and the title of a PDF export: kept
+    ///     whole in the document metadata, drawn on one line on every page and cut with an ellipsis when wider than the
+    ///     page. Ignored for CSV. Null or blank uses the rule's name without its timestamp.
     /// </summary>
     public string? SheetName { get; set; }
 
@@ -41,8 +42,9 @@ public sealed class ExportOptions
     /// </summary>
     /// <remarks>
     ///     Returning null or whitespace falls back to the C# member name, then to the numeric value for members that
-    ///     have none. The delegate is called once per enum cell, so it must be cheap — resolve the whole translation
-    ///     set once and close over it rather than looking each value up individually.
+    ///     have none. The delegate is called once per enum cell (a PDF also formats up to 5,000 rows once more to measure
+    ///     its columns), so it must be cheap — resolve the whole translation set once and close over it rather than
+    ///     looking each value up individually.
     /// </remarks>
     public Func<Enum, string>? EnumLabelResolver { get; set; }
 }

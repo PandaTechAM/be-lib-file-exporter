@@ -27,7 +27,6 @@ internal static class XlsxExporter
         var columns = ExportColumnBuilder.Build(rule, options);
 
         var baseName = NamingHelper.ResolveFileName(options?.FileName, rule.FileNameTemplate);
-        var singleFileName = NamingHelper.EnsureExtension(baseName, MimeTypes.Xlsx.Extension);
 
         // The worksheet name is the rule's name without its timestamp, not the stamped file name: the old behaviour
         // truncated "Orders 2026-07-26 12:00:00" at 30 characters and put that on the tab.
@@ -51,17 +50,7 @@ internal static class XlsxExporter
             bytes = await CreateMultiSheetXlsxFileAsync(list, columns, sheetName, options, rowsPerSheet, ct);
         }
 
-        if (bytes.Length < ExportLimits.ZipThresholdBytes)
-        {
-            return new ExportFile(singleFileName, MimeTypes.Xlsx, bytes);
-        }
-
-        // Zip only when size threshold exceeded
-        return ZipHelper.CreateZip(baseName,
-            MimeTypes.Xlsx,
-            [
-                bytes
-            ]);
+        return ExportFileFactory.Create(baseName, MimeTypes.Xlsx, bytes);
     }
 
     private static async Task<byte[]> CreateXlsxFileAsync<T>(IEnumerable<T> dataSlice,
